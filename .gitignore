@@ -1,0 +1,36 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.fleet/
+
+# Build
+build/
+out/
+target/
+*.class
+
+# Android
+android/local.properties
+android/.gradle/
+android/app/build/
+
+# iOS
+ios/build/
+ios/DerivedData/
+ios/*.xcworkspace/xcuserdata/
+
+# Backend
+backend/build/
+backend/.gradle/
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+secrets/
