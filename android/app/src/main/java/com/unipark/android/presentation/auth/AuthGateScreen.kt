@@ -40,10 +40,8 @@ import com.unipark.android.core.ui.theme.Background
 import com.unipark.android.core.ui.theme.Error
 import com.unipark.android.core.ui.theme.OnBackground
 import com.unipark.android.core.ui.theme.OnSurfaceVariant
-import com.unipark.android.core.ui.theme.Outline
 import com.unipark.android.core.ui.theme.OutlineVariant
 import com.unipark.android.core.ui.theme.PrimaryFixedDim
-import com.unipark.android.core.ui.theme.SecondaryFixed
 import com.unipark.android.core.ui.theme.SurfaceContainer
 
 @Composable
