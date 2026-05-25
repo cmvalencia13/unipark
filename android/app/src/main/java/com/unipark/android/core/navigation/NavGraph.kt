@@ -25,6 +25,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.unipark.android.presentation.access.AccessGateScreen
+import com.unipark.android.presentation.auth.AuthGateScreen
 import com.unipark.android.presentation.dashboard.DashboardScreen
 import com.unipark.android.presentation.map.MapScreen
 import com.unipark.android.presentation.permits.PermitsScreen
@@ -33,6 +35,7 @@ import com.unipark.android.presentation.permits.PermitsScreen
  * Route constants.
  */
 object Routes {
+    const val AUTH = "auth"
     const val DASHBOARD = "dashboard"
     const val MAP = "map"
     const val PERMITS = "permits"
@@ -117,9 +120,18 @@ fun UniParkNavGraph() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Routes.DASHBOARD,
+            startDestination = Routes.AUTH,
             modifier = Modifier.padding(innerPadding),
         ) {
+            composable(Routes.AUTH) {
+                AuthGateScreen(
+                    onAuthenticated = {
+                        navController.navigate(Routes.DASHBOARD) {
+                            popUpTo(Routes.AUTH) { inclusive = true }
+                        }
+                    },
+                )
+            }
             composable(Routes.DASHBOARD) {
                 DashboardScreen()
             }
@@ -130,7 +142,7 @@ fun UniParkNavGraph() {
                 PermitsScreen()
             }
             composable(Routes.ACCESS) {
-                PlaceholderScreen("Access Gate")
+                AccessGateScreen()
             }
         }
     }
