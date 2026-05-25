@@ -26,6 +26,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unipark.android.presentation.dashboard.DashboardScreen
+import com.unipark.android.presentation.permits.PermitsScreen
 
 /**
  * Route constants.
@@ -125,7 +126,7 @@ fun UniParkNavGraph() {
                 PlaceholderScreen("Availability Map")
             }
             composable(Routes.PERMITS) {
-                PlaceholderScreen("Permits")
+                PermitsScreen()
             }
             composable(Routes.ACCESS) {
                 PlaceholderScreen("Access Gate")
