@@ -194,8 +194,10 @@ com.unipark.android/
 - ScannerCore with animations, AuthorizedVehicleCard, HUD grid, AuthGate OIDC flow
 - Token storage in Keystore, functional Tab 4, full nav flow
 
-### Phase 6 — Real Data Layer + Polish
+### Phase 6 — Real Data Layer + Polish (DEFERRED)
+**Blocked on:** Backend API and database being available. This phase is the wiring step — it replaces fake data sources with real ones. Phases 1-5 produce a fully navigable, animated app running on in-memory fake data, so UI development and review can proceed independently of backend progress.
+
 - Retrofit/Moshi API client, Room persistence, WebSocket client, DataStore
-- Replace fake ViewModels with real repositories
+- Replace Fake*Repository classes with real implementations
 - Offline scan queue, error/loading/empty states
 - ktlint + detekt, unit tests for domain/data
