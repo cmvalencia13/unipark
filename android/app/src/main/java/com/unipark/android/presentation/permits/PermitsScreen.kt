@@ -62,10 +62,9 @@ fun PermitsScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         permits.forEachIndexed { index, permit ->
-            Column(modifier = Modifier.entranceAnimation(delayIndex = index)) {
+            Column(modifier = Modifier.entranceAnimation(delayIndex = index + 1)) {
                 ActivePermitCard(
                     permit = permit,
-                    modifier = Modifier.padding(horizontal = 20.dp),
                 )
 
                 TextButton(
