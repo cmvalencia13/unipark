@@ -22,6 +22,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
@@ -52,6 +55,23 @@ fun ShineButton(
             .clip(RoundedCornerShape(cornerRadius))
             .background(containerColor)
             .border(1.dp, borderColor, RoundedCornerShape(cornerRadius))
+            .drawBehind {
+                val x = shineOffset.value
+                if (x > 0f) {
+                    val shineWidth = size.width * 0.4f
+                    drawRect(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.White.copy(alpha = 0.15f),
+                                Color.Transparent,
+                            ),
+                            start = Offset(x * size.width - shineWidth, 0f),
+                            end = Offset(x * size.width + shineWidth, 0f),
+                        ),
+                    )
+                }
+            }
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
