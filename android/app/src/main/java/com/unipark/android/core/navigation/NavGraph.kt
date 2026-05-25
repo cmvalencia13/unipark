@@ -25,6 +25,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.unipark.android.presentation.dashboard.DashboardScreen
 
 /**
  * Route constants.
@@ -118,7 +119,7 @@ fun UniParkNavGraph() {
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(Routes.DASHBOARD) {
-                PlaceholderScreen("Dashboard")
+                DashboardScreen()
             }
             composable(Routes.MAP) {
                 PlaceholderScreen("Availability Map")
