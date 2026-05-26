@@ -1,0 +1,49 @@
+<h2>Screen 4 — Access Gate</h2>
+<p class="subtitle">NFC/QR scanner HUD for tap-to-enter</p>
+
+<div class="section">
+  <h3>Component Tree</h3>
+  <div style="background: #1e2024; border-radius: 12px; padding: 16px; font-family: monospace; font-size: 13px; line-height: 1.8;">
+    <div style="color: #849495;">TopAppBar (consistent)</div>
+    <div style="color: #849495; margin-top: 4px;">HUDCanvas (centered, HUD grid bg)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── AmbientGlow (radial bg blur)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── <span style="color: #36ffc4;">AuthorizedVehicleCard</span> (glass panel)</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── Destination label + lot name</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── Car icon</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── Divider (gradient)</div>
+    <div style="padding-left: 40px; color: #666;">│   └── Plate number (mono, tracking-widest)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── <span style="color: #36ffc4;">ScannerCore</span> (central interaction)</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── ConcentricRings (animated, staggered pulse)</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── ScanLaser (animated horizontal line)</div>
+    <div style="padding-left: 40px; color: #666;">│   └── NFCIcon + "Tap to Enter"</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── SystemReady indicator (pulse dot + text)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">└── NeedAssistanceButton (error-tinted, emergency icon)</div>
+    <div style="color: #849495; margin-top: 4px;">BottomNavBar (4 tabs, Access active)</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>New Reusable Components</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">ScannerCore</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Circular scanner with pulse rings + laser line + NFC icon</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">ConcentricRings</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Animated expanding rings, staggered delays</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">ScanLaser</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Animated horizontal line sweeping top-to-bottom</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">HUDGrid</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Background modifier: subtle grid lines for tech aesthetic</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">StatusDot</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Tiny pulsing dot with label (reusable: System Ready, Active, Valid)</td>
+    </tr>
+  </table>
+</div>

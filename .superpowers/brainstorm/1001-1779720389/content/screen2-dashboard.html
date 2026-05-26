@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>UniPark Dashboard</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background-color: rgba(30, 32, 36, 0.6); /* surface-container with opacity */
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-right: 1px solid rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+        }
+
+        .glow-active {
+            box-shadow: 0 0 24px rgba(54, 255, 196, 0.25); /* secondary-fixed glow */
+        }
+
+        /* Animations */
+        @keyframes slideUpFade {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-entrance {
+            opacity: 0;
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes shimmerLine {
+            0% { transform: translateX(-150%); }
+            100% { transform: translateX(150%); }
+        }
+
+        .shimmer-effect {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shimmer-effect::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(54, 255, 196, 0.2), transparent);
+            animation: shimmerLine 2s infinite;
+        }
+    </style>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#e2e2e8",
+                        "secondary-fixed": "#36ffc4",
+                        "on-primary-fixed": "#002022",
+                        "on-primary-fixed-variant": "#004f54",
+                        "surface-container": "#1e2024",
+                        "primary": "#dbfcff",
+                        "on-surface-variant": "#b9cacb",
+                        "on-error-container": "#ffdad6",
+                        "surface": "#111317",
+                        "on-secondary-fixed": "#002116",
+                        "on-secondary-fixed-variant": "#00513c",
+                        "surface-variant": "#333539",
+                        "surface-bright": "#37393e",
+                        "tertiary-container": "#e1d2ff",
+                        "primary-fixed": "#7df4ff",
+                        "inverse-surface": "#e2e2e8",
+                        "secondary-container": "#36ffc4",
+                        "inverse-primary": "#006970",
+                        "primary-fixed-dim": "#00dbe9",
+                        "outline": "#849495",
+                        "on-surface": "#e2e2e8",
+                        "surface-container-highest": "#333539",
+                        "on-tertiary-container": "#7213ff",
+                        "on-primary": "#00363a",
+                        "on-primary-container": "#006970",
+                        "primary-container": "#00f0ff",
+                        "on-error": "#690005",
+                        "surface-tint": "#00dbe9",
+                        "surface-container-high": "#282a2e",
+                        "error": "#ffb4ab",
+                        "secondary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#5700c9",
+                        "error-container": "#93000a",
+                        "tertiary": "#faf3ff",
+                        "on-secondary-container": "#007255",
+                        "inverse-on-surface": "#2f3035",
+                        "secondary-fixed-dim": "#00e1ab",
+                        "surface-dim": "#111317",
+                        "tertiary-fixed": "#e9ddff",
+                        "background": "#111317",
+                        "tertiary-fixed-dim": "#d1bcff",
+                        "surface-container-low": "#1a1c20",
+                        "surface-container-lowest": "#0c0e12",
+                        "on-tertiary-fixed": "#23005b",
+                        "on-secondary": "#003828",
+                        "outline-variant": "#3b494b",
+                        "on-tertiary": "#3c0090"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "48px",
+                        "margin-mobile": "20px",
+                        "lg": "40px",
+                        "xs": "4px",
+                        "md": "24px",
+                        "sm": "12px",
+                        "xl": "64px",
+                        "gutter": "16px",
+                        "base": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg-mobile": ["Sora"],
+                        "mono-data": ["Sora"],
+                        "label-sm": ["Sora"],
+                        "body-md": ["Sora"],
+                        "headline-lg": ["Sora"],
+                        "body-lg": ["Sora"],
+                        "display-lg": ["Sora"],
+                        "label-md": ["Sora"],
+                        "headline-md": ["Sora"]
+                    },
+                    "fontSize": {
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "mono-data": ["14px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md antialiased min-h-screen flex flex-col selection:bg-secondary-fixed/30 selection:text-secondary-fixed">
+<!-- TopAppBar (Shared Component) -->
+<header class="bg-surface/70 dark:bg-surface/70 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_0_20px_rgba(0,219,233,0.15)] flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16">
+<!-- Leading: Avatar -->
+<div class="flex items-center gap-sm cursor-pointer hover:opacity-80 active:scale-95 transition-all">
+<img alt="User Profile" class="w-10 h-10 rounded-full border border-white/10 object-cover" data-alt="A futuristic, slightly glowing avatar profile picture of a young professional in a sleek cyber-academic setting. The lighting is dark with neon blue rim light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDI7F9CdJt066tMfyXviwNel5-l1PUY2uj9Fjokq1zkK_9Xu17Wnu1O4LR9MKb74NXFIv5QipdQw0qloVg4sd8HrMaeXoxpnCN3dbxzgOlKcMDeHijmhUXBTKfG3pne_JaLRsHQoZxqCEarF-pJQNpsDFhmuUEzLDowPqPQ8i5dZzGzzb2GAMZYg9zttS3gaBsPCmRM8xu6ne0dYeupnIhKRNtVbG9hhaqSJV9xHJr0lHXaIFEcmWz9C9-FS0IlCLwoLInZaG9wvmjA"/>
+</div>
+<!-- Desktop Navigation (Hidden on Mobile) -->
+<nav class="hidden md:flex items-center gap-md">
+<a class="text-secondary-fixed font-label-md text-label-md flex flex-col items-center gap-xs relative group hover:opacity-80 active:scale-95 transition-all" href="#">
+                Status
+                <div class="absolute -bottom-2 w-full h-0.5 bg-secondary-fixed rounded-t-full shadow-[0_0_12px_rgba(54,255,196,0.5)]"></div>
+</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-secondary-fixed-dim hover:opacity-80 active:scale-95 transition-all" href="#">Map</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-secondary-fixed-dim hover:opacity-80 active:scale-95 transition-all" href="#">Permits</a>
+<a class="text-on-surface-variant font-label-md text-label-md hover:text-secondary-fixed-dim hover:opacity-80 active:scale-95 transition-all" href="#">Access</a>
+</nav>
+<!-- Brand/Headline -->
+<div class="absolute left-1/2 -translate-x-1/2 flex items-center justify-center md:hidden">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary-fixed-dim tracking-tight">UniPark</h1>
+</div>
+<div class="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center justify-center">
+<h1 class="font-headline-lg text-headline-lg font-bold text-primary-fixed-dim tracking-tight">UniPark</h1>
+</div>
+<!-- Trailing: Icon -->
+<button class="text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-all active:scale-95 duration-200 p-2 rounded-full hover:bg-surface-container/50 relative">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-secondary-fixed rounded-full shadow-[0_0_8px_rgba(54,255,196,0.8)]"></span>
+</button>
+</header>
+<!-- Main Content Canvas (Bento Grid) -->
+<main class="flex-1 w-full max-w-7xl mx-auto px-margin-mobile md:px-margin-desktop py-lg grid grid-cols-4 md:grid-cols-12 gap-gutter md:gap-md auto-rows-min pb-32 md:pb-lg">
+<!-- Active Permit Status (Hero Module) -->
+<section class="stagger-card col-span-4 md:col-span-8 glass-panel rounded-xl glow-active p-md flex flex-col md:flex-row justify-between items-start md:items-center gap-md relative overflow-hidden group">
+<!-- Decorative Background Element -->
+<div class="absolute -right-20 -top-20 w-64 h-64 bg-secondary-fixed/5 rounded-full blur-3xl group-hover:bg-secondary-fixed/10 transition-all duration-700"></div>
+<div class="z-10">
+<div class="flex items-center gap-sm mb-2">
+<span class="material-symbols-outlined text-secondary-fixed" style="font-variation-settings: 'FILL' 1;">verified</span>
+<h2 class="font-label-md text-label-md text-secondary-fixed uppercase tracking-widest">Active Permit</h2>
+</div>
+<h3 class="font-display-lg text-display-lg text-on-background mb-1">Commuter Zone A</h3>
+<p class="font-mono-data text-mono-data text-on-surface-variant">EXP: DEC 31, 2024 • AUTO-RENEW ON</p>
+</div>
+<div class="z-10 flex flex-col items-start md:items-end w-full md:w-auto">
+<div class="shimmer-effect overflow-hidden bg-secondary-container/10 border border-secondary-fixed/30 px-4 py-2 rounded-lg flex items-center gap-2 mb-4">
+<div class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse shadow-[0_0_8px_rgba(54,255,196,0.8)]"></div>
+<span class="font-label-md text-label-md text-secondary-fixed">Status: Valid</span>
+</div>
+<button class="text-on-surface-variant hover:text-primary-fixed hover:opacity-80 active:scale-95 transition-all font-label-md text-label-md flex items-center gap-1">
+                    Manage Permit <span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</section>
+<!-- Current Parked Location -->
+<section class="stagger-card col-span-4 md:col-span-4 glass-panel rounded-xl p-md flex flex-col justify-between relative overflow-hidden">
+<div class="absolute top-0 right-0 w-32 h-32 bg-primary-fixed/5 rounded-full blur-2xl"></div>
+<div>
+<div class="flex items-center gap-sm mb-4">
+<span class="material-symbols-outlined text-primary-fixed-dim">location_on</span>
+<h2 class="font-label-md text-label-md text-primary-fixed-dim uppercase tracking-widest">Current Vehicle</h2>
+</div>
+<div class="flex items-baseline gap-2 mb-1">
+<span class="font-headline-lg text-headline-lg text-on-background">Lot B</span>
+</div>
+<div class="font-mono-data text-mono-data text-on-surface-variant text-lg">Spot 42 <span class="opacity-50">• Level 2</span></div>
+</div>
+<div class="mt-6">
+<button class="w-full bg-primary-fixed text-on-primary-fixed font-label-md text-label-md py-3 px-4 rounded-lg hover:opacity-90 hover:shadow-[0_0_20px_rgba(125,244,255,0.4)] transition-all duration-300 flex justify-center items-center gap-2 active:scale-95">
+<span class="material-symbols-outlined">directions_car</span>
+                    Find My Car
+                </button>
+</div>
+</section>
+<!-- Quick Stats -->
+<section class="stagger-card col-span-4 md:col-span-6 glass-panel rounded-xl p-md">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-on-surface-variant">bar_chart</span>
+<h2 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Campus Trends</h2>
+</div>
+<button class="text-on-surface-variant hover:opacity-80 active:scale-95 transition-all"><span class="material-symbols-outlined">more_horiz</span></button>
+</div>
+<div class="space-y-4">
+<!-- Stat Bar 1 -->
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1">
+<span class="text-on-background">Commuter Lots (Zone A)</span>
+<span class="text-secondary-fixed">78% Full</span>
+</div>
+<div class="h-1.5 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary-fixed w-[78%] rounded-full shadow-[0_0_8px_rgba(54,255,196,0.6)]"></div>
+</div>
+</div>
+<!-- Stat Bar 2 -->
+<div>
+<div class="flex justify-between font-label-sm text-label-sm mb-1">
+<span class="text-on-background">Visitor Parking (Lot V)</span>
+<span class="text-error">95% Full</span>
+</div>
+<div class="h-1.5 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-error w-[95%] rounded-full shadow-[0_0_8px_rgba(255,180,171,0.6)]"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Notifications -->
+<section class="stagger-card col-span-4 md:col-span-6 glass-panel rounded-xl p-md">
+<div class="flex items-center gap-sm mb-6">
+<span class="material-symbols-outlined text-outline">campaign</span>
+<h2 class="font-label-md text-label-md text-outline uppercase tracking-widest">System Alerts</h2>
+</div>
+<div class="flex flex-col gap-3">
+<!-- Alert Item -->
+<div class="flex gap-4 items-start p-3 rounded-lg bg-surface-container-high/50 border border-white/5 hover:bg-surface-container-highest active:scale-95 transition-all cursor-pointer group hover:opacity-90">
+<div class="mt-0.5 w-8 h-8 rounded-full bg-error-container/20 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error text-sm">warning</span>
+</div>
+<div>
+<h4 class="font-label-md text-label-md text-on-background group-hover:text-primary-fixed transition-colors">Lot C Closure Tomorrow</h4>
+<p class="font-body-sm text-sm text-on-surface-variant mt-1 line-clamp-2">Lot C will be closed for repaving starting 06:00 AM. Please use Lot D as an alternative.</p>
+<span class="font-mono-data text-xs text-outline mt-2 block">2 HOURS AGO</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Shared Component - Mobile Only) -->
+<nav class="md:hidden bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-2xl fixed bottom-0 w-full z-50 rounded-t-xl border-t border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.4)] flex justify-around items-center h-20 pb-safe px-4">
+<!-- Active Item (Status) -->
+<a class="flex flex-col items-center justify-center bg-secondary-container/20 text-secondary-fixed rounded-xl px-4 py-1 shadow-[0_0_12px_rgba(54,255,196,0.3)] hover:opacity-80 active:scale-90 transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-sm text-label-sm mt-1">Status</span>
+</a>
+<!-- Inactive Items -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 hover:text-secondary-fixed-dim transition-all active:scale-90 duration-300 px-4 py-1" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="font-label-sm text-label-sm mt-1">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 hover:text-secondary-fixed-dim transition-all active:scale-90 duration-300 px-4 py-1" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-label-sm text-label-sm mt-1">Permits</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:opacity-100 hover:text-secondary-fixed-dim transition-all active:scale-90 duration-300 px-4 py-1" href="#">
+<span class="material-symbols-outlined">qr_code_scanner</span>
+<span class="font-label-sm text-label-sm mt-1">Access</span>
+</a>
+</nav>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const cards = document.querySelectorAll('.stagger-card');
+        cards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.1}s`;
+            card.classList.add('animate-entrance');
+        });
+    });
+</script>
+</body></html>

@@ -1,0 +1,58 @@
+<h2>Screen 1 — Dashboard (Status Tab)</h2>
+<p class="subtitle">Driver's home screen. Hero permit card + occupancy + alerts.</p>
+
+<div class="section">
+  <h3>Component Tree</h3>
+  <div style="background: #1e2024; border-radius: 12px; padding: 16px; font-family: monospace; font-size: 13px; line-height: 1.8;">
+    <div style="color: #849495;">TopAppBar</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── UserAvatar (profile image)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── UniParkLogo ("UniPark" centered)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">└── NotificationBell (with green dot)</div>
+    <div style="color: #849495; margin-top: 4px;">MainContent (Bento Grid)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── <span style="color: #36ffc4;">ActivePermitCard</span> (hero, glow-active)</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── VerifiedBadge + "Active Permit" label</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── PermitName ("Commuter Zone A")</div>
+    <div style="padding-left: 40px; color: #666;">│   └── StatusPill (shimmer "Status: Valid")</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── <span style="color: #36ffc4;">CurrentLocationCard</span></div>
+    <div style="padding-left: 40px; color: #666;">│   ├── LocationIcon + "Current Vehicle" label</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── LotName ("Lot B") + SpotNumber ("Spot 42")</div>
+    <div style="padding-left: 40px; color: #666;">│   └── FindMyCarButton (primary filled)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── <span style="color: #36ffc4;">CampusTrendsCard</span></div>
+    <div style="padding-left: 40px; color: #666;">│   ├── SectionHeader + more icon</div>
+    <div style="padding-left: 40px; color: #666;">│   └── OccupancyBar (reusable, per lot)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">└── <span style="color: #36ffc4;">SystemAlertsCard</span></div>
+    <div style="padding-left: 40px; color: #666;">    ├── AlertItem (icon + title + body + timestamp)</div>
+    <div style="padding-left: 40px; color: #666;">    └── (repeated, scrollable)</div>
+    <div style="color: #849495; margin-top: 4px;">BottomNavBar (4 tabs, Status active)</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Key Compose Components to Build</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">GlassPanel</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Reusable glassmorphism container (blur + semi-transparent bg + border)</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">GlowActivePanel</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">GlassPanel + neon green box-shadow (for active/valid states)</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">StatusPill</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Shimmer-animated status badge with pulse dot</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">OccupancyBar</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Label + percentage + colored progress bar with glow</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">AlertItem</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Icon circle + title + body + mono timestamp</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">StaggeredEntrance</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Modifier that applies slideUpFade with indexed delay</td>
+    </tr>
+  </table>
+</div>

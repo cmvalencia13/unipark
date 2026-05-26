@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">UniPark</string>
+    <string name="tab_status">Status</string>
+    <string name="tab_map">Map</string>
+    <string name="tab_permits">Permits</string>
+    <string name="tab_access">Access</string>
+</resources>
