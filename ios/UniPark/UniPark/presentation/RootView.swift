@@ -1,7 +1,7 @@
 import SwiftUI
 
 public struct RootView: View {
-    private let role: UserRole = .driver
+    private let role: UserRole = .securityGuard
 
     public init() {}
 
@@ -12,8 +12,7 @@ public struct RootView: View {
                 case .driver:
                     driverTabs
                 case .securityGuard:
-                    Text("Guard View - Coming Soon")
-                        .font(.title)
+                    guardTabs
                 case .admin:
                     Text("Admin View - Coming Soon")
                         .font(.title)
@@ -43,6 +42,25 @@ public struct RootView: View {
                 .font(.title)
                 .tabItem {
                     Label("Wallet", systemImage: "creditcard.fill")
+                }
+        }
+    }
+
+    private var guardTabs: some View {
+        TabView {
+            ScannerView()
+                .tabItem {
+                    Label("Scanner", systemImage: "qrcode.viewfinder")
+                }
+
+            LotCapacityView()
+                .tabItem {
+                    Label("Lotes", systemImage: "car.2.fill")
+                }
+
+            ViolationFormView()
+                .tabItem {
+                    Label("Violación", systemImage: "exclamationmark.triangle")
                 }
         }
     }
