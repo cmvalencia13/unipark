@@ -1,0 +1,47 @@
+<h2>Implementation Order — UI-First, 6 Phases</h2>
+<p class="subtitle">Each phase produces reviewable code. Fake data first, real integration after.</p>
+
+<div class="options">
+  <div class="option">
+    <div class="letter">1</div>
+    <div class="content">
+      <h3>Project Skeleton + Design System</h3>
+      <p>Gradle setup (Kotlin DSL, Version Catalogs, Hilt, Compose, dependencies). UniParkTheme (Material3 dark + Stitch colors). Typography (Sora + Inter). <b>GlassPanel, LiquidGlassPanel, GlowActivePanel, StatusPill, OccupancyBar, ShineButton, StatusDot, PulseRing modifiers.</b> Empty MainActivity with TopAppBar + BottomNavBar shell.</p>
+    </div>
+  </div>
+  <div class="option">
+    <div class="letter">2</div>
+    <div class="content">
+      <h3>Dashboard Screen (Status Tab)</h3>
+      <p>ActivePermitCard (hero, glow-active), CurrentLocationCard, CampusTrendsCard (OccupancyBar x2), SystemAlertsCard. Staggered entrance animations. All with fake ViewModel data. Tab 1 of bottom nav functional.</p>
+    </div>
+  </div>
+  <div class="option">
+    <div class="letter">3</div>
+    <div class="content">
+      <h3>Permits Screen</h3>
+      <p>ActivePermitCard (reused), VehicleCard list (plate + make/model + delete, guest variant with dashed border), PricingCard grid (Semester/Monthly/Daily with shine buttons). Entrance animations. Tab 3 functional.</p>
+    </div>
+  </div>
+  <div class="option">
+    <div class="letter">4</div>
+    <div class="content">
+      <h3>Map Screen</h3>
+      <p>MapCanvas with campus image overlay. SearchBar (LiquidGlass), FilterChipRow (EV/ADA/Faculty/Visitor). LotPin components with pulse-ring animations. LotDetailSheet (slide-up, dynamic color per lot status). Tab 2 functional.</p>
+    </div>
+  </div>
+  <div class="option">
+    <div class="letter">5</div>
+    <div class="content">
+      <h3>Access Gate Screen + Auth</h3>
+      <p>ScannerCore (concentric pulse rings, scan laser, NFC icon). AuthorizedVehicleCard. HUD grid background. AuthGate with AppAuth OIDC PKCE. Token storage in Android Keystore. Tab 4 functional. Full navigation flow complete.</p>
+    </div>
+  </div>
+  <div class="option">
+    <div class="letter">6</div>
+    <div class="content">
+      <h3>Real Data Layer + Polish</h3>
+      <p>Wire Retrofit/Moshi client. Room persistence. WebSocket client for live occupancy. DataStore preferences. Replace fake ViewModels with real repositories. Offline queue for scans. Error states, loading skeletons, empty states. ktlint + detekt. Unit tests for domain/data layers.</p>
+    </div>
+  </div>
+</div>

@@ -82,9 +82,8 @@ fun PulseRing(
                 initialValue = 0.8f,
                 targetValue = 2.5f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(2000, delayMillis = index * 500),
+                    animation = tween(2000, delayMillis = index * 500, easing = LinearEasing),
                     repeatMode = RepeatMode.Restart,
-                    easing = LinearEasing,
                 ),
                 label = "ringScale$index",
             )
@@ -92,9 +91,8 @@ fun PulseRing(
                 initialValue = 0.5f,
                 targetValue = 0f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(2000, delayMillis = index * 500),
+                    animation = tween(2000, delayMillis = index * 500, easing = LinearEasing),
                     repeatMode = RepeatMode.Restart,
-                    easing = LinearEasing,
                 ),
                 label = "ringAlpha$index",
             )

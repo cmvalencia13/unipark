@@ -60,7 +60,7 @@ fun CurrentLocationCard(
             // Lot name + spot
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Baseline,
+                verticalAlignment = Alignment.Bottom,
             ) {
                 Text(
                     text = location.lotName,

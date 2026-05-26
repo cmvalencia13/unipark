@@ -1,0 +1,53 @@
+<h2>Screen 2 — Availability Map</h2>
+<p class="subtitle">Interactive campus map with "Liquid Glass" floating UI elements</p>
+
+<div class="section">
+  <h3>Component Tree</h3>
+  <div style="background: #1e2024; border-radius: 12px; padding: 16px; font-family: monospace; font-size: 13px; line-height: 1.8;">
+    <div style="color: #849495;">TopAppBar (consistent)</div>
+    <div style="color: #849495; margin-top: 4px;">MapCanvas (full-bleed)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── MapImage (campus map, low opacity, blend-screen)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── <span style="color: #36ffc4;">SearchBar</span> (liquid-glass, with tune button)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── <span style="color: #36ffc4;">FilterChipRow</span> (horizontal scroll, liquid-glass chips)</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── EV Charging (active/highlighted)</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── ADA Spots</div>
+    <div style="padding-left: 40px; color: #666;">│   ├── Faculty Only</div>
+    <div style="padding-left: 40px; color: #666;">│   └── Visitor</div>
+    <div style="padding-left: 20px; color: #b9cacb;">└── <span style="color: #36ffc4;">LotPin</span> (repeated, positioned absolutely)</div>
+    <div style="padding-left: 40px; color: #666;">    ├── BoundaryZone (rotated rectangle, color-coded)</div>
+    <div style="padding-left: 40px; color: #666;">    ├── PinDot (colored, pulse-ring animation)</div>
+    <div style="padding-left: 40px; color: #666;">    └── GlassBubble label ("LOT N" + "85% OPEN")</div>
+    <div style="color: #849495; margin-top: 4px;">LotDetailCard (slide-up from bottom)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── ColorAccentBar (top edge, dynamic color)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── LotName + Description</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── OccupancyMeter (progress bar variant)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">└── ActionRow (Navigate + Bookmark)</div>
+    <div style="color: #849495; margin-top: 4px;">BottomNavBar (4 tabs, Map active)</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>New Reusable Components</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">LiquidGlassPanel</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Stronger glass: blur(24px) saturate(180%), inner glow shadow</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">FilterChip</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Pill-shaped toggle with icon, liquid-glass bg, selected state</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">LotPin</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Positioned pin: boundary zone + pulse dot + glass bubble label</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">LotDetailSheet</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Animated bottom sheet with dynamic color theming per lot status</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">PulseRing</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Modifier: expanding ring animation for map pins and scanner</td>
+    </tr>
+  </table>
+</div>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>UniPark - Live Map</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Sora & Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-background": "#e2e2e8",
+                      "secondary-fixed": "#36ffc4",
+                      "on-primary-fixed": "#002022",
+                      "on-primary-fixed-variant": "#004f54",
+                      "surface-container": "#1e2024",
+                      "primary": "#dbfcff",
+                      "on-surface-variant": "#b9cacb",
+                      "on-error-container": "#ffdad6",
+                      "surface": "#111317",
+                      "on-secondary-fixed": "#002116",
+                      "on-secondary-fixed-variant": "#00513c",
+                      "surface-variant": "#333539",
+                      "surface-bright": "#37393e",
+                      "tertiary-container": "#e1d2ff",
+                      "primary-fixed": "#7df4ff",
+                      "inverse-surface": "#e2e2e8",
+                      "secondary-container": "#36ffc4",
+                      "inverse-primary": "#006970",
+                      "primary-fixed-dim": "#00dbe9",
+                      "outline": "#849495",
+                      "on-surface": "#e2e2e8",
+                      "surface-container-highest": "#333539",
+                      "on-tertiary-container": "#7213ff",
+                      "on-primary": "#00363a",
+                      "on-primary-container": "#006970",
+                      "primary-container": "#00f0ff",
+                      "on-error": "#690005",
+                      "surface-tint": "#00dbe9",
+                      "surface-container-high": "#282a2e",
+                      "error": "#ffb4ab",
+                      "secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#5700c9",
+                      "error-container": "#93000a",
+                      "tertiary": "#faf3ff",
+                      "on-secondary-container": "#007255",
+                      "inverse-on-surface": "#2f3035",
+                      "secondary-fixed-dim": "#00e1ab",
+                      "surface-dim": "#111317",
+                      "tertiary-fixed": "#e9ddff",
+                      "background": "#111317",
+                      "tertiary-fixed-dim": "#d1bcff",
+                      "surface-container-low": "#1a1c20",
+                      "surface-container-lowest": "#0c0e12",
+                      "on-tertiary-fixed": "#23005b",
+                      "on-secondary": "#003828",
+                      "outline-variant": "#3b494b",
+                      "on-tertiary": "#3c0090"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "48px",
+                      "margin-mobile": "20px",
+                      "lg": "40px",
+                      "xs": "4px",
+                      "md": "24px",
+                      "sm": "12px",
+                      "xl": "64px",
+                      "gutter": "16px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": ["Sora"],
+                      "mono-data": ["Inter"],
+                      "label-sm": ["Inter"],
+                      "body-md": ["Inter"],
+                      "headline-lg": ["Sora"],
+                      "body-lg": ["Inter"],
+                      "display-lg": ["Sora"],
+                      "label-md": ["Inter"],
+                      "headline-md": ["Sora"]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                      "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                      "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                      "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                      "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        /* Liquid Glass utilities */
+        .liquid-glass {
+            background: rgba(30, 32, 36, 0.45);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 
+                inset 0 1px 1px rgba(255, 255, 255, 0.1),
+                0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .glass-bubble {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.05);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        .pin-pulse::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            z-index: -1;
+        }
+        .pin-open::before { background-color: #36ffc4; }
+        .pin-full::before { background-color: #ffb4ab; }
+        .pin-reserved::before { background-color: #00dbe9; }
+
+        @keyframes bounce-soft {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        @keyframes breathe {
+            0%, 100% { opacity: 1; transform: scale(1); text-shadow: 0 0 2px currentColor; }
+            50% { opacity: 0.8; transform: scale(1.02); text-shadow: 0 0 8px currentColor; }
+        }
+
+        .lot-btn.selected .pin-dot {
+            animation: bounce-soft 1s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+        }
+        .availability-text {
+            animation: breathe 2.5s ease-in-out infinite;
+            display: inline-block;
+        }
+        .lot-btn {
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .lot-btn.selected {
+            transform: scale(1.15);
+            z-index: 30;
+        }
+
+        #lot-details-card {
+            transform: translateY(120%);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #lot-details-card.active {
+            transform: translateY(0);
+        }
+
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background h-screen w-full overflow-hidden relative flex flex-col font-body-md text-body-md select-none">
+<!-- TOP APP BAR -->
+<header class="bg-surface/60 backdrop-blur-2xl border-b border-white/5 shadow-lg docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-margin-mobile h-16 shrink-0">
+<button class="w-10 h-10 rounded-full bg-surface-container-high/40 border border-white/10 flex items-center justify-center overflow-hidden active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="person">person</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary-fixed-dim tracking-tight">
+        UniPark
+    </h1>
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="notifications" data-weight="fill" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</button>
+</header>
+<!-- MAIN MAP CANVAS -->
+<main class="relative flex-grow w-full h-full bg-surface-dim z-0 overflow-hidden">
+<!-- Base Map Image -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center opacity-40 mix-blend-screen" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBNkc26K4cGAM1RHxtT_zpiD_xuVJxkCHePztKDDHuS1ab3SJPZ15hlCeGoR1HGYlEoonzdhDzUFthoHnaIKh8jXR3yjIvjgSo-GjNoKw7EzgU_s18NLTdzVf24gXeQL1mASy6hfB9kqoVA9vAD9MDzKs2_5ONH9UsQ04O8kwfA-vVILyyDmNpOSCaRuGu35IonCxw12wgIsCMnCi_DABD9uMe9s6_88MIknWAxNm3WKRyHKc83MYrwpqA10EbTuuy42W-Mim1qMWyX');"></div>
+<!-- SEARCH & FILTERS OVERLAY -->
+<div class="absolute top-4 left-0 w-full px-4 z-40 flex flex-col gap-sm pointer-events-none">
+<!-- Search Bar -->
+<div class="pointer-events-auto liquid-glass rounded-2xl p-3.5 flex items-center gap-3 transition-all">
+<span class="material-symbols-outlined text-on-surface-variant/80 ml-1" data-icon="search">search</span>
+<input class="bg-transparent border-none w-full text-on-surface font-body-md placeholder:text-on-surface-variant/50 focus:ring-0 p-0" placeholder="Find building, lot, or zone..." type="text"/>
+<button class="bg-white/10 w-8 h-8 rounded-xl flex items-center justify-center border border-white/5 hover:bg-white/20 transition-colors">
+<span class="material-symbols-outlined text-on-surface text-sm" data-icon="tune">tune</span>
+</button>
+</div>
+<!-- Filters Scroll Row -->
+<div class="pointer-events-auto flex gap-2 overflow-x-auto no-scrollbar py-1">
+<button class="liquid-glass border-primary/40 text-primary rounded-full px-4 py-2 font-label-md text-label-md whitespace-nowrap flex items-center gap-2 shadow-xl active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm" data-icon="electric_car">electric_car</span>
+                EV Charging
+            </button>
+<button class="liquid-glass text-on-surface-variant rounded-full px-4 py-2 font-label-md text-label-md whitespace-nowrap hover:text-on-surface transition-all active:scale-95">
+                ADA Spots
+            </button>
+<button class="liquid-glass text-on-surface-variant rounded-full px-4 py-2 font-label-md text-label-md whitespace-nowrap hover:text-on-surface transition-all active:scale-95">
+                Faculty Only
+            </button>
+<button class="liquid-glass text-on-surface-variant rounded-full px-4 py-2 font-label-md text-label-md whitespace-nowrap hover:text-on-surface transition-all active:scale-95">
+                Visitor
+            </button>
+</div>
+</div>
+<!-- INTERACTIVE MAP ELEMENTS -->
+<div class="absolute inset-0 z-10 w-full h-full">
+<!-- Lot North (Open) -->
+<button class="lot-btn absolute top-[30%] left-[20%] group flex flex-col items-center" onclick="showDetails(this, 'Lot North', 'secondary-fixed', '85', 'Open', '2 min walk to Science Bldg')">
+<div class="absolute w-32 h-24 border border-secondary-fixed/30 bg-secondary-fixed/5 rounded-2xl -translate-x-1/2 -translate-y-1/2 -rotate-12 group-hover:bg-secondary-fixed/10 group-hover:border-secondary-fixed/60 transition-all pointer-events-none duration-300"></div>
+<div class="pin-dot relative w-4 h-4 rounded-full bg-secondary-fixed shadow-[0_0_15px_rgba(54,255,196,0.8)] pin-pulse pin-open z-10"></div>
+<div class="mt-2 glass-bubble liquid-glass border-secondary-fixed/20 px-3 py-1.5 rounded-xl flex flex-col items-center">
+<span class="font-mono-data text-mono-data text-on-surface text-[10px]">LOT N</span>
+<span class="availability-text font-label-sm text-label-sm text-secondary-fixed font-bold">85% OPEN</span>
+</div>
+</button>
+<!-- Lot East (Full) -->
+<button class="lot-btn absolute top-[45%] right-[25%] group flex flex-col items-center" onclick="showDetails(this, 'Lot East', 'error', '0', 'Full', 'Student Union proximity')">
+<div class="absolute w-24 h-40 border border-error/30 bg-error/5 rounded-2xl -translate-x-1/2 -translate-y-1/2 rotate-6 group-hover:bg-error/10 group-hover:border-error/60 transition-all pointer-events-none duration-300"></div>
+<div class="pin-dot relative w-4 h-4 rounded-full bg-error shadow-[0_0_15px_rgba(255,180,171,0.8)] pin-pulse pin-full z-10"></div>
+<div class="mt-2 glass-bubble liquid-glass border-error/20 px-3 py-1.5 rounded-xl flex flex-col items-center">
+<span class="font-mono-data text-mono-data text-on-surface text-[10px]">LOT E</span>
+<span class="availability-text font-label-sm text-label-sm text-error font-bold">FULL</span>
+</div>
+</button>
+<!-- Lot South (Limited) -->
+<button class="lot-btn absolute bottom-[35%] left-[40%] group flex flex-col items-center" onclick="showDetails(this, 'Lot South', 'primary-fixed-dim', '12', 'Limited', 'Faculty/Staff only zones active')">
+<div class="absolute w-40 h-20 border border-primary-fixed-dim/30 bg-primary-fixed-dim/5 rounded-2xl -translate-x-1/2 -translate-y-1/2 rotate-0 group-hover:bg-primary-fixed-dim/10 group-hover:border-primary-fixed-dim/60 transition-all pointer-events-none duration-300"></div>
+<div class="pin-dot relative w-4 h-4 rounded-full bg-primary-fixed-dim shadow-[0_0_15px_rgba(0,219,233,0.8)] pin-pulse pin-reserved z-10"></div>
+<div class="mt-2 glass-bubble liquid-glass border-primary-fixed-dim/20 px-3 py-1.5 rounded-xl flex flex-col items-center">
+<span class="font-mono-data text-mono-data text-on-surface text-[10px]">LOT S</span>
+<span class="availability-text font-label-sm text-label-sm text-primary-fixed-dim font-bold">12 SPOTS</span>
+</div>
+</button>
+</div>
+</main>
+<!-- SELECTED LOT DETAILS CARD -->
+<div class="fixed bottom-[100px] left-0 w-full px-4 z-40 pointer-events-none" id="lot-details-card">
+<div class="liquid-glass rounded-3xl p-md pointer-events-auto flex flex-col gap-4 relative overflow-hidden">
+<!-- Dynamic Top Accent Line -->
+<div class="absolute top-0 left-0 w-full h-1 bg-secondary-fixed transition-colors duration-300" id="card-accent"></div>
+<!-- Close Button -->
+<button class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/15 transition-colors border border-white/10" onclick="hideDetails()">
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="close">close</span>
+</button>
+<!-- Header Info -->
+<div class="pr-10">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-0.5" id="card-title">Lot North</h2>
+<p class="font-body-md text-body-md text-on-surface-variant/80" id="card-desc">2 min walk to Science Bldg</p>
+</div>
+<!-- Capacity Meter -->
+<div class="bg-white/5 rounded-2xl p-4 border border-white/5 flex items-center gap-4">
+<div class="flex-grow">
+<div class="flex justify-between mb-2">
+<span class="font-label-md text-label-md text-on-surface-variant">Occupancy</span>
+<span class="font-mono-data text-mono-data text-secondary-fixed transition-colors duration-300" id="card-status-text">85% Open</span>
+</div>
+<div class="w-full h-2 bg-surface rounded-full overflow-hidden">
+<div class="h-full bg-secondary-fixed rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(54,255,196,0.3)]" id="card-progress" style="width: 15%;"></div>
+</div>
+</div>
+</div>
+<!-- Action Area -->
+<div class="flex gap-3 pt-1">
+<button class="flex-grow bg-[#00dbe9] text-[#002022] rounded-2xl py-3.5 px-4 font-label-md text-label-md font-bold flex items-center justify-center gap-2 hover:brightness-110 active:scale-95 transition-all shadow-lg">
+<span class="material-symbols-outlined text-xl" data-icon="navigation" data-weight="fill" style="font-variation-settings: 'FILL' 1;">navigation</span>
+                Navigate Here
+            </button>
+<button class="w-14 rounded-2xl border border-white/10 bg-white/5 flex items-center justify-center text-on-surface-variant hover:bg-white/10 transition-all active:scale-95">
+<span class="material-symbols-outlined" data-icon="bookmark_border">bookmark_border</span>
+</button>
+</div>
+</div>
+</div>
+<!-- BOTTOM NAV BAR -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-3xl border-t border-white/10 shadow-2xl bg-surface-container/60 backdrop-blur-3xl flex justify-around items-center h-20 pb-safe px-4 shrink-0">
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors active:scale-90 duration-300 w-16">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm text-label-sm">Status</span>
+</button>
+<button class="flex flex-col items-center justify-center text-secondary-fixed relative w-16">
+<div class="absolute -top-2 w-1.5 h-1.5 rounded-full bg-secondary-fixed shadow-[0_0_8px_rgba(54,255,196,1)]"></div>
+<span class="material-symbols-outlined mb-1" data-icon="map" data-weight="fill" style="font-variation-settings: 'FILL' 1;">map</span>
+<span class="font-label-sm text-label-sm">Map</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors active:scale-90 duration-300 w-16">
+<span class="material-symbols-outlined mb-1" data-icon="payments">payments</span>
+<span class="font-label-sm text-label-sm">Permits</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-secondary-fixed transition-colors active:scale-90 duration-300 w-16">
+<span class="material-symbols-outlined mb-1" data-icon="qr_code_scanner">qr_code_scanner</span>
+<span class="font-label-sm text-label-sm">Access</span>
+</button>
+</nav>
+<script>
+    const detailsCard = document.getElementById('lot-details-card');
+    const cardTitle = document.getElementById('card-title');
+    const cardDesc = document.getElementById('card-desc');
+    const cardStatusText = document.getElementById('card-status-text');
+    const cardProgress = document.getElementById('card-progress');
+    const cardAccent = document.getElementById('card-accent');
+
+    const colorMap = {
+        'secondary-fixed': '#36ffc4',
+        'error': '#ffb4ab',
+        'primary-fixed-dim': '#00dbe9'
+    };
+
+    function showDetails(btnEl, title, colorKey, percentage, statusLabel, desc) {
+        document.querySelectorAll('.lot-btn').forEach(btn => btn.classList.remove('selected'));
+        if(btnEl) btnEl.classList.add('selected');
+
+        cardTitle.textContent = title;
+        cardDesc.textContent = desc;
+        
+        let statusDisplay = statusLabel;
+        if (percentage > 0) statusDisplay = `${percentage}% ${statusLabel}`;
+        cardStatusText.textContent = statusDisplay;
+        
+        let fillPct = 100 - parseInt(percentage);
+        if(isNaN(fillPct)) fillPct = 100;
+        cardProgress.style.width = `${fillPct}%`;
+
+        const hexColor = colorMap[colorKey] || '#ffffff';
+        cardStatusText.style.color = hexColor;
+        cardProgress.style.backgroundColor = hexColor;
+        cardAccent.style.backgroundColor = hexColor;
+
+        detailsCard.classList.add('active');
+    }
+
+    function hideDetails() {
+        detailsCard.classList.remove('active');
+        document.querySelectorAll('.lot-btn').forEach(btn => btn.classList.remove('selected'));
+    }
+
+    document.querySelector('main').addEventListener('click', (e) => {
+        if(e.target === e.currentTarget) {
+            hideDetails();
+        }
+    });
+</script>
+</body></html>

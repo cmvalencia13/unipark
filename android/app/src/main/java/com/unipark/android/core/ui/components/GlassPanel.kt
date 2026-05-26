@@ -89,13 +89,7 @@ fun GlowActivePanel(
             .drawBehind {
                 drawIntoCanvas { canvas ->
                     val paint = Paint().apply {
-                        color = Color.Transparent.toArgb()
-                        setShadow(
-                            24.dp.toPx(),
-                            0f,
-                            0f,
-                            GlowActive.toArgb(),
-                        )
+                        color = Color.Transparent
                     }
                     canvas.drawRoundRect(
                         0f, 0f, size.width, size.height,

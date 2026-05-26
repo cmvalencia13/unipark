@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>UniPark - Permit Management</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Sora:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-background": "#e2e2e8",
+                    "secondary-fixed": "#36ffc4",
+                    "on-primary-fixed": "#002022",
+                    "on-primary-fixed-variant": "#004f54",
+                    "surface-container": "#1e2024",
+                    "primary": "#dbfcff",
+                    "on-surface-variant": "#b9cacb",
+                    "on-error-container": "#ffdad6",
+                    "surface": "#111317",
+                    "on-secondary-fixed": "#002116",
+                    "on-secondary-fixed-variant": "#00513c",
+                    "surface-variant": "#333539",
+                    "surface-bright": "#37393e",
+                    "tertiary-container": "#e1d2ff",
+                    "primary-fixed": "#7df4ff",
+                    "inverse-surface": "#e2e2e8",
+                    "secondary-container": "#36ffc4",
+                    "inverse-primary": "#006970",
+                    "primary-fixed-dim": "#00dbe9",
+                    "outline": "#849495",
+                    "on-surface": "#e2e2e8",
+                    "surface-container-highest": "#333539",
+                    "on-tertiary-container": "#7213ff",
+                    "on-primary": "#00363a",
+                    "on-primary-container": "#006970",
+                    "primary-container": "#00f0ff",
+                    "on-error": "#690005",
+                    "surface-tint": "#00dbe9",
+                    "surface-container-high": "#282a2e",
+                    "error": "#ffb4ab",
+                    "secondary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#5700c9",
+                    "error-container": "#93000a",
+                    "tertiary": "#faf3ff",
+                    "on-secondary-container": "#007255",
+                    "inverse-on-surface": "#2f3035",
+                    "secondary-fixed-dim": "#00e1ab",
+                    "surface-dim": "#111317",
+                    "tertiary-fixed": "#e9ddff",
+                    "background": "#111317",
+                    "tertiary-fixed-dim": "#d1bcff",
+                    "surface-container-low": "#1a1c20",
+                    "surface-container-lowest": "#0c0e12",
+                    "on-tertiary-fixed": "#23005b",
+                    "on-secondary": "#003828",
+                    "outline-variant": "#3b494b",
+                    "on-tertiary": "#3c0090"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-desktop": "48px",
+                    "margin-mobile": "20px",
+                    "lg": "40px",
+                    "xs": "4px",
+                    "md": "24px",
+                    "sm": "12px",
+                    "xl": "64px",
+                    "gutter": "16px",
+                    "base": "8px"
+            },
+            "fontFamily": {
+                    "headline-lg-mobile": ["Sora"],
+                    "mono-data": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg": ["Sora"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Sora"],
+                    "label-md": ["Inter"],
+                    "headline-md": ["Sora"]
+            },
+            "fontSize": {
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "mono-data": ["14px", {"lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "700"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}]
+            }
+          },
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Sora', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+    
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up {
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+    
+    .btn-shine {
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-shine::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,0.25), transparent);
+      transform: skewX(-20deg);
+    }
+    .btn-shine:active::after {
+      animation: shine 0.5s ease-out;
+    }
+    @keyframes shine {
+      100% { left: 150%; }
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col pb-24 md:pb-0 font-body-md text-body-md">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 sticky z-50 bg-surface/70 dark:bg-surface/70 backdrop-blur-xl border-b border-white/10 shadow-[0_0_20px_rgba(0,219,233,0.15)] flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16">
+<div class="flex items-center hover:opacity-80 transition-opacity active:scale-95 duration-200 cursor-pointer">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3EpIv_sqTwjxabUbukgHXO-xbS7jB04BZUDJDSQyUoGWKNGBmIhSA7xfx5jeyVyQsyXCaktWMnf1YWgmGt2_GAiPXq7GjuC0rIYOJqpPmHN4JQjpquy4A9BkJXyjxBVsZWTW14SLBuRMEg_JM-jhXnsIbr-FtwyLwBi_m4ETckI09IeyIaq5P298lDyFdGOJdbgaNuurYE3fvuMrEiLn6ulUIy9o3VkyYhPQlD6HTEkKv7DjLTwbPBhluO8YIzM9_dRh2hV8iQ6Ak"/>
+</div>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg font-bold text-primary-fixed-dim tracking-tight">UniPark</h1>
+<button class="text-primary dark:text-primary-fixed-dim hover:opacity-80 transition-opacity active:scale-95 duration-200 flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="flex-1 w-full max-w-5xl mx-auto px-margin-mobile md:px-margin-desktop py-lg flex flex-col gap-xl">
+<!-- Active Permits Section -->
+<section class="flex flex-col gap-md">
+<h2 class="font-headline-md text-headline-md text-primary">Active Permits</h2>
+<div class="relative rounded-xl p-md bg-surface-container/60 backdrop-blur-xl border border-white/10 border-t-white/20 border-l-white/20 shadow-[0_0_30px_rgba(54,255,196,0.15)] flex flex-col gap-md overflow-hidden">
+<div class="absolute inset-0 rounded-xl ring-1 ring-secondary-fixed/30 pointer-events-none"></div>
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-secondary-fixed/10 blur-3xl rounded-full pointer-events-none"></div>
+<div class="flex justify-between items-start z-10">
+<div>
+<div class="inline-flex items-center gap-xs px-2 py-1 rounded bg-secondary-container/20 text-secondary-fixed font-label-sm text-label-sm mb-sm border border-secondary-fixed/20">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span>
+                            ACTIVE
+                        </div>
+<h3 class="font-headline-md text-headline-md text-on-background">Student Annual</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Lot A - Main Campus</p>
+</div>
+<span class="material-symbols-outlined text-secondary-fixed text-4xl drop-shadow-[0_0_8px_rgba(54,255,196,0.5)]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="pt-sm border-t border-white/5 flex justify-between items-end z-10">
+<div class="flex flex-col gap-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">VALID UNTIL</span>
+<span class="font-mono-data text-mono-data text-on-background">Aug 31, 2025</span>
+</div>
+<button class="font-label-md text-label-md text-primary hover:text-primary-fixed-dim transition-colors flex items-center gap-xs group">
+                        Manage <span class="material-symbols-outlined text-[16px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Vehicles Section -->
+<section class="flex flex-col gap-md">
+<div class="flex justify-between items-end border-b border-white/5 pb-sm">
+<h2 class="font-headline-md text-headline-md text-primary">Registered Vehicles</h2>
+<button class="font-label-md text-label-md text-primary-fixed-dim hover:opacity-80 transition-opacity flex items-center gap-xs bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20 hover:bg-primary/20 active:scale-95 duration-200">
+<span class="material-symbols-outlined text-[18px]">add</span> Add Guest
+                </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<!-- Vehicle 1 -->
+<div class="rounded-xl p-md bg-surface-container/40 backdrop-blur-md border border-white/5 flex items-center justify-between hover:bg-surface-container/60 transition-colors opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
+<div class="flex items-center gap-md">
+<div class="w-12 h-12 rounded-lg bg-surface flex items-center justify-center text-primary-fixed-dim shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)] border border-white/5">
+<span class="material-symbols-outlined">directions_car</span>
+</div>
+<div class="flex flex-col">
+<span class="font-mono-data text-mono-data text-on-background tracking-widest uppercase">XYZ-9876</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Honda Civic, Silver</span>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors p-2 rounded-full hover:bg-error/10">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+<!-- Vehicle 2 (Guest) -->
+<div class="rounded-xl p-md bg-surface-container/40 backdrop-blur-md border border-outline-variant/30 border-dashed flex items-center justify-between relative overflow-hidden group opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">
+<div class="absolute top-0 left-0 w-1 h-full bg-tertiary-fixed-dim"></div>
+<div class="flex items-center gap-md ml-2">
+<div class="w-12 h-12 rounded-lg bg-surface flex items-center justify-center text-tertiary-fixed-dim border border-white/5">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-mono-data text-mono-data text-on-background tracking-widest uppercase">GUE-5521</span>
+<span class="text-[10px] bg-tertiary-fixed-dim/20 text-tertiary-fixed px-1.5 py-0.5 rounded uppercase font-semibold">Temp</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Toyota Camry (Ends 5:00 PM)</span>
+</div>
+</div>
+<button class="text-on-surface-variant hover:text-error transition-colors p-2 rounded-full hover:bg-error/10">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Purchase Section -->
+<section class="flex flex-col gap-md">
+<h2 class="font-headline-md text-headline-md text-primary">Purchase New Permit</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+<!-- Pricing Card 1 -->
+<div class="rounded-xl p-md bg-surface-container/30 backdrop-blur-lg border border-white/5 hover:border-primary/40 hover:bg-surface-container/50 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,219,233,0.15)] transition-all duration-300 flex flex-col gap-lg h-full group">
+<div class="flex flex-col gap-xs">
+<h3 class="font-body-lg text-body-lg font-bold text-on-background group-hover:text-primary transition-colors">Semester Pass</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Valid for Fall Semester</p>
+</div>
+<div class="flex items-baseline gap-1 mt-auto">
+<span class="font-headline-md text-headline-md text-on-surface-variant">$</span>
+<span class="font-display-lg text-display-lg text-primary">150</span>
+</div>
+<button class="btn-shine w-full py-3 rounded-lg bg-primary/10 border border-primary/30 text-primary font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all active:scale-95 flex justify-center items-center gap-2">
+                        Purchase <span class="material-symbols-outlined text-[18px]">shopping_cart</span>
+</button>
+</div>
+<!-- Pricing Card 2 -->
+<div class="rounded-xl p-md bg-surface-container/30 backdrop-blur-lg border border-white/5 hover:border-primary/40 hover:bg-surface-container/50 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,219,233,0.15)] transition-all duration-300 flex flex-col gap-lg h-full group">
+<div class="flex flex-col gap-xs">
+<h3 class="font-body-lg text-body-lg font-bold text-on-background group-hover:text-primary transition-colors">Monthly Commuter</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Auto-renews monthly</p>
+</div>
+<div class="flex items-baseline gap-1 mt-auto">
+<span class="font-headline-md text-headline-md text-on-surface-variant">$</span>
+<span class="font-display-lg text-display-lg text-primary">45</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">/mo</span>
+</div>
+<button class="btn-shine w-full py-3 rounded-lg bg-primary/10 border border-primary/30 text-primary font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all active:scale-95 flex justify-center items-center gap-2">
+                        Subscribe <span class="material-symbols-outlined text-[18px]">event_repeat</span>
+</button>
+</div>
+<!-- Pricing Card 3 -->
+<div class="rounded-xl p-md bg-surface-container/30 backdrop-blur-lg border border-white/5 hover:border-primary/40 hover:bg-surface-container/50 hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,219,233,0.15)] transition-all duration-300 flex flex-col gap-lg h-full group">
+<div class="flex flex-col gap-xs">
+<h3 class="font-body-lg text-body-lg font-bold text-on-background group-hover:text-primary transition-colors">Daily Scratch</h3>
+<p class="font-label-sm text-label-sm text-on-surface-variant">Pack of 5 daily passes</p>
+</div>
+<div class="flex items-baseline gap-1 mt-auto">
+<span class="font-headline-md text-headline-md text-on-surface-variant">$</span>
+<span class="font-display-lg text-display-lg text-primary">25</span>
+</div>
+<button class="btn-shine w-full py-3 rounded-lg bg-primary/10 border border-primary/30 text-primary font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-all active:scale-95 flex justify-center items-center gap-2">
+                        Buy Pack <span class="material-symbols-outlined text-[18px]">style</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-2xl border-t border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.4)] flex justify-around items-center h-20 pb-safe px-4 md:hidden">
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary-fixed-dim transition-colors active:scale-90 duration-300 w-16" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-sm text-label-sm mt-1">Status</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary-fixed-dim transition-colors active:scale-90 duration-300 w-16" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="font-label-sm text-label-sm mt-1">Map</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-secondary-container/20 text-secondary-fixed rounded-xl px-4 py-1 shadow-[0_0_12px_rgba(54,255,196,0.3)] active:scale-90 transition-all duration-300 w-20" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">payments</span>
+<span class="font-label-sm text-label-sm mt-1">Permits</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary-fixed-dim transition-colors active:scale-90 duration-300 w-16" href="#">
+<span class="material-symbols-outlined">qr_code_scanner</span>
+<span class="font-label-sm text-label-sm mt-1">Access</span>
+</a>
+</nav>
+</body></html>

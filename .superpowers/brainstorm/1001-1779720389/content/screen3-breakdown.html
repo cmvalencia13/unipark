@@ -1,0 +1,53 @@
+<h2>Screen 3 — Permits</h2>
+<p class="subtitle">Active permit management + purchase flow</p>
+
+<div class="section">
+  <h3>Component Tree</h3>
+  <div style="background: #1e2024; border-radius: 12px; padding: 16px; font-family: monospace; font-size: 13px; line-height: 1.8;">
+    <div style="color: #849495;">TopAppBar (consistent)</div>
+    <div style="color: #849495; margin-top: 4px;">MainContent (scrollable column)</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── Section: "Active Permits"</div>
+    <div style="padding-left: 20px; color: #b9cacb;">│   └── <span style="color: #36ffc4;">ActivePermitCard</span> (reused from Dashboard, expanded)</div>
+    <div style="padding-left: 40px; color: #666;">│       ├── ActiveBadge (pulse dot + "ACTIVE" pill)</div>
+    <div style="padding-left: 40px; color: #666;">│       ├── PermitTitle ("Student Annual")</div>
+    <div style="padding-left: 40px; color: #666;">│       ├── LotAssignment ("Lot A - Main Campus")</div>
+    <div style="padding-left: 40px; color: #666;">│       ├── ValidUntil date</div>
+    <div style="padding-left: 40px; color: #666;">│       └── ManageButton</div>
+    <div style="padding-left: 20px; color: #b9cacb;">├── Section: "Registered Vehicles"</div>
+    <div style="padding-left: 20px; color: #b9cacb;">│   ├── AddGuestButton</div>
+    <div style="padding-left: 20px; color: #b9cacb;">│   └── <span style="color: #36ffc4;">VehicleCard</span> (repeated)</div>
+    <div style="padding-left: 40px; color: #666;">│       ├── CarIcon (glass square)</div>
+    <div style="padding-left: 40px; color: #666;">│       ├── PlateNumber (mono, tracking-widest)</div>
+    <div style="padding-left: 40px; color: #666;">│       ├── MakeModel subtitle</div>
+    <div style="padding-left: 40px; color: #666;">│       ├── TempBadge (optional, for guest vehicles)</div>
+    <div style="padding-left: 40px; color: #666;">│       └── DeleteButton</div>
+    <div style="padding-left: 20px; color: #b9cacb;">└── Section: "Purchase New Permit"</div>
+    <div style="padding-left: 40px; color: #b9cacb;">    └── <span style="color: #36ffc4;">PricingCard</span> (3x in grid)</div>
+    <div style="padding-left: 60px; color: #666;">        ├── PlanName + Description</div>
+    <div style="padding-left: 60px; color: #666;">        ├── Price (display-lg) + unit</div>
+    <div style="padding-left: 60px; color: #666;">        └── PurchaseButton (btn-shine effect)</div>
+    <div style="color: #849495; margin-top: 4px;">BottomNavBar (4 tabs, Permits active)</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>New Reusable Components</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">VehicleCard</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Plate + make/model + delete, glass panel, dashed border for guest</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">PricingCard</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Hover lift + glow, shine button effect on purchase CTA</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">ShineButton</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Button modifier: gradient shine sweep on press</td>
+    </tr>
+    <tr>
+      <td style="padding: 6px 8px; color: #36ffc4; font-size: 12px;">EntranceAnimation</td>
+      <td style="padding: 6px 8px; color: #849495; font-size: 12px;">Modifier: staggered fadeInUp with configurable delay index</td>
+    </tr>
+  </table>
+</div>

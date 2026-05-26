@@ -1,0 +1,26 @@
+<h2>How should we structure the Android development?</h2>
+<p class="subtitle">Three approaches — pick the one that fits your workflow and reviewer needs</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Feature-Slice First (Recommended)</h3>
+      <p>Build one complete vertical slice at a time: Auth → Passes → Scanner → Occupancy → Violations → Admin. Each slice includes all Clean Architecture layers (data → domain → presentation) and is reviewable independently. Best for parallel review and incremental progress.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Layer-by-Layer</h3>
+      <p>Build all data layer first (Room, Retrofit, DataStore), then all domain layer (UseCases, repositories), then all UI. Gives reviewers clean separation but delays visible progress — no working screens until the end.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Screen-by-Screen (UI-First)</h3>
+      <p>Build navigation + all screens with fake data first, wire up real data sources after. Gets UI in front of reviewers fast but requires rework when real data flows differ from mocks.</p>
+    </div>
+  </div>
+</div>

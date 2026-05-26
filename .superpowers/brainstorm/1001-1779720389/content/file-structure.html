@@ -1,0 +1,31 @@
+<h2>Android Project Structure</h2>
+<p class="subtitle">Clean Architecture + MVVM as specified in docs/02-tech-stack.md</p>
+
+<div class="section">
+  <h3>Package Layout</h3>
+  <div style="background: #1e2024; border-radius: 12px; padding: 16px; font-family: monospace; font-size: 12px; line-height: 1.7;">
+    <div style="color: #849495;">com.unipark.android/</div>
+    <div style="padding-left: 16px; color: #b9cacb;">├── <span style="color: #00dbe9;">core/</span></div>
+    <div style="padding-left: 32px; color: #666;">├── ui/theme/          (UniParkTheme, Color, Type, GlassPanel modifiers)</div>
+    <div style="padding-left: 32px; color: #666;">├── ui/components/     (GlassPanel, StatusPill, OccupancyBar, ShineButton...)</div>
+    <div style="padding-left: 32px; color: #666;">├── navigation/        (TopAppBar, BottomNavBar, NavGraph, AuthGate)</div>
+    <div style="padding-left: 32px; color: #666;">├── network/           (Retrofit client, OkHttp interceptors, Moshi, cert pinning)</div>
+    <div style="padding-left: 32px; color: #666;">├── auth/              (AppAuth OIDC, TokenStore in Keystore)</div>
+    <div style="padding-left: 32px; color: #666;">├── crypto/            (Tink, HMAC verification helpers)</div>
+    <div style="padding-left: 32px; color: #666;">├── di/                (Hilt modules)</div>
+    <div style="padding-left: 32px; color: #666;">└── util/              (Extensions, constants)</div>
+    <div style="padding-left: 16px; color: #b9cacb;">├── <span style="color: #00dbe9;">domain/</span></div>
+    <div style="padding-left: 32px; color: #666;">├── model/             (User, Vehicle, ParkingLot, Pass, Scan, Violation)</div>
+    <div style="padding-left: 32px; color: #666;">└── usecase/           (GetPasses, SubmitScan, GetOccupancy, ...)</div>
+    <div style="padding-left: 16px; color: #b9cacb;">├── <span style="color: #00dbe9;">data/</span></div>
+    <div style="padding-left: 32px; color: #666;">├── repository/        (PassRepository, LotRepository, ScanRepository...)</div>
+    <div style="padding-left: 32px; color: #666;">├── remote/            (ApiService, DTOs, WebSocket client)</div>
+    <div style="padding-left: 32px; color: #666;">└── local/             (Room DAOs, DataStore preferences, offline queue)</div>
+    <div style="padding-left: 16px; color: #b9cacb;">└── <span style="color: #00dbe9;">presentation/</span></div>
+    <div style="padding-left: 32px; color: #666;">├── dashboard/         (DashboardScreen, DashboardViewModel)</div>
+    <div style="padding-left: 32px; color: #666;">├── map/               (MapScreen, MapViewModel)</div>
+    <div style="padding-left: 32px; color: #666;">├── permits/           (PermitsScreen, PermitsViewModel)</div>
+    <div style="padding-left: 32px; color: #666;">├── access/            (AccessGateScreen, ScannerViewModel)</div>
+    <div style="padding-left: 32px; color: #666;">└── auth/              (LoginScreen, AuthViewModel)</div>
+  </div>
+</div>

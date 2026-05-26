@@ -73,5 +73,6 @@ dependencies {
     implementation(libs.coroutines.android)
 
     // Core
+    implementation(libs.material)
     implementation("androidx.core:core-ktx:1.15.0")
 }

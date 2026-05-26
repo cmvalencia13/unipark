@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>UniPark - Gate Access</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Design System Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-background": "#e2e2e8",
+                      "secondary-fixed": "#36ffc4",
+                      "on-primary-fixed": "#002022",
+                      "on-primary-fixed-variant": "#004f54",
+                      "surface-container": "#1e2024",
+                      "primary": "#dbfcff",
+                      "on-surface-variant": "#b9cacb",
+                      "on-error-container": "#ffdad6",
+                      "surface": "#111317",
+                      "on-secondary-fixed": "#002116",
+                      "on-secondary-fixed-variant": "#00513c",
+                      "surface-variant": "#333539",
+                      "surface-bright": "#37393e",
+                      "tertiary-container": "#e1d2ff",
+                      "primary-fixed": "#7df4ff",
+                      "inverse-surface": "#e2e2e8",
+                      "secondary-container": "#36ffc4",
+                      "inverse-primary": "#006970",
+                      "primary-fixed-dim": "#00dbe9",
+                      "outline": "#849495",
+                      "on-surface": "#e2e2e8",
+                      "surface-container-highest": "#333539",
+                      "on-tertiary-container": "#7213ff",
+                      "on-primary": "#00363a",
+                      "on-primary-container": "#006970",
+                      "primary-container": "#00f0ff",
+                      "on-error": "#690005",
+                      "surface-tint": "#00dbe9",
+                      "surface-container-high": "#282a2e",
+                      "error": "#ffb4ab",
+                      "secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#5700c9",
+                      "error-container": "#93000a",
+                      "tertiary": "#faf3ff",
+                      "on-secondary-container": "#007255",
+                      "inverse-on-surface": "#2f3035",
+                      "secondary-fixed-dim": "#00e1ab",
+                      "surface-dim": "#111317",
+                      "tertiary-fixed": "#e9ddff",
+                      "background": "#111317",
+                      "tertiary-fixed-dim": "#d1bcff",
+                      "surface-container-low": "#1a1c20",
+                      "surface-container-lowest": "#0c0e12",
+                      "on-tertiary-fixed": "#23005b",
+                      "on-secondary": "#003828",
+                      "outline-variant": "#3b494b",
+                      "on-tertiary": "#3c0090"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-desktop": "48px",
+                      "margin-mobile": "20px",
+                      "lg": "40px",
+                      "xs": "4px",
+                      "md": "24px",
+                      "sm": "12px",
+                      "xl": "64px",
+                      "gutter": "16px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Sora"
+                      ],
+                      "mono-data": [
+                              "Sora"
+                      ],
+                      "label-sm": [
+                              "Sora"
+                      ],
+                      "body-md": [
+                              "Sora"
+                      ],
+                      "headline-lg": [
+                              "Sora"
+                      ],
+                      "body-lg": [
+                              "Sora"
+                      ],
+                      "display-lg": [
+                              "Sora"
+                      ],
+                      "label-md": [
+                              "Sora"
+                      ],
+                      "headline-md": [
+                              "Sora"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "mono-data": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "600"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        @keyframes scan-pulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(54, 255, 196, 0.7);
+                border-color: rgba(54, 255, 196, 0.8);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 40px rgba(54, 255, 196, 0);
+                border-color: rgba(54, 255, 196, 0.1);
+            }
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(54, 255, 196, 0);
+                border-color: rgba(54, 255, 196, 0.8);
+            }
+        }
+
+        @keyframes scan-line {
+            0% { top: 10%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 90%; opacity: 0; }
+        }
+
+        .animate-pulse-ring {
+            animation: scan-pulse 2.5s infinite;
+        }
+
+        .animate-scan-line {
+            animation: scan-line 3s linear infinite;
+        }
+        
+        /* HUD Grid Background */
+        .bg-hud-grid {
+            background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col font-sans antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar Shared Component -->
+<header class="w-full top-0 sticky z-50 bg-surface/70 dark:bg-surface/70 backdrop-blur-xl border-b border-white/10 shadow-[0_0_20px_rgba(0,219,233,0.15)] flex justify-between items-center px-margin-mobile h-16">
+<!-- Leading: Avatar -->
+<div aria-label="User Profile" class="flex-shrink-0 cursor-pointer active:scale-95 transition-transform duration-200 w-8 h-8 rounded-full bg-surface-container flex items-center justify-center border border-outline/50 overflow-hidden">
+<span class="material-symbols-outlined text-primary-fixed-dim text-[18px]" data-icon="person">person</span>
+</div>
+<!-- Headline / Brand Logo -->
+<div class="flex-grow flex justify-center">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary-fixed-dim tracking-tight m-0">UniPark</h1>
+</div>
+<!-- Trailing: Icon -->
+<div aria-label="notifications" class="flex-shrink-0 cursor-pointer active:scale-95 transition-transform duration-200 hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed-dim" data-icon="notifications">notifications</span>
+</div>
+</header>
+<!-- Main Canvas: Gate Screen HUD -->
+<main class="flex-1 flex flex-col items-center justify-center px-margin-mobile relative overflow-hidden bg-hud-grid pb-24">
+<!-- Ambient Background Glow -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] max-w-[600px] max-h-[600px] bg-secondary-fixed/5 rounded-full blur-[100px] pointer-events-none"></div>
+<!-- Authorized Context Card (Glassmorphism) -->
+<div class="z-10 w-full max-w-sm mb-12 bg-surface-container/40 backdrop-blur-xl border-t border-l border-white/10 rounded-2xl p-md shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col gap-4">
+<div class="flex justify-between items-center w-full">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Destination</span>
+<h2 class="font-headline-md text-headline-md text-primary-fixed m-0">Lot C Entry</h2>
+</div>
+<div class="h-10 w-10 rounded-full bg-surface-container-highest flex items-center justify-center border border-outline-variant/50">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="directions_car">directions_car</span>
+</div>
+</div>
+<div class="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent my-2"></div>
+<div class="flex justify-between items-center w-full">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Authorized Vehicle</span>
+<div class="bg-surface border border-outline-variant rounded px-3 py-1 shadow-inner">
+<span class="font-mono-data text-mono-data text-on-surface tracking-widest uppercase">XYZ-9876</span>
+</div>
+</div>
+</div>
+<!-- Primary Interaction Area: NFC/QR Scanner -->
+<div class="relative z-10 flex flex-col items-center justify-center mb-12 cursor-pointer group">
+<!-- Concentric Animation Rings -->
+<div class="absolute w-[300px] h-[300px] rounded-full border border-secondary-fixed/20 animate-ping" style="animation-duration: 3s;"></div>
+<div class="absolute w-[240px] h-[240px] rounded-full border border-secondary-fixed/30 animate-ping" style="animation-duration: 3s; animation-delay: 0.5s;"></div>
+<!-- Central Scanner Core -->
+<div class="relative w-48 h-48 rounded-full bg-surface-container-high/80 backdrop-blur-2xl flex flex-col items-center justify-center border-2 border-secondary-fixed shadow-[0_0_40px_rgba(54,255,196,0.3)] animate-pulse-ring z-20 overflow-hidden transition-transform duration-300 group-active:scale-95">
+<!-- Scanning Laser Line -->
+<div class="absolute left-0 w-full h-[2px] bg-secondary-fixed shadow-[0_0_10px_#36ffc4] animate-scan-line z-30"></div>
+<!-- Icon Assembly -->
+<div class="relative flex flex-col items-center gap-3">
+<span class="material-symbols-outlined text-[64px] text-secondary-fixed drop-shadow-[0_0_15px_rgba(54,255,196,0.8)]" data-icon="nfc">nfc</span>
+<span class="font-label-md text-label-md text-secondary-fixed font-bold tracking-widest uppercase shadow-black drop-shadow-md">Tap to Enter</span>
+</div>
+</div>
+<p class="mt-8 font-label-sm text-label-sm text-on-surface-variant opacity-80 uppercase tracking-widest flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse shadow-[0_0_8px_#36ffc4]"></span>
+                System Ready
+            </p>
+</div>
+<!-- Emergency / Secondary Action -->
+<button class="z-10 mt-auto flex items-center gap-2 px-6 py-3 rounded-full bg-surface-container/50 backdrop-blur-md border border-error/30 text-error font-label-md text-label-md hover:bg-error/10 hover:border-error/60 transition-all duration-300 active:scale-95">
+<span class="material-symbols-outlined text-[20px]" data-icon="emergency">emergency</span>
+            Need Assistance?
+        </button>
+</main>
+<!-- BottomNavBar Shared Component -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-xl bg-surface-container/80 dark:bg-surface-container/80 backdrop-blur-2xl border-t border-white/10 shadow-[0_-8px_32px_rgba(0,0,0,0.4)] flex justify-around items-center h-20 pb-safe px-4 md:hidden">
+<!-- Tab 1: Status (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary-fixed-dim transition-colors active:scale-90 duration-300 w-16 h-14" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]" data-icon="dashboard">dashboard</span>
+<span class="font-label-sm text-label-sm">Status</span>
+</a>
+<!-- Tab 2: Map (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary-fixed-dim transition-colors active:scale-90 duration-300 w-16 h-14" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]" data-icon="map">map</span>
+<span class="font-label-sm text-label-sm">Map</span>
+</a>
+<!-- Tab 3: Permits (Inactive) -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant opacity-60 hover:text-secondary-fixed-dim transition-colors active:scale-90 duration-300 w-16 h-14" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]" data-icon="payments">payments</span>
+<span class="font-label-sm text-label-sm">Permits</span>
+</a>
+<!-- Tab 4: Access (ACTIVE STATE) -->
+<a class="flex flex-col items-center justify-center bg-secondary-container/20 text-secondary-fixed rounded-xl px-4 py-1 shadow-[0_0_12px_rgba(54,255,196,0.3)] hover:text-secondary-fixed-dim transition-colors active:scale-90 duration-300 w-20 h-16" href="#">
+<span class="material-symbols-outlined mb-1 text-[24px]" data-icon="qr_code_scanner" data-weight="fill" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+<span class="font-label-sm text-label-sm">Access</span>
+</a>
+</nav>
+<!-- Script for subtle interactive glow tracking (optional enhancement for high-tech feel) -->
+<script>
+        document.addEventListener('mousemove', function(e) {
+            const cursorGlow = document.querySelector('.bg-secondary-fixed\\/5');
+            if (cursorGlow) {
+                const x = e.clientX;
+                const y = e.clientY;
+                cursorGlow.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(54, 255, 196, 0.08) 0%, transparent 50%)`;
+            }
+        });
+    </script>
+</body></html>
