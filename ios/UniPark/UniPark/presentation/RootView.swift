@@ -1,25 +1,69 @@
 import SwiftUI
 
 public struct RootView: View {
-    private let role: UserRole = .securityGuard
+    private let devMode: Bool = true
+    // TODO: set devMode = false when Keycloak is configured
+    @State private var isAuthenticated: Bool = false
+    @State private var currentUser: User? = nil
 
     public init() {}
 
     public var body: some View {
         NavigationStack {
             Group {
-                switch role {
-                case .driver:
-                    driverTabs
-                case .securityGuard:
-                    guardTabs
-                case .admin:
-                    Text("Admin View - Coming Soon")
-                        .font(.title)
-                case .superadmin:
-                    Text("Superadmin View - Coming Soon")
-                        .font(.title)
+                if devMode {
+                    let devRole: UserRole = .securityGuard
+                    switch devRole {
+                    case .driver:
+                        driverTabs
+                    case .securityGuard:
+                        guardTabs
+                    case .admin:
+                        Text("Admin View - Coming Soon")
+                            .font(.title)
+                    case .superadmin:
+                        Text("Superadmin View - Coming Soon")
+                            .font(.title)
+                    }
+                } else if isAuthenticated, let role = currentUser?.role {
+                    switch role {
+                    case .driver:
+                        driverTabs
+                    case .securityGuard:
+                        guardTabs
+                    case .admin:
+                        Text("Admin View - Coming Soon")
+                            .font(.title)
+                    case .superadmin:
+                        Text("Superadmin View - Coming Soon")
+                            .font(.title)
+                    }
+                } else {
+                    LoginView()
                 }
+            }
+        }
+        .onAppear {
+            guard !devMode else {
+                currentUser = User(
+                    email: "test@universidad.edu",
+                    fullName: "Carlos Test",
+                    role: .driver,
+                    universityId: "DEV-000",
+                    active: true
+                )
+                isAuthenticated = true
+                return
+            }
+
+            let user = OIDCAuthManager.shared.currentUser()
+            currentUser = user
+            isAuthenticated = user != nil
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .oidcAuthStateDidChange)) { notification in
+            if let user = notification.userInfo?["user"] as? User {
+                currentUser = user
+                isAuthenticated = true
             }
         }
     }
