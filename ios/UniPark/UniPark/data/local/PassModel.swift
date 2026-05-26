@@ -1,0 +1,1 @@
+// Placeholder for SwiftData Pass model.
