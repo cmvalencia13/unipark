@@ -1,10 +1,9 @@
 import NextAuth from 'next-auth';
 import { JWT } from 'next-auth/jwt';
-import KeycloakProvider from 'next-auth/providers/keycloak';
-import { Session } from '@/types';
+import type { Session } from '@/types';
 
 declare module 'next-auth' {
-  interface Session extends Session {
+  interface Session {
     accessToken?: string;
     refreshToken?: string;
     expiresAt?: number;
@@ -19,37 +18,38 @@ declare module 'next-auth/jwt' {
   }
 }
 
-const keycloakUrl = process.env.KEYCLOAK_URL || 'https://auth.unipark.local';
+const keycloakUrl = process.env.KEYCLOAK_URL || 'http://localhost:8080';
 const clientId = process.env.KEYCLOAK_CLIENT_ID || 'unipark-dashboard';
 const clientSecret = process.env.KEYCLOAK_CLIENT_SECRET || '';
 const realm = process.env.KEYCLOAK_REALM || 'unipark';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
-    KeycloakProvider({
+    {
+      id: 'keycloak',
+      name: 'Keycloak',
+      type: 'oidc',
+      issuer: `${keycloakUrl}/realms/${realm}`,
       clientId,
       clientSecret,
-      issuer: `${keycloakUrl}/realms/${realm}`,
       authorization: {
         params: {
           scope: 'openid profile email roles',
         },
       },
-    }),
+    },
   ],
   pages: {
     signIn: '/auth/signin',
-    error: '/auth/error',
   },
   callbacks: {
     async jwt({ token, account }) {
       if (account) {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
-        token.expiresAt = (account.expires_at || 0) * 1000;
+        token.expiresAt = account.expires_at ? account.expires_at * 1000 : 0;
       }
 
-      // Refresh token if expired
       if (token.expiresAt && Date.now() >= token.expiresAt) {
         try {
           const response = await fetch(
@@ -78,28 +78,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           };
         } catch (error) {
           console.error('Token refresh failed:', error);
-          return { ...token, error: 'RefreshAccessTokenError' };
+          return token;
         }
       }
 
       return token;
     },
     async session({ session, token }) {
-      if (token.error === 'RefreshAccessTokenError') {
-        return null;
-      }
-
-      return {
-        ...session,
-        accessToken: token.accessToken,
-        refreshToken: token.refreshToken,
-        expiresAt: token.expiresAt,
-      };
+      session.accessToken = token.accessToken as string | undefined;
+      session.refreshToken = token.refreshToken as string | undefined;
+      session.expiresAt = token.expiresAt as number | undefined;
+      return session;
     },
   },
   session: { strategy: 'jwt' },
-  jwt: {
-    secret: process.env.NEXTAUTH_SECRET,
-    maxAge: 24 * 60 * 60, // 24 hours
-  },
 });

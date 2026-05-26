@@ -3,16 +3,22 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function middleware(request: NextRequest) {
   const session = await auth();
+  const pathname = request.nextUrl.pathname;
 
   // Proteger rutas de dashboard
-  if (request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (pathname.startsWith('/dashboard')) {
     if (!session) {
       return NextResponse.redirect(new URL('/auth/signin', request.url));
     }
   }
 
   // Redirigir a dashboard si ya está autenticado y accede a signin
-  if (request.nextUrl.pathname === '/auth/signin' && session) {
+  if (pathname === '/auth/signin' && session) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // Redirigir raíz a dashboard si autenticado
+  if (pathname === '/' && session) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
