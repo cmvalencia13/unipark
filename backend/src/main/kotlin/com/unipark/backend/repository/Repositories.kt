@@ -51,6 +51,14 @@ interface ScanRepository : JpaRepository<Scan, UUID> {
 @Repository
 interface ViolationRepository : JpaRepository<Violation, UUID> {
     fun countByStatus(status: ViolationStatus): Long
+
+    @Query("""
+        SELECT v FROM Violation v
+        WHERE (:status IS NULL OR v.status = :status)
+          AND (:lotId IS NULL OR v.lot.id = :lotId)
+        ORDER BY v.createdAt DESC
+    """)
+    fun findFilteredViolations(status: ViolationStatus?, lotId: UUID?, pageable: Pageable): Page<Violation>
 }
 
 @Repository
