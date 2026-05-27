@@ -1,12 +1,28 @@
 package com.unipark.backend.repository
 
 import com.unipark.backend.domain.*
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface UserRepository : JpaRepository<User, UUID>
+interface UserRepository : JpaRepository<User, UUID> {
+    fun findByEmail(email: String): User?
+    fun findAllByOrderByCreatedAtDesc(pageable: Pageable): Page<User>
+
+    @Query("""
+        SELECT u FROM User u
+        WHERE (:role IS NULL OR u.role = :role)
+          AND (:search IS NULL OR LOWER(u.fullName) LIKE CONCAT('%', LOWER(CAST(:search AS text)), '%')
+               OR LOWER(u.email) LIKE CONCAT('%', LOWER(CAST(:search AS text)), '%')
+               OR LOWER(u.universityId) LIKE CONCAT('%', LOWER(CAST(:search AS text)), '%'))
+        ORDER BY u.createdAt DESC
+    """)
+    fun findFilteredUsers(role: Role?, search: String?, pageable: Pageable): Page<User>
+}
 
 @Repository
 interface VehicleRepository : JpaRepository<Vehicle, UUID>
