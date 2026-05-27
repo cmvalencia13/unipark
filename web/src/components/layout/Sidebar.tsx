@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
+
+const KEYCLOAK_LOGOUT = `${process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER || "http://localhost:8090/realms/unipark"}/protocol/openid-connect/logout`;
 
 const adminLinks = [
   { href: "/admin/dashboard", icon: "dashboard", label: "Dashboard" },
@@ -68,13 +70,19 @@ export function Sidebar() {
       </nav>
 
       <div className="border-t border-white/5 pt-3">
-        <Link
-          href="/api/auth/signout"
-          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-error transition-all"
+        <button
+          onClick={async () => {
+            const idToken = (session as any)?.idToken;
+            await signOut({ redirect: false });
+            const url = new URL(KEYCLOAK_LOGOUT);
+            if (idToken) url.searchParams.set("id_token_hint", idToken);
+            window.location.href = url.toString();
+          }}
+          className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-error transition-all w-full text-left"
         >
           <span className="material-symbols-outlined text-xl">logout</span>
           <span>Sign Out</span>
-        </Link>
+        </button>
       </div>
     </aside>
   );

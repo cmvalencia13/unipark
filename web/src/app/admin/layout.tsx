@@ -7,6 +7,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await auth();
   if (!session?.user) redirect("/login");
 
+  const role = (session.user as any).role as string;
+  if (role !== "admin" && role !== "superadmin") {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500">You do not have permission to access this area.</p>
+      </div>
+    );
+  }
+
   return (
     <>
       <Sidebar />

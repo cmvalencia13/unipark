@@ -11,15 +11,7 @@ export const authConfig: NextAuthConfig = {
 
       if (isAdminRoute) {
         if (!isLoggedIn) return false;
-        const role = (auth?.user as any)?.role as string;
-        if (
-          nextUrl.pathname.startsWith("/admin/users") ||
-          nextUrl.pathname.startsWith("/admin/audit") ||
-          nextUrl.pathname.startsWith("/admin/settings")
-        ) {
-          return role === "superadmin";
-        }
-        return role === "admin" || role === "superadmin";
+        return true;
       }
 
       if (isLoggedIn) {
@@ -27,18 +19,29 @@ export const authConfig: NextAuthConfig = {
       }
       return true;
     },
-    jwt({ token, user }) {
+    jwt({ token, user, account }) {
       if (user) {
-        (token as any).role = (user as any).role;
-        token.sub = user.id;
+        token.sub = user.id!;
+      }
+      if (account?.access_token) {
+        const payload = account.access_token.split(".")[1];
+        const decoded = JSON.parse(Buffer.from(payload, "base64").toString());
+        const roles: string[] = decoded?.realm_access?.roles ?? [];
+        (token as any).role = roles.includes("superadmin")
+          ? "superadmin"
+          : roles.includes("admin")
+            ? "admin"
+            : null;
+        (token as any).idToken = account.id_token;
       }
       return token;
     },
     session({ session, token }) {
       if (session.user) {
-        (session.user as any).role = (token as any).role as string;
         session.user.id = token.sub!;
+        (session.user as any).role = (token as any).role;
       }
+      (session as any).idToken = (token as any).idToken;
       return session;
     },
   },

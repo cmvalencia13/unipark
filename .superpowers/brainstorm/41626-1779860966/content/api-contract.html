@@ -1,0 +1,84 @@
+<h2>Section 2 — Admin API Contract</h2>
+<p class="subtitle">New Spring Boot endpoints to support the admin dashboard</p>
+
+<div class="section">
+  <h3>User Management <span style="color: #36ffc4; font-size: 11px; background: rgba(54,255,196,0.1); padding: 2px 8px; border-radius: 4px;">superadmin</span></h3>
+  <table style="width:100%; border-collapse: collapse; margin-top: 8px;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #36ffc4; font-size: 12px; font-family: monospace;">GET</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px; font-family: monospace;">/v1/admin/users</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">List users (paginated, filterable by role, status, search)</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #36ffc4; font-size: 12px; font-family: monospace;">GET</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px; font-family: monospace;">/v1/admin/users/{id}</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">User detail with vehicles, violations, scan history</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; color: #ffb4ab; font-size: 12px; font-family: monospace;">PATCH</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px; font-family: monospace;">/v1/admin/users/{id}</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Update role, active flag, driver category</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>Dashboard Stats <span style="color: #00dbe9; font-size: 11px; background: rgba(0,219,233,0.1); padding: 2px 8px; border-radius: 4px;">admin+</span></h3>
+  <table style="width:100%; border-collapse: collapse; margin-top: 8px;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #36ffc4; font-size: 12px; font-family: monospace;">GET</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px; font-family: monospace;">/v1/admin/stats</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Occupancy per lot, violation counts, user counts, today's scans</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>Violations Console <span style="color: #00dbe9; font-size: 11px; background: rgba(0,219,233,0.1); padding: 2px 8px; border-radius: 4px;">admin+</span></h3>
+  <table style="width:100%; border-collapse: collapse; margin-top: 8px;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #36ffc4; font-size: 12px; font-family: monospace;">GET</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px; font-family: monospace;">/v1/admin/violations</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">All violations (paginated, filterable by status, lot, date)</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; color: #ffb4ab; font-size: 12px; font-family: monospace;">PATCH</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px; font-family: monospace;">/v1/admin/violations/{id}</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Approve or dismiss with resolution note</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>Audit & Settings <span style="color: #36ffc4; font-size: 11px; background: rgba(54,255,196,0.1); padding: 2px 8px; border-radius: 4px;">superadmin</span></h3>
+  <table style="width:100%; border-collapse: collapse; margin-top: 8px;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #36ffc4; font-size: 12px; font-family: monospace;">GET</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px; font-family: monospace;">/v1/admin/audit</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Paginated audit log with date/actor/action filters</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #36ffc4; font-size: 12px; font-family: monospace;">GET</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px; font-family: monospace;">/v1/admin/settings</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Global thresholds, rate limits, system config</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; color: #ffb4ab; font-size: 12px; font-family: monospace;">PATCH</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px; font-family: monospace;">/v1/admin/settings</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Update global configuration</td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>Spring Security setup for these endpoints</h3>
+  <div style="background: #1e2024; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; line-height: 1.7;">
+    <div style="color: #666;">// SecurityConfig.kt — method-level security</div>
+    <div style="color: #b9cacb;">@PreAuthorize(<span style="color: #36ffc4;">"hasRole('ADMIN')"</span>)</div>
+    <div style="color: #849495;">fun getStats() { ... }</div>
+    <div style="margin-top: 8px; color: #b9cacb;">@PreAuthorize(<span style="color: #36ffc4;">"hasRole('SUPERADMIN')"</span>)</div>
+    <div style="color: #849495;">fun listUsers() { ... }</div>
+    <div style="margin-top: 8px; color: #666;">// All /v1/admin/** requires authentication + admin role</div>
+    <div style="color: #849495;">.requestMatchers("/v1/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")</div>
+  </div>
+</div>
