@@ -21,9 +21,9 @@ public struct RootView: View {
                     case .securityGuard:
                         guardTabs
                     case .admin:
-                        Text("Admin View - Coming Soon")
+                        AdminPlaceholderView()
                     case .superadmin:
-                        Text("Superadmin View - Coming Soon")
+                        SuperadminPlaceholderView()
                     }
                 } else {
                     DevRoleSelectorView { selectedRole in
@@ -34,8 +34,8 @@ public struct RootView: View {
                 switch role {
                 case .driver:        driverTabs
                 case .securityGuard: guardTabs
-                case .admin:         Text("Admin View - Coming Soon")
-                case .superadmin:    Text("Superadmin View - Coming Soon")
+                case .admin:         AdminPlaceholderView()
+                case .superadmin:    SuperadminPlaceholderView()
                 }
             } else {
                 NavigationStack { LoginView() }

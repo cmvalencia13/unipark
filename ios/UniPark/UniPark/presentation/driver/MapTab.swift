@@ -1,6 +1,43 @@
 import SwiftUI
 import MapKit
+import CoreLocation
 import Observation
+
+// MARK: - Location Manager
+final class LocationPermissionManager: NSObject, CLLocationManagerDelegate {
+    private let manager = CLLocationManager()
+    var onLocationUpdate: ((CLLocationCoordinate2D) -> Void)?
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+    }
+
+    func requestAndStart() {
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.requestLocation()
+        default: break
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let coord = locations.first?.coordinate else { return }
+        DispatchQueue.main.async { self.onLocationUpdate?(coord) }
+    }
+
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        if manager.authorizationStatus == .authorizedWhenInUse ||
+           manager.authorizationStatus == .authorizedAlways {
+            manager.requestLocation()
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
+}
 
 @MainActor
 @Observable
@@ -33,6 +70,7 @@ final class MapViewModel {
 public struct MapTab: View {
     var viewModel: DriverViewModel
     @State private var mapVM = MapViewModel()
+    @State private var locationManager = LocationPermissionManager()
 
     public init(viewModel: DriverViewModel) {
         self.viewModel = viewModel
@@ -128,6 +166,40 @@ public struct MapTab: View {
                 })
                 .background(.ultraThinMaterial)
                 Spacer()
+            }
+
+            // LOCATION BUTTON — bottom trailing, above tab bar
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button {
+                        locationManager.requestAndStart()
+                    } label: {
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(Color.upPrimary)
+                            .padding(12)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                            .shadow(color: Color.upPrimary.opacity(0.4), radius: 8)
+                    }
+                    .padding(.trailing, 16)
+                    .padding(.bottom, mapVM.showLotCard ? 280 : 100)
+                    .animation(.spring(), value: mapVM.showLotCard)
+                }
+            }
+            .onAppear {
+                locationManager.onLocationUpdate = { coord in
+                    withAnimation(.easeInOut(duration: 0.8)) {
+                        mapVM.cameraPosition = .camera(MapCamera(
+                            centerCoordinate: coord,
+                            distance: 400,
+                            heading: 0,
+                            pitch: 0
+                        ))
+                    }
+                }
             }
 
             // FLOATING LOT CARD (appears when marker tapped)
