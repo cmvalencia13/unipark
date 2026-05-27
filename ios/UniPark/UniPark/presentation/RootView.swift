@@ -12,7 +12,7 @@ public struct RootView: View {
         NavigationStack {
             Group {
                 if devMode {
-                    let devRole: UserRole = .securityGuard
+                    let devRole: UserRole = .driver
                     switch devRole {
                     case .driver:
                         driverTabs
@@ -82,8 +82,7 @@ public struct RootView: View {
                     Label("Mi Pase", systemImage: "qrcode")
                 }
 
-            Text("Wallet - Coming Soon")
-                .font(.title)
+            WalletView()
                 .tabItem {
                     Label("Wallet", systemImage: "creditcard.fill")
                 }
