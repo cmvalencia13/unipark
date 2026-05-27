@@ -19,6 +19,7 @@ class SecurityConfig {
         http
             .csrf { it.disable() }
             .authorizeHttpRequests { auth ->
+                auth.requestMatchers("/v1/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
                 auth.requestMatchers("/v1/**").authenticated()
                 auth.anyRequest().permitAll()
             }
