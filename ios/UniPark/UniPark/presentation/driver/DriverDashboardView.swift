@@ -70,6 +70,17 @@ public struct DriverDashboardView: View {
 					.background(Color.upSurfaceHighest)
 					.clipShape(Circle())
 			}
+
+			Button(action: {
+				NotificationCenter.default.post(name: Notification.Name("signOut"), object: nil)
+			}) {
+				Image(systemName: "rectangle.portrait.and.arrow.right")
+					.font(.title3)
+					.foregroundStyle(Color.upTextSecondary)
+					.padding(10)
+					.background(Color.upSurfaceHighest)
+					.clipShape(Circle())
+			}
 		}
 		.foregroundStyle(Color.upTextPrimary)
 		.padding(.horizontal, 4)
