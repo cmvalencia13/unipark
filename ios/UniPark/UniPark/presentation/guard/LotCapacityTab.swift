@@ -1,4 +1,5 @@
 import SwiftUI
+import MapKit
 
 public struct LotCapacityTab: View {
     @State var viewModel: GuardViewModel
@@ -27,15 +28,9 @@ public struct LotCapacityTab: View {
                             .kerning(1.2)
                             .padding(.top, 16)
                         
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        VStack(spacing: 14) {
                             ForEach(viewModel.lots, id: \.id) { lot in
-                                LotCapacityCard(
-                                    lot: lot,
-                                    isSelected: lot.id == viewModel.selectedLotId,
-                                    onSelect: {
-                                        viewModel.selectedLotId = lot.id
-                                    }
-                                )
+                                LotCapacityCard(lot: lot)
                             }
                         }
                     }
@@ -61,69 +56,143 @@ public struct LotCapacityTab: View {
 
 private struct LotCapacityCard: View {
     let lot: ParkingLot
-    let isSelected: Bool
-    let onSelect: () -> Void
+    
+    private var geometry: LotGeometry {
+        LotGeometry.forLot(named: lot.name)
+    }
     
     var body: some View {
-        Button(action: onSelect) {
-            ZStack(alignment: .topTrailing) {
-                VStack(alignment: .leading, spacing: 10) {
+        VStack(spacing: 0) {
+            Map(
+                position: .constant(
+                    .camera(
+                        MapCamera(
+                            centerCoordinate: geometry.center,
+                            distance: 250,
+                            heading: 42,
+                            pitch: 0
+                        )
+                    )
+                ),
+                interactionModes: []
+            ) {
+                MapPolygon(coordinates: geometry.coordinates)
+                    .foregroundStyle(occupancyColor.opacity(0.5))
+                    .stroke(Color.upPrimary, lineWidth: 2)
+
+                Annotation(lot.name, coordinate: geometry.center) {
+                    Text("\(lot.availableSpots)")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.upBackground)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(Color.upSecondary)
+                        .clipShape(Capsule())
+                        .shadow(color: Color.cyan.opacity(0.35), radius: 6)
+                }
+            }
+            .mapStyle(.hybrid(elevation: .realistic))
+            .frame(height: 180)
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(lot.name)
-                        .font(.headline)
+                        .font(.title3.bold())
                         .foregroundStyle(Color.upTextPrimary)
-                    
-                    Text("\(lot.capacityUsed)/\(lot.capacityTotal)")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(occupancyColor(lot))
-                    
-                    Text("\(lot.availableSpots) libres")
+
+                    Spacer()
+
+                    Text("\(lot.availableSpots) libres / \(lot.capacityTotal) total")
                         .font(.subheadline)
                         .foregroundStyle(Color.upTextSecondary)
-                    
+                        .multilineTextAlignment(.trailing)
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
                     GeometryReader { proxy in
                         ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
+                            RoundedRectangle(cornerRadius: 3)
                                 .fill(Color.upSurfaceHighest)
                                 .frame(height: 6)
-                            
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(occupancyColor(lot))
+
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(occupancyColor)
                                 .frame(width: proxy.size.width * CGFloat(lot.occupancyPercentage), height: 6)
                         }
                     }
                     .frame(height: 6)
-                }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                if lot.isFull {
-                    Text("LLENO")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.upError)
-                        .clipShape(Capsule())
-                        .padding(8)
+
+                    HStack {
+                        Text(String(format: "%.0f%% ocupación", lot.occupancyPercentage * 100))
+                            .font(.caption)
+                            .foregroundStyle(Color.upTextSecondary)
+                        
+                        Spacer()
+                        
+                        if lot.isFull {
+                            Text("LLENO")
+                                .font(.caption.bold())
+                                .foregroundStyle(Color.upError)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.upError.opacity(0.12))
+                                .clipShape(Capsule())
+                        }
+                    }
                 }
             }
-            .glassCard(cornerRadius: 16, glowColor: isSelected ? occupancyColor(lot) : .clear)
-            .overlay(
-                isSelected ?
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(occupancyColor(lot), lineWidth: 2) : nil
-            )
+            .padding(16)
         }
-        .buttonStyle(.plain)
+        .glassCard(cornerRadius: 18, glowColor: occupancyColor)
     }
     
-    private func occupancyColor(_ lot: ParkingLot) -> Color {
+    private var occupancyColor: Color {
         if lot.occupancyPercentage < 0.7 {
             return .upSecondary
         } else if lot.occupancyPercentage < 0.9 {
             return .orange
         } else {
             return .upError
+        }
+    }
+}
+
+private struct LotGeometry {
+    let center: CLLocationCoordinate2D
+    let coordinates: [CLLocationCoordinate2D]
+
+    static func forLot(named name: String) -> LotGeometry {
+        switch name {
+        case "Parqueo Key":
+            return LotGeometry(
+                center: CLLocationCoordinate2D(latitude: 13.680524, longitude: -89.253714),
+                coordinates: [
+                    CLLocationCoordinate2D(latitude: 13.680210122389441, longitude: -89.25347279543529),
+                    CLLocationCoordinate2D(latitude: 13.680272017660446, longitude: -89.25334539050634),
+                    CLLocationCoordinate2D(latitude: 13.680879241990954, longitude: -89.25377521450173),
+                    CLLocationCoordinate2D(latitude: 13.680839498816082, longitude: -89.25390060777389),
+                    CLLocationCoordinate2D(latitude: 13.680592774238331, longitude: -89.25393748571777),
+                    CLLocationCoordinate2D(latitude: 13.680555522984136, longitude: -89.25392379323479),
+                    CLLocationCoordinate2D(latitude: 13.680348867120747, longitude: -89.25376313476218),
+                    CLLocationCoordinate2D(latitude: 13.680454412412706, longitude: -89.25359608646397),
+                ]
+            )
+        case "Parqueo Matías":
+            return LotGeometry(
+                center: CLLocationCoordinate2D(latitude: 13.680100, longitude: -89.254309),
+                coordinates: [
+                    CLLocationCoordinate2D(latitude: 13.680323974054101, longitude: -89.25411001529224),
+                    CLLocationCoordinate2D(latitude: 13.680324679516982, longitude: -89.25450644457504),
+                    CLLocationCoordinate2D(latitude: 13.679876004700510, longitude: -89.25447159364909),
+                    CLLocationCoordinate2D(latitude: 13.679879532021591, longitude: -89.25416156562022),
+                ]
+            )
+        default:
+            return LotGeometry(
+                center: CLLocationCoordinate2D(latitude: 13.680524, longitude: -89.253714),
+                coordinates: []
+            )
         }
     }
 }

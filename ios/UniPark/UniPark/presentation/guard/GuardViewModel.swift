@@ -5,8 +5,8 @@ import Observation
 @Observable
 public final class GuardViewModel {
     // MARK: - Lots
-    public var lots: [ParkingLot] = ParkingLot.stubs
-    public var selectedLotId: UUID = ParkingLot.stubs.first?.id ?? UUID()
+    public var lots: [ParkingLot] = []
+    public var selectedLotId: UUID = UUID()
     
     public var selectedLot: ParkingLot? {
         lots.first { $0.id == selectedLotId }
@@ -33,10 +33,21 @@ public final class GuardViewModel {
     
     // MARK: - Init
     public init() {
-        if lots.isEmpty {
-            lots = ParkingLot.stubs
-        }
+        lots = Self.guardLots(from: ParkingLot.stubs)
         selectedLotId = lots.first?.id ?? UUID()
+    }
+
+    private static func guardLots(from stubs: [ParkingLot]) -> [ParkingLot] {
+        let renamed = stubs.prefix(2).enumerated().map { index, lot in
+            ParkingLot(
+                id: lot.id,
+                name: index == 0 ? "Parqueo Key" : "Parqueo Matías",
+                capacityTotal: lot.capacityTotal,
+                capacityUsed: lot.capacityUsed,
+                active: lot.active
+            )
+        }
+        return Array(renamed)
     }
     
     // MARK: - Scanner
