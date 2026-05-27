@@ -1,6 +1,6 @@
 import Foundation
 
-public struct ParkingLot: Identifiable, Codable, Sendable {
+public struct ParkingLot: Identifiable, Codable, Sendable, Equatable {
 	public let id: UUID
 	public let name: String
 	public let capacityTotal: Int
@@ -36,9 +36,9 @@ public struct ParkingLot: Identifiable, Codable, Sendable {
 
 	// MARK: - Dev stubs
 	public static let stubs: [ParkingLot] = [
-		ParkingLot(name: "Commuter Lots (Zone A)", capacityTotal: 200, capacityUsed: 156, active: true),
-		ParkingLot(name: "Visitor Parking (Lot V)", capacityTotal: 50,  capacityUsed: 45,  active: true),
-		ParkingLot(name: "Faculty Lot B",           capacityTotal: 80,  capacityUsed: 32,  active: true),
-		ParkingLot(name: "Lot North",               capacityTotal: 120, capacityUsed: 120, active: true),
+		ParkingLot(name: "Parqueo Key",    capacityTotal: 200, capacityUsed: 156, active: true),
+		ParkingLot(name: "Parqueo Matías", capacityTotal: 120, capacityUsed: 48,  active: true),
+		ParkingLot(name: "Faculty Lot B",  capacityTotal: 80,  capacityUsed: 32,  active: true),
+		ParkingLot(name: "Lot North",      capacityTotal: 120, capacityUsed: 120, active: true),
 	]
 }
