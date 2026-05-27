@@ -1,3 +1,6 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+CREATE EXTENSION IF NOT EXISTS postgis;
+
 CREATE TABLE users (
   id              UUID PRIMARY KEY,
   email           CITEXT NOT NULL UNIQUE,

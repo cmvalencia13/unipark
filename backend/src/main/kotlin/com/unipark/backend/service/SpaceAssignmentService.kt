@@ -35,6 +35,7 @@ class SpaceAssignmentService(
             DriverCategory.staff -> listOf(ReservedFor.staff, ReservedFor.general)
             DriverCategory.student -> listOf(ReservedFor.general)
             DriverCategory.visitor -> listOf(ReservedFor.visitor)
+            null -> throw IllegalArgumentException("Driver category is missing")
         }
 
         val availableSpace = parkingSpaceRepository.findFirstByLotIdAndAssignedUserIsNullAndReservedForIn(
