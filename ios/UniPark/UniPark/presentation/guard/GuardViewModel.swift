@@ -7,86 +7,95 @@ public final class GuardViewModel {
     // MARK: - Lots
     public var lots: [ParkingLot] = []
     public var selectedLotId: UUID = UUID()
-    
+
     public var selectedLot: ParkingLot? {
         lots.first { $0.id == selectedLotId }
     }
-    
+
     // MARK: - Scanner State
     public enum ScanStatus: Equatable {
         case idle
-        case success(String)
-        case rejected(String)
-        case pending
+        case verifying                          // loading — esperando resultado
+        case accepted(VerificationOutcome)      // verde — acceso autorizado
+        case rejected(VerificationOutcome)      // rojo — razón específica
     }
-    
+
     public var scanStatus: ScanStatus = .idle
-    // Demo scenario: último escaneo fue una entrada de María García
-    public var lastScanDriver: String? = "María García"
     public var lastScanDirection: String? = nil
     public var lastScanTime: String? = nil
     public var isScanCooldown: Bool = false
-    
+
     // MARK: - Violations
     public var violations: [ViolationEntry] = ViolationEntry.stubs
     public var isSubmittingViolation: Bool = false
     public var violationSubmitSuccess: Bool = false
-    
+
     // MARK: - Init
     public init() {
-        lots = Self.guardLots(from: ParkingLot.stubs)
+        lots = Array(ParkingLot.stubs.prefix(2))
         selectedLotId = lots.first?.id ?? UUID()
     }
 
-    private static func guardLots(from stubs: [ParkingLot]) -> [ParkingLot] {
-        // Usa los stubs directamente — ya tienen los nombres y ocupación correctos
-        Array(stubs.prefix(2))
-    }
-    
     // MARK: - Scanner
-    public func processScan(direction: ScanDirection) {
+
+    /// Simula escanear un QR con el payload dado en la dirección indicada.
+    /// Para pruebas, usar los prefijos definidos en MockPassVerificationService:
+    ///   "UNIPARK-..."  → válido
+    ///   "EXPIRED-..."  → expirado
+    ///   "USED-..."     → ya usado
+    ///   "WRONG-LOT-..."→ lote incorrecto
+    ///   "REVOKED-..."  → revocado
+    ///   cualquier otro → firma inválida
+    public func processScan(direction: ScanDirection, payload: String = "UNIPARK-DEMO") {
         guard !isScanCooldown else { return }
         isScanCooldown = true
-        
+
         let timeFmt = DateFormatter()
         timeFmt.dateFormat = "hh:mm a"
         lastScanTime = timeFmt.string(from: Date())
         lastScanDirection = direction == .entry ? "ENTRADA" : "SALIDA"
-        lastScanDriver = "Carlos Martínez"
-        
-        // Update lot occupancy optimistically
-        if let idx = lots.firstIndex(where: { $0.id == selectedLotId }) {
-            let lot = lots[idx]
-            let newUsed: Int
-            if direction == .entry {
-                newUsed = min(lot.capacityUsed + 1, lot.capacityTotal)
-            } else {
-                newUsed = max(lot.capacityUsed - 1, 0)
-            }
-            lots[idx] = ParkingLot(
-                id: lot.id,
-                name: lot.name,
-                capacityTotal: lot.capacityTotal,
-                capacityUsed: newUsed,
-                active: lot.active
+        scanStatus = .verifying
+
+        Task {
+            let outcome = await MockPassVerificationService.shared.verify(
+                payload: payload,
+                selectedLotName: selectedLot?.name ?? ""
             )
-        }
-        
-        scanStatus = .success("Escaneo registrado correctamente")
-        
-        // Reset cooldown after 2 seconds
-        Task {
+
+            if outcome.isValid {
+                // Actualizar ocupación optimistamente solo si es válido
+                updateOccupancy(direction: direction)
+                scanStatus = .accepted(outcome)
+            } else {
+                scanStatus = .rejected(outcome)
+            }
+
+            // Reset cooldown tras 2s
             try? await Task.sleep(for: .seconds(2))
-            self.isScanCooldown = false
-        }
-        
-        // Reset status after 5 seconds
-        Task {
-            try? await Task.sleep(for: .seconds(5))
-            self.scanStatus = .idle
+            isScanCooldown = false
+
+            // Reset estado tras 6s
+            try? await Task.sleep(for: .seconds(4))
+            if case .accepted = scanStatus { scanStatus = .idle }
+            if case .rejected = scanStatus { scanStatus = .idle }
         }
     }
-    
+
+    private func updateOccupancy(direction: ScanDirection) {
+        guard let idx = lots.firstIndex(where: { $0.id == selectedLotId }) else { return }
+        let lot = lots[idx]
+        let newUsed = direction == .entry
+            ? min(lot.capacityUsed + 1, lot.capacityTotal)
+            : max(lot.capacityUsed - 1, 0)
+        lots[idx] = ParkingLot(
+            id: lot.id,
+            name: lot.name,
+            capacityTotal: lot.capacityTotal,
+            capacityUsed: newUsed,
+            active: lot.active
+        )
+    }
+
     // MARK: - Violations
     public func submitViolation(_ entry: ViolationEntry) {
         isSubmittingViolation = true
