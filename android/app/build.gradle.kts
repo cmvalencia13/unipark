@@ -41,7 +41,9 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+
 }
 
 dependencies {
@@ -75,4 +77,16 @@ dependencies {
     // Core
     implementation(libs.material)
     implementation("androidx.core:core-ktx:1.15.0")
+
+    // Red (Retrofit, OkHttp, Moshi)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.moshi)
+    implementation(libs.moshi)
+    ksp(libs.moshi.codegen)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+
+    // Seguridad (EncryptedSharedPreferences)
+    implementation(libs.androidx.security)
 }
+

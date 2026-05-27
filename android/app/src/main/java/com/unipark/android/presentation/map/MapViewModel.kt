@@ -1,17 +1,23 @@
 package com.unipark.android.presentation.map
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.unipark.android.domain.model.LotInfo
+import com.unipark.android.domain.model.Resource
+import com.unipark.android.domain.repository.LotRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MapViewModel @Inject constructor() : ViewModel() {
+class MapViewModel @Inject constructor(
+    private val lotRepository: LotRepository
+) : ViewModel() {
 
-    private val _lots = MutableStateFlow(fakeLots)
+    private val _lots = MutableStateFlow<List<LotInfo>>(emptyList())
     val lots: StateFlow<List<LotInfo>> = _lots.asStateFlow()
 
     private val _selectedLot = MutableStateFlow<LotInfo?>(null)
@@ -19,6 +25,20 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
     private val _filters = MutableStateFlow(fakeFilters)
     val filters: StateFlow<List<String>> = _filters.asStateFlow()
+
+    init {
+        fetchLots()
+    }
+
+    fun fetchLots() {
+        viewModelScope.launch {
+            lotRepository.getLots().collect { resource ->
+                if (resource is Resource.Success) {
+                    _lots.value = resource.data
+                }
+            }
+        }
+    }
 
     fun selectLot(lot: LotInfo) {
         _selectedLot.value = lot
@@ -29,30 +49,6 @@ class MapViewModel @Inject constructor() : ViewModel() {
     }
 
     companion object {
-        val fakeLots = listOf(
-            LotInfo(
-                id = "main",
-                name = "Main Campus Garage",
-                occupancy = 72,
-                xFraction = 0.5f,
-                yFraction = 0.35f,
-            ),
-            LotInfo(
-                id = "west",
-                name = "West Lot",
-                occupancy = 91,
-                xFraction = 0.2f,
-                yFraction = 0.6f,
-            ),
-            LotInfo(
-                id = "south",
-                name = "South Deck",
-                occupancy = 45,
-                xFraction = 0.75f,
-                yFraction = 0.7f,
-            ),
-        )
-
         val fakeFilters = listOf(
             "EV Charging",
             "ADA Spots",
