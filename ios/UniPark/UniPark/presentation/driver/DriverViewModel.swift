@@ -11,7 +11,7 @@ public final class DriverViewModel {
 
     // MARK: - Pass & User
     public var activePass: ActivePassDisplay? = ActivePassDisplay(
-        lotName: "Commuter Zone A",
+        lotName: "Parqueo Key",
         expiryDateString: "Dic 31, 2026 • Auto-Renew ON"
     )
     public var userName: String? = "Carlos Test"
@@ -24,13 +24,14 @@ public final class DriverViewModel {
     public var stickerPermit: StickerPermit? = nil
 
     // MARK: - QR Pass & Clock
-    public var passPayload: String = "UNIPARK-DEV-STUB-PAYLOAD-001"
+    public var passPayload: String = "UNIPARK-\(UUID().uuidString)"
     public var passCountdown: Int = 60
     public var currentTime: String = ""
     public var currentDate: String = ""
 
-    // Timer is nonisolated so deinit can safely invalidate it
+    // Timers are nonisolated(unsafe) so deinit can safely invalidate them
     private nonisolated(unsafe) var clockTimer: Timer?
+    private nonisolated(unsafe) var countdownTimer: Timer?
 
     // MARK: - Init
     public init() {
@@ -40,32 +41,50 @@ public final class DriverViewModel {
 
     // MARK: - Timers
     public func startTimers() {
+        // Clock: updates currentTime / currentDate every second
         clockTimer?.invalidate()
         updateClock()
-        let timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        let cTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor [weak self] in
+                self?.updateClock()
+            }
+        }
+        RunLoop.main.add(cTimer, forMode: .common)
+        clockTimer = cTimer
+
+        // Countdown: ticks every second, regenerates QR payload at 0
+        countdownTimer?.invalidate()
+        passCountdown = 60
+        let qTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                self.updateClock()
                 self.passCountdown -= 1
                 if self.passCountdown <= 0 {
                     self.passCountdown = 60
-                    // Regenerate pass payload here when backend is ready
+                    // Phase 1 — UUID temporal para que el QR rote visualmente.
+                    // Phase 2 (post-backend) — reemplazar con JWT firmado de
+                    // PassRepository.generateAccessToken() y validar server-side.
+                    self.passPayload = "UNIPARK-\(UUID().uuidString)"
                 }
             }
         }
-        RunLoop.main.add(timer, forMode: .common)
-        clockTimer = timer
+        RunLoop.main.add(qTimer, forMode: .common)
+        countdownTimer = qTimer
     }
 
     public func stopTimers() {
         clockTimer?.invalidate()
         clockTimer = nil
+        countdownTimer?.invalidate()
+        countdownTimer = nil
     }
 
     // nonisolated so deinit can call it without hopping to MainActor
     nonisolated public func invalidateTimers() {
         clockTimer?.invalidate()
+        countdownTimer?.invalidate()
     }
 
     deinit {
