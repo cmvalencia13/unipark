@@ -62,7 +62,18 @@ interface ViolationRepository : JpaRepository<Violation, UUID> {
 }
 
 @Repository
-interface AuditLogRepository : JpaRepository<AuditLog, Long>
+interface AuditLogRepository : JpaRepository<AuditLog, Long> {
+
+    @Query("""
+        SELECT a FROM AuditLog a
+        WHERE (:from IS NULL OR a.createdAt >= :from)
+          AND (:to IS NULL OR a.createdAt <= :to)
+          AND (:actor IS NULL OR a.actorId = :actor)
+          AND (:action IS NULL OR a.action = :action)
+        ORDER BY a.createdAt DESC
+    """)
+    fun findFilteredAuditLogs(from: OffsetDateTime?, to: OffsetDateTime?, actor: UUID?, action: String?, pageable: Pageable): Page<AuditLog>
+}
 
 @Repository
 interface OutboxEventRepository : JpaRepository<OutboxEvent, UUID>
