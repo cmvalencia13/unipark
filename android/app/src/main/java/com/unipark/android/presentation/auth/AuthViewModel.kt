@@ -10,20 +10,20 @@ import javax.inject.Inject
 sealed interface AuthState {
     data object Idle : AuthState
     data object Loading : AuthState
-    data class Authenticated(val email: String) : AuthState
+    data class Authenticated(val email: String, val role: AppRole) : AuthState
     data class Error(val message: String) : AuthState
 }
 
+enum class AppRole { DRIVER, SECURITY_GUARD }
+
 @HiltViewModel
 class AuthViewModel @Inject constructor() : ViewModel() {
-
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    fun login(email: String) {
+    fun login(email: String, role: AppRole) {
         _authState.value = AuthState.Loading
-        // Fake auth — immediately succeed for UI-first development
-        _authState.value = AuthState.Authenticated(email)
+        _authState.value = AuthState.Authenticated(email, role)
     }
 
     fun logout() {
