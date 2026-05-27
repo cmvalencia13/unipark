@@ -1,0 +1,94 @@
+<h2>Section 1 — System Architecture</h2>
+<p class="subtitle">Next.js App Router + Spring Boot API + Keycloak OIDC</p>
+
+<div class="section">
+  <h3>How the pieces fit together</h3>
+  <div style="background: #1e2024; border-radius: 12px; padding: 24px; font-family: monospace; font-size: 13px; line-height: 1.8;">
+    <div style="text-align: center; color: #849495; margin-bottom: 16px;">Browser</div>
+    <div style="text-align: center; margin-bottom: 8px;">
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 4px 12px; border-radius: 6px;">Next.js 14 App Router</span>
+    </div>
+    <div style="color: #666; text-align: center; margin: 4px 0;">Admin Dashboard (TypeScript + Tailwind)</div>
+    <div style="border-left: 2px solid #00dbe9; height: 20px; margin: 0 auto; width: 0;"></div>
+    <div style="display: flex; justify-content: center; gap: 24px; margin: 8px 0;">
+      <div style="background: #1e2024; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 16px; text-align: center;">
+        <span style="color: #36ffc4; font-size: 11px;">Server Components</span>
+        <div style="color: #849495; font-size: 10px;">RSC + fetch</div>
+      </div>
+      <div style="background: #1e2024; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px 16px; text-align: center;">
+        <span style="color: #36ffc4; font-size: 11px;">Client Components</span>
+        <div style="color: #849495; font-size: 10px;">'use client' + interactivity</div>
+      </div>
+    </div>
+    <div style="border-left: 2px solid #00dbe9; height: 20px; margin: 0 auto; width: 0;"></div>
+    <div style="text-align: center;">
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 4px 12px; border-radius: 6px;">NextAuth.js v5 (Auth.js)</span>
+      <div style="color: #666; font-size: 11px; margin-top: 4px;">OIDC PKCE → Keycloak | Session in httpOnly cookie</div>
+    </div>
+    <div style="border-left: 2px solid #00dbe9; height: 20px; margin: 0 auto; width: 0;"></div>
+    <div style="text-align: center;">
+      <span style="background: #0c2e1a; color: #36ffc4; padding: 4px 12px; border-radius: 6px;">Spring Boot 3.3 API</span>
+      <div style="color: #666; font-size: 11px; margin-top: 4px;">JWT validation | RBAC with @PreAuthorize | REST endpoints</div>
+    </div>
+    <div style="border-left: 2px solid #36ffc4; height: 16px; margin: 0 auto; width: 0;"></div>
+    <div style="text-align: center;">
+      <span style="background: #111; color: #849495; padding: 4px 12px; border-radius: 6px;">PostgreSQL 16</span>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Key decisions</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div style="background: rgba(30,32,36,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+      <h4 style="color: #36ffc4; margin: 0 0 8px;">Auth Strategy</h4>
+      <p style="color: #b9cacb; font-size: 13px; margin: 0;">NextAuth.js with Keycloak provider. JWT from Keycloak forwarded as Bearer token to Spring Boot API. Role claims validated on both sides.</p>
+    </div>
+    <div style="background: rgba(30,32,36,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+      <h4 style="color: #36ffc4; margin: 0 0 8px;">API Communication</h4>
+      <p style="color: #b9cacb; font-size: 13px; margin: 0;">Next.js Server Components call Spring Boot directly (server-to-server). Client mutations use fetch with JWT from session. No BFF duplication.</p>
+    </div>
+    <div style="background: rgba(30,32,36,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+      <h4 style="color: #36ffc4; margin: 0 0 8px;">Role Gating</h4>
+      <p style="color: #b9cacb; font-size: 13px; margin: 0;">Next.js middleware checks role claim from session. Admin pages visible to admin+. Superadmin pages visible only to superadmin. Backend @PreAuthorize as defense-in-depth.</p>
+    </div>
+    <div style="background: rgba(30,32,36,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+      <h4 style="color: #36ffc4; margin: 0 0 8px;">Design System</h4>
+      <p style="color: #b9cacb; font-size: 13px; margin: 0;">Same "cyber-academic" dark theme as Android app. Tailwind config with Unipark tokens. Glassmorphism panels, Sora headings, Material Symbols icons.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Tech stack summary</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Framework</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Next.js 14 (App Router)</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Language</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">TypeScript 5.x</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Styling</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Tailwind CSS 3.4 + custom Unipark tokens</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Auth</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">NextAuth.js v5 (Auth.js) + Keycloak OIDC</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Icons</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Material Symbols (matches Android app)</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Charts</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Recharts (lightweight, React-native, good dark theme support)</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Data fetching</td>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">SWR (client) + fetch in RSC (server)</td>
+    </tr>
+  </table>
+</div>

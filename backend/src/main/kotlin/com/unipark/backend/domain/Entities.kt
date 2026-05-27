@@ -121,3 +121,10 @@ data class OutboxEvent(
     @CreationTimestamp @Column(name = "created_at", updatable = false) val createdAt: OffsetDateTime? = null,
     @Column(name = "published_at") val publishedAt: OffsetDateTime? = null
 )
+
+@Entity
+@Table(name = "system_settings")
+data class SystemSetting(
+    @Id @Column(name = "setting_key", length = 100) val key: String,
+    @Column(name = "setting_value", nullable = false) val value: String
+)

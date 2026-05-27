@@ -19,6 +19,7 @@ class SecurityConfig {
         http
             .csrf { it.disable() }
             .authorizeHttpRequests { auth ->
+                auth.requestMatchers("/v1/admin/**").hasAnyRole("ADMIN", "SUPERADMIN")
                 auth.requestMatchers("/v1/**").authenticated()
                 auth.anyRequest().permitAll()
             }
@@ -35,7 +36,9 @@ class SecurityConfig {
     fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
         val converter = JwtAuthenticationConverter()
         converter.setJwtGrantedAuthoritiesConverter { jwt ->
-            val claim = jwt.claims["role"]
+            // Keycloak puts roles in realm_access.roles
+            val realmAccess = jwt.claims["realm_access"] as? Map<*, *>
+            val claim = realmAccess?.get("roles")
             val roles = when (claim) {
                 is List<*> -> claim.mapNotNull { it?.toString() }
                 is String -> listOf(claim)
