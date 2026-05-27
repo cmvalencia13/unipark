@@ -1,7 +1,7 @@
 import SwiftUI
 
 public struct RootView: View {
-    private let devMode: Bool = true
+    private let devMode: Bool = FeatureFlags.devMode
     @State private var devRole: UserRole? = nil
     @State private var isAuthenticated: Bool = false
     @State private var currentUser: User? = nil

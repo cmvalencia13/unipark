@@ -81,9 +81,29 @@ public struct ViolationEntry: Identifiable {
     }
     
     public static let stubs: [ViolationEntry] = [
-        ViolationEntry(plate: "ABC-1234", lotName: "Lote A",
-                       reason: .badParking, status: .pending),
-        ViolationEntry(plate: "XYZ-9988", lotName: "Lote B",
-                       reason: .wrongLot, status: .approved),
+        ViolationEntry(
+            plate: "P-123-456",
+            lotName: "Parqueo Key",
+            reason: .badParking,
+            createdAt: Date().addingTimeInterval(-900), // hace 15 min
+            status: .pending,
+            hasPhoto: true
+        ),
+        ViolationEntry(
+            plate: "P-789-012",
+            lotName: "Parqueo Matías",
+            reason: .wrongLot,
+            createdAt: Date().addingTimeInterval(-3600), // hace 1 hora
+            status: .approved,
+            hasPhoto: false
+        ),
+        ViolationEntry(
+            plate: "P-345-678",
+            lotName: "Parqueo Key",
+            reason: .noScan,
+            createdAt: Date().addingTimeInterval(-7200), // hace 2 horas
+            status: .dismissed,
+            hasPhoto: false
+        ),
     ]
 }

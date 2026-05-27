@@ -21,7 +21,8 @@ public final class GuardViewModel {
     }
     
     public var scanStatus: ScanStatus = .idle
-    public var lastScanDriver: String? = nil
+    // Demo scenario: último escaneo fue una entrada de María García
+    public var lastScanDriver: String? = "María García"
     public var lastScanDirection: String? = nil
     public var lastScanTime: String? = nil
     public var isScanCooldown: Bool = false
@@ -38,16 +39,8 @@ public final class GuardViewModel {
     }
 
     private static func guardLots(from stubs: [ParkingLot]) -> [ParkingLot] {
-        let renamed = stubs.prefix(2).enumerated().map { index, lot in
-            ParkingLot(
-                id: lot.id,
-                name: index == 0 ? "Parqueo Key" : "Parqueo Matías",
-                capacityTotal: lot.capacityTotal,
-                capacityUsed: lot.capacityUsed,
-                active: lot.active
-            )
-        }
-        return Array(renamed)
+        // Usa los stubs directamente — ya tienen los nombres y ocupación correctos
+        Array(stubs.prefix(2))
     }
     
     // MARK: - Scanner

@@ -5,8 +5,7 @@ import UIKit
 @MainActor
 public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationContextProviding {
 	public static let shared = OIDCAuthManager()
-	private let devMode: Bool = true
-	// TODO: remove dev bypass when Keycloak URL is configured
+	private let devMode: Bool = FeatureFlags.devMode
 
 	public static let issuerURL = "https://auth.universidad.edu/realms/unipark"
 	public static let clientID = "unipark-ios"

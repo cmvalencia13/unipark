@@ -7,8 +7,8 @@ public enum HTTPMethod: String {
 public final class NetworkClient {
 	public static let shared = NetworkClient()
 
-	/// Default base URL points to local development server; can be changed at runtime.
-	public var baseURL: URL = URL(string: "http://localhost:8080/v1")!
+	/// Base URL leída de FeatureFlags — cambia backendBaseURL ahí para apuntar a staging/prod.
+	public var baseURL: URL = URL(string: FeatureFlags.backendBaseURL)!
 
 	private let session: URLSession
 	private let decoder: JSONDecoder

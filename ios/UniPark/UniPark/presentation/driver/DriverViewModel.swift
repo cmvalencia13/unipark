@@ -14,11 +14,22 @@ public final class DriverViewModel {
         lotName: "Parqueo Key",
         expiryDateString: "Dic 31, 2026 • Auto-Renew ON"
     )
-    public var userName: String? = "Carlos Test"
+    public var userName: String? = "María García"
 
     // MARK: - Scans
-    public var lastEntryScan: ScanResult? = nil
-    public var lastScanResult: ScanResult? = nil
+    // Demo scenario: conductor entró hace 12 minutos a Parqueo Key
+    public var lastEntryScan: ScanResult? = ScanResult(
+        lotName: "Parqueo Key",
+        detail: "Acceso autorizado • Spot A-14",
+        timeString: "Hace 12 min",
+        direction: .entry
+    )
+    public var lastScanResult: ScanResult? = ScanResult(
+        lotName: "Parqueo Key",
+        detail: "Acceso autorizado • Spot A-14",
+        timeString: "Hace 12 min",
+        direction: .entry
+    )
 
     // MARK: - Sticker Permit
     public var stickerPermit: StickerPermit? = nil
@@ -55,14 +66,14 @@ public final class DriverViewModel {
 
         // Countdown: ticks every second, regenerates QR payload at 0
         countdownTimer?.invalidate()
-        passCountdown = 60
+        passCountdown = FeatureFlags.qrRotationSeconds
         let qTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.passCountdown -= 1
                 if self.passCountdown <= 0 {
-                    self.passCountdown = 60
+                    self.passCountdown = FeatureFlags.qrRotationSeconds
                     // Phase 1 — UUID temporal para que el QR rote visualmente.
                     // Phase 2 (post-backend) — reemplazar con JWT firmado de
                     // PassRepository.generateAccessToken() y validar server-side.
