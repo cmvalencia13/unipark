@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import java.time.OffsetDateTime
 import java.util.UUID
 
 @Repository
@@ -22,6 +23,7 @@ interface UserRepository : JpaRepository<User, UUID> {
         ORDER BY u.createdAt DESC
     """)
     fun findFilteredUsers(role: Role?, search: String?, pageable: Pageable): Page<User>
+    override fun count(): Long
 }
 
 @Repository
@@ -43,10 +45,13 @@ interface PassRepository : JpaRepository<Pass, UUID> {
 @Repository
 interface ScanRepository : JpaRepository<Scan, UUID> {
     fun existsByGuardIdAndIdempotencyKey(guardId: UUID, idempotencyKey: String): Boolean
+    fun countByScannedAtAfter(after: OffsetDateTime): Long
 }
 
 @Repository
-interface ViolationRepository : JpaRepository<Violation, UUID>
+interface ViolationRepository : JpaRepository<Violation, UUID> {
+    fun countByStatus(status: ViolationStatus): Long
+}
 
 @Repository
 interface AuditLogRepository : JpaRepository<AuditLog, Long>
