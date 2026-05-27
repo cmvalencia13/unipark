@@ -7,6 +7,7 @@ struct UniParkApp: App {
     private let networkSyncManager = NetworkSyncManager()
 
     init() {
+        // UniParkNavBarAppearance.apply() — disabled: UIAppearance in init causes issues on iOS 26
         networkSyncManager.start()
     }
 
@@ -14,7 +15,7 @@ struct UniParkApp: App {
         WindowGroup {
             RootView()
         }
-        .modelContainer(for: PendingScan.self)
+        // .modelContainer(for: PendingScan.self) — disabled temporarily, re-enable when SwiftData schema is stable
     }
 }
 

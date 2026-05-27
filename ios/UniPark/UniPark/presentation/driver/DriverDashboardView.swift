@@ -7,200 +7,265 @@ public struct DriverDashboardView: View {
 	public init() {}
 
 	public var body: some View {
-		NavigationStack {
-			ZStack {
-				Color(.systemBackground)
-					.ignoresSafeArea()
+		ZStack {
+			Color.upBackground
+				.ignoresSafeArea()
 
-				ScrollView {
-					VStack(alignment: .leading, spacing: 20) {
-						headerSection
-						lotsCarouselSection
-						digitalPassSection
-						lotsListSection
-					}
+			ScrollView(showsIndicators: false) {
+				VStack(alignment: .leading, spacing: 12) {
+					header
+					activePermitCard
+					currentVehicleCard
+					campusTrendsCard
+					systemAlertsCard
+				}
+				.padding(.horizontal, 16)
+				.padding(.vertical, 20)
+			}
+
+			if viewModel.isLoading {
+				ProgressView()
+					.progressViewStyle(CircularProgressViewStyle(tint: .upPrimary))
 					.padding()
-				}
-
-				if viewModel.isLoading {
-					ProgressView()
-						.padding()
-						.background(.thinMaterial)
-						.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-				}
+					.background(Color.upSurfaceHighest.opacity(0.6))
+					.clipShape(RoundedRectangle(cornerRadius: 16))
 			}
-			.navigationTitle("UniPark")
-			.navigationBarTitleDisplayMode(.inline)
-			.task {
-				await viewModel.loadData()
+		}
+		.task {
+			await viewModel.loadData()
+		}
+		.onChange(of: viewModel.errorMessage) { _, newValue in
+			showingErrorAlert = newValue != nil
+		}
+		.alert("No fue posible cargar los datos", isPresented: $showingErrorAlert) {
+			Button("Cerrar", role: .cancel) {
+				viewModel.errorMessage = nil
 			}
-			.onChange(of: viewModel.errorMessage) { _, newValue in
-				showingErrorAlert = newValue != nil
-			}
-			.alert("No fue posible cargar los datos", isPresented: $showingErrorAlert) {
-				Button("Cerrar", role: .cancel) {
-					viewModel.errorMessage = nil
-				}
-			} message: {
-				Text(viewModel.errorMessage ?? "Ocurrió un error inesperado.")
-			}
+		} message: {
+			Text(viewModel.errorMessage ?? "Ocurrió un error inesperado.")
 		}
 	}
 
-	// MARK: - Sections
-
-	private var headerSection: some View {
+	// MARK: - Header
+	private var header: some View {
 		HStack(spacing: 12) {
-			Image(systemName: "building.2.fill")
-				.font(.title2)
-				.foregroundStyle(Color.accentColor)
-				.padding(12)
-				.background(.thinMaterial)
-				.clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+			Image(systemName: "person.crop.circle.fill")
+				.font(.title)
+				.foregroundStyle(Color.upPrimary)
+				.padding(8)
+				.background(Color.upSurfaceHighest)
+				.clipShape(Circle())
 
-			VStack(alignment: .leading, spacing: 4) {
-				Text("Bienvenido, \(viewModel.user?.fullName ?? "Usuario")")
-					.font(.title2.bold())
-				Text("Tu estado de estacionamiento universitario")
-					.font(.subheadline)
-					.foregroundStyle(.secondary)
-			}
+			Text("UniPark")
+				.font(.title2.weight(.bold))
+				.foregroundStyle(Color.upPrimary)
 
 			Spacer()
+
+			Button(action: {}) {
+				Image(systemName: "bell.fill")
+					.font(.title3)
+					.foregroundStyle(Color.upPrimaryText)
+					.padding(10)
+					.background(Color.upSurfaceHighest)
+					.clipShape(Circle())
+			}
 		}
-		.padding()
-		.background(.thinMaterial)
-		.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+		.foregroundStyle(Color.upTextPrimary)
+		.padding(.horizontal, 4)
 	}
 
-	private var lotsCarouselSection: some View {
+	// MARK: - Active Permit Card
+	private var activePermitCard: some View {
 		VStack(alignment: .leading, spacing: 12) {
-			Text("Lotes")
-				.font(.headline)
+			Text("ACTIVE PERMIT")
+				.font(.system(size: 11, weight: .semibold))
+				.foregroundColor(.upPrimary)
+				.kerning(1.2)
 
-			ScrollView(.horizontal, showsIndicators: false) {
-				HStack(spacing: 12) {
-					ForEach(viewModel.lots) { lot in
-						ParkingLotCard(lot: lot)
+			HStack(alignment: .top) {
+				VStack(alignment: .leading, spacing: 8) {
+					Text(viewModel.activePass?.lotName ?? "Commuter Zone A")
+						.font(.title.bold())
+						.foregroundStyle(Color.upTextPrimary)
+
+					Text("Expiry: \(viewModel.activePass?.expiryDateString ?? "Jun 30, 2026")")
+						.font(.subheadline)
+						.foregroundStyle(Color.upTextSecondary)
+				}
+
+				Spacer()
+
+				VStack(alignment: .trailing, spacing: 8) {
+					HStack(spacing: 6) {
+						GlowingDot(color: .upSecondary, size: 6)
+						Text("Status Valid")
+							.font(.subheadline.weight(.semibold))
+							.foregroundStyle(Color.upSurfaceLowest)
+					}
+					.padding(.horizontal, 10)
+					.padding(.vertical, 6)
+					.background(Color.upSecondary)
+					.clipShape(Capsule())
+
+					Button(action: {}) {
+						HStack(spacing: 6) {
+							Text("Manage Permit")
+								.font(.subheadline.weight(.semibold))
+							Image(systemName: "chevron.right")
+						}
+						.foregroundStyle(Color.upPrimaryText)
 					}
 				}
-				.padding(.vertical, 2)
 			}
 		}
+		.padding(16)
+		.glassCard(cornerRadius: 16, glowColor: .upPrimary)
 	}
 
-	private var digitalPassSection: some View {
-		NavigationLink {
-			DigitalPassView()
-		} label: {
-			HStack(spacing: 12) {
-				Image(systemName: "qrcode.viewfinder")
-					.font(.title2)
-				Text("Ver mi Pase Digital")
-					.font(.headline)
-				Spacer()
-				Image(systemName: "chevron.right")
-					.font(.subheadline.weight(.semibold))
-			}
-			.foregroundStyle(.white)
-			.padding()
-			.frame(maxWidth: .infinity)
-			.background(
-				LinearGradient(
-					colors: [.blue, .indigo],
-					startPoint: .topLeading,
-					endPoint: .bottomTrailing
-				)
-			)
-			.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-			.shadow(color: .black.opacity(0.12), radius: 12, y: 6)
-		}
-	}
-
-	private var lotsListSection: some View {
+	// MARK: - Current Vehicle Card
+	private var currentVehicleCard: some View {
 		VStack(alignment: .leading, spacing: 12) {
-			Text("Detalle de ocupación")
-				.font(.headline)
+			Text("CURRENT VEHICLE")
+				.font(.system(size: 11, weight: .semibold))
+				.foregroundColor(.upPrimary)
+				.kerning(1.2)
 
-			ForEach(viewModel.lots) { lot in
-				VStack(alignment: .leading, spacing: 10) {
+			HStack {
+				VStack(alignment: .leading, spacing: 6) {
+					Text(viewModel.currentVehicle?.plate ?? "Lot B")
+						.font(.title3.weight(.bold))
+						.foregroundStyle(Color.upTextPrimary)
+					Text(viewModel.currentVehicle?.details ?? "Spot 42 • Level 2")
+						.font(.subheadline)
+						.foregroundStyle(Color.upTextSecondary)
+				}
+				Spacer()
+			}
+
+			Button(action: {}) {
+				Label("Find My Car", systemImage: "car.fill")
+					.font(.subheadline.weight(.semibold))
+					.frame(maxWidth: .infinity)
+					.padding(.vertical, 12)
+					.background(Color.upSecondary)
+					.foregroundColor(Color.upSurfaceLowest)
+					.clipShape(RoundedRectangle(cornerRadius: 12))
+			}
+		}
+		.padding(16)
+		.glassCard(cornerRadius: 16, glowColor: .clear)
+	}
+
+	// MARK: - Campus Trends Card
+	private var campusTrendsCard: some View {
+		VStack(alignment: .leading, spacing: 12) {
+			HStack {
+				Text("CAMPUS TRENDS")
+					.font(.system(size: 11, weight: .semibold))
+					.foregroundColor(.upPrimary)
+					.kerning(1.2)
+				Spacer()
+				Text("⋯")
+					.foregroundStyle(Color.upTextSecondary)
+			}
+
+			ForEach(Array(viewModel.lots.prefix(2).enumerated()), id: \.offset) { _, lot in
+				VStack(alignment: .leading, spacing: 6) {
 					HStack {
 						Text(lot.name)
-							.font(.headline)
-						Spacer()
-						Text("\(lot.capacityUsed) / \(lot.capacityTotal) spots")
 							.font(.subheadline)
-							.foregroundStyle(.secondary)
+							.foregroundStyle(Color.upTextPrimary)
+						Spacer()
+						Text(String(format: "%.0f%% Full", lot.occupancyPercentage * 100))
+							.font(.subheadline.weight(.semibold))
+							.foregroundStyle(Color.upPrimary)
 					}
 
-					ProgressView(value: lot.occupancyPercentage / 100)
-						.tint(color(for: lot.occupancyPercentage))
+					GeometryReader { proxy in
+						ZStack(alignment: .leading) {
+							RoundedRectangle(cornerRadius: 4)
+								.fill(Color.upSurfaceHighest)
+								.frame(height: 8)
+							RoundedRectangle(cornerRadius: 4)
+								.fill(Color.upSecondary)
+								.frame(width: max(0, proxy.size.width * CGFloat(lot.occupancyPercentage)), height: 8)
+						}
+					}
+					.frame(height: 8)
 				}
-				.padding()
-				.background(.thinMaterial)
-				.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 			}
 		}
+		.padding(16)
+		.glassCard(cornerRadius: 16, glowColor: .clear)
 	}
 
-	// MARK: - Helpers
+	// MARK: - System Alerts Card
+	private var systemAlertsCard: some View {
+		VStack(alignment: .leading, spacing: 12) {
+			HStack(alignment: .top, spacing: 12) {
+				Image(systemName: "exclamationmark.triangle.fill")
+					.font(.title2)
+					.foregroundStyle(Color.orange)
+					.padding(8)
+					.background(Color.upSurfaceHighest)
+					.clipShape(Circle())
 
-	private func color(for occupancy: Double) -> Color {
-		if occupancy < 0.7 {
-			return .green
-		} else if occupancy < 0.9 {
-			return .orange
-		} else {
-			return .red
+				VStack(alignment: .leading, spacing: 6) {
+					Text("SYSTEM ALERTS")
+						.font(.system(size: 11, weight: .semibold))
+						.foregroundColor(.upPrimary)
+						.kerning(1.2)
+
+					Text("Maintenance scheduled in Lot C. Some spots will be closed.")
+						.font(.subheadline)
+						.foregroundStyle(Color.upTextSecondary)
+
+					Text("4 HOURS AGO")
+						.font(.caption2.weight(.semibold))
+						.foregroundStyle(Color.upTextSecondary)
+						.kerning(0.8)
+				}
+			}
 		}
+		.padding(16)
+		.glassCard(cornerRadius: 16, glowColor: .clear)
 	}
 }
 
-// MARK: - Parking Lot Card
-
-private struct ParkingLotCard: View {
+// MARK: - Parking Lot Card (reusable)
+struct ParkingLotCard: View {
 	let lot: ParkingLot
 
 	var body: some View {
-		let occupancy = lot.occupancyPercentage
-
 		VStack(alignment: .leading, spacing: 12) {
 			HStack {
 				Text(lot.name)
 					.font(.headline)
-					.foregroundStyle(.primary)
+					.foregroundStyle(Color.upTextPrimary)
 				Spacer()
 				Circle()
 					.fill(statusColor)
 					.frame(width: 10, height: 10)
+					.shadow(color: statusColor.opacity(0.8), radius: 4)
 			}
 
 			Text("\(lot.capacityUsed) / \(lot.capacityTotal) spots")
 				.font(.subheadline)
-				.foregroundStyle(.secondary)
+				.foregroundStyle(Color.upTextSecondary)
 
-			ProgressView(value: occupancy)
+			ProgressView(value: lot.occupancyPercentage)
 				.tint(statusColor)
 		}
 		.padding()
 		.frame(width: 220)
-		.background(.thinMaterial)
-		.overlay(
-			RoundedRectangle(cornerRadius: 16, style: .continuous)
-				.strokeBorder(statusColor.opacity(0.18), lineWidth: 1)
-		)
-		.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-		.shadow(color: .black.opacity(0.10), radius: 10, y: 5)
+		.glassCard(cornerRadius: 16, glowColor: statusColor)
 	}
 
 	private var statusColor: Color {
-		let occupancy = lot.occupancyPercentage
-		if occupancy < 0.7 {
-			return .green
-		} else if occupancy < 0.9 {
-			return .orange
-		} else {
-			return .red
-		}
+		let o = lot.occupancyPercentage
+		if o < 0.7 { return .upSecondary }
+		else if o < 0.9 { return .orange }
+		else { return .upError }
 	}
 }

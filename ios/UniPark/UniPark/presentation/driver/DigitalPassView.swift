@@ -10,67 +10,65 @@ public struct DigitalPassView: View {
 	public init() {}
 
 	public var body: some View {
-		ScrollView {
-			VStack(spacing: 20) {
-				VStack(alignment: .leading, spacing: 8) {
-					Text("Tu Pase Digital")
-						.font(.title2.bold())
-					Text("Presenta este pase cuando llegues al acceso.")
-						.font(.subheadline)
-						.foregroundStyle(.secondary)
-				}
-				.frame(maxWidth: .infinity, alignment: .leading)
-				.padding()
-				.background(.thinMaterial)
-				.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+		NavigationStack {
+			ZStack {
+				Color.upBackground
+					.ignoresSafeArea()
 
-				VStack(spacing: 16) {
-					ZStack {
-						RoundedRectangle(cornerRadius: 16, style: .continuous)
-							.fill(.black)
-							.frame(width: 260, height: 260)
+				ScrollView(showsIndicators: false) {
+					VStack(spacing: 18) {
+						header
 
-						if let qr = viewModel.qrImage {
-							qr
-								.resizable()
-								.interpolation(.none)
-								.frame(width: 220, height: 220)
-								.scaledToFit()
-								.padding(0)
-						} else {
-							ProgressView()
-								.tint(.white)
+						destinationCard
+
+						accessRing
+
+						Text("TAP TO ENTER")
+							.font(.system(size: 13, weight: .bold))
+							.foregroundStyle(Color.upPrimary)
+							.textCase(.uppercase)
+							.kerning(1.8)
+
+						VStack(spacing: 10) {
+							HStack(spacing: 8) {
+								GlowingDot(color: .upSecondary, size: 6)
+								Text("SYSTEM READY")
+									.font(.system(size: 11, weight: .semibold))
+									.foregroundStyle(Color.upTextSecondary)
+									.textCase(.uppercase)
+									.kerning(1.2)
+							}
+
+							Text("Refreshes in \(viewModel.secondsRemaining)s")
+								.font(.headline.weight(.semibold))
+								.foregroundStyle(Color.upPrimary)
 						}
-					}
 
-					Text("Expira en \(viewModel.secondsRemaining)s")
-						.font(.headline)
-						.foregroundStyle(viewModel.secondsRemaining < 15 ? .red : .secondary)
-						.fontWeight(viewModel.secondsRemaining < 15 ? .bold : .regular)
-
-					Button {
-						// NFC placeholder
-					} label: {
-						HStack(spacing: 10) {
-							Image(systemName: "antenna.radiowaves.left.and.right")
-							Text("NFC")
+						Button {
+							// Assistance action placeholder
+						} label: {
+							HStack(spacing: 10) {
+								Image(systemName: "questionmark.circle")
+								Text("Need Assistance?")
+							}
+							.font(.subheadline.weight(.semibold))
+							.foregroundStyle(Color.upTextSecondary)
+							.frame(maxWidth: .infinity)
+							.padding(.vertical, 14)
+							.background(
+								RoundedRectangle(cornerRadius: 16, style: .continuous)
+									.stroke(Color.upOutlineVariant, lineWidth: 1)
+							)
 						}
-						.font(.headline)
-						.foregroundStyle(.white)
-						.frame(maxWidth: .infinity)
-						.padding()
-						.background(Color.accentColor)
-						.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+						.padding(.top, 6)
 					}
+					.padding(.horizontal, 16)
+					.padding(.top, 20)
+					.padding(.bottom, 24)
 				}
-				.padding()
-				.background(.thinMaterial)
-				.clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 			}
-			.padding()
 		}
-		.navigationTitle("Pase Digital")
-		.navigationBarTitleDisplayMode(.inline)
+		.toolbar(.hidden, for: .navigationBar)
 		.task {
 			await viewModel.generatePass()
 			viewModel.startTimer()
@@ -83,9 +81,127 @@ public struct DigitalPassView: View {
 		}
 	}
 
-	// MARK: - QR Generation
+	private var header: some View {
+		HStack(spacing: 12) {
+			Image(systemName: "person.crop.circle.fill")
+				.font(.title)
+				.foregroundStyle(Color.upPrimary)
+				.padding(8)
+				.background(Color.upSurfaceHighest)
+				.clipShape(Circle())
 
-	// All QR generation and timer logic moved to the ViewModel
+			Text("UniPark")
+				.font(.title2.weight(.bold))
+				.foregroundStyle(Color.upPrimary)
+
+			Spacer()
+
+			Button(action: {}) {
+				Image(systemName: "bell.fill")
+					.font(.title3)
+					.foregroundStyle(Color.upPrimaryText)
+					.padding(10)
+					.background(Color.upSurfaceHighest)
+					.clipShape(Circle())
+			}
+		}
+		.foregroundStyle(Color.upTextPrimary)
+	}
+
+	private var destinationCard: some View {
+		HStack(alignment: .top, spacing: 14) {
+			VStack(alignment: .leading, spacing: 8) {
+				Text("DESTINATION")
+					.font(.system(size: 11, weight: .semibold))
+					.foregroundStyle(Color.upPrimary)
+					.textCase(.uppercase)
+					.kerning(1.2)
+
+				Text("Lot C Entry")
+					.font(.system(size: 22, weight: .bold))
+					.foregroundStyle(Color.upTextPrimary)
+
+				VStack(alignment: .leading, spacing: 4) {
+					Text("AUTHORIZED VEHICLE")
+						.font(.system(size: 10, weight: .semibold))
+						.foregroundStyle(Color.upSecondary)
+						.textCase(.uppercase)
+						.kerning(1.0)
+
+					Text(viewModel.pass?.vehicleId.uuidString.uppercased().prefix(8) ?? "ABC-123")
+						.font(.subheadline.weight(.bold))
+						.foregroundStyle(Color.upSecondary)
+				}
+			}
+
+			Spacer()
+
+			Image(systemName: "car.fill")
+				.font(.system(size: 24, weight: .semibold))
+				.foregroundStyle(Color.upPrimary)
+				.padding(12)
+				.background(Color.upSurfaceHighest.opacity(0.9))
+				.clipShape(Circle())
+		}
+		.padding(16)
+		.glassCard(cornerRadius: 18, glowColor: .upPrimary)
+	}
+
+	private var accessRing: some View {
+		ZStack {
+			Circle()
+				.fill(
+					RadialGradient(
+						colors: [Color.upSurface, Color.upBackground],
+						center: .center,
+						startRadius: 24,
+						endRadius: 120
+					)
+				)
+				.frame(width: 240, height: 240)
+
+			Circle()
+				.stroke(Color.upOutlineVariant, lineWidth: 1)
+				.frame(width: 240, height: 240)
+
+			Circle()
+				.stroke(
+					AngularGradient(
+						colors: [Color.upPrimary, Color.upSecondary, Color.upPrimary],
+						center: .center
+					),
+					lineWidth: 12
+				)
+				.frame(width: 224, height: 224)
+				.neonGlow(color: .upSecondary, radius: 24)
+
+			Circle()
+				.fill(
+					RadialGradient(
+						colors: [Color.upSurfaceHighest, Color.upSurface, Color.upBackground],
+						center: .center,
+						startRadius: 12,
+						endRadius: 120
+					)
+				)
+				.frame(width: 180, height: 180)
+				.overlay {
+					if let qr = viewModel.qrImage {
+						qr
+							.resizable()
+							.interpolation(.none)
+							.scaledToFit()
+							.padding(28)
+					} else {
+						Image(systemName: "qrcode.viewfinder")
+							.font(.system(size: 60, weight: .semibold))
+							.foregroundStyle(Color.upPrimary)
+					}
+				}
+				.clipShape(Circle())
+		}
+		.frame(width: 240, height: 240)
+	}
 }
 
 // MARK: - View Model

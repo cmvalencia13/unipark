@@ -2,60 +2,28 @@ import SwiftUI
 
 public struct RootView: View {
     private let devMode: Bool = true
-    // TODO: set devMode = false when Keycloak is configured
     @State private var isAuthenticated: Bool = false
     @State private var currentUser: User? = nil
 
     public init() {}
 
     public var body: some View {
-        NavigationStack {
-            Group {
-                if devMode {
-                    let devRole: UserRole = .driver
-                    switch devRole {
-                    case .driver:
-                        driverTabs
-                    case .securityGuard:
-                        guardTabs
-                    case .admin:
-                        Text("Admin View - Coming Soon")
-                            .font(.title)
-                    case .superadmin:
-                        Text("Superadmin View - Coming Soon")
-                            .font(.title)
-                    }
-                } else if isAuthenticated, let role = currentUser?.role {
-                    switch role {
-                    case .driver:
-                        driverTabs
-                    case .securityGuard:
-                        guardTabs
-                    case .admin:
-                        Text("Admin View - Coming Soon")
-                            .font(.title)
-                    case .superadmin:
-                        Text("Superadmin View - Coming Soon")
-                            .font(.title)
-                    }
-                } else {
-                    LoginView()
+        Group {
+            if devMode {
+                driverTabs
+            } else if isAuthenticated, let role = currentUser?.role {
+                switch role {
+                case .driver:        driverTabs
+                case .securityGuard: guardTabs
+                case .admin:         Text("Admin View - Coming Soon")
+                case .superadmin:    Text("Superadmin View - Coming Soon")
                 }
+            } else {
+                NavigationStack { LoginView() }
             }
         }
         .onAppear {
-            guard !devMode else {
-                currentUser = User(
-                    email: "test@universidad.edu",
-                    fullName: "Carlos Test",
-                    role: .driver,
-                    universityId: "DEV-000",
-                    active: true
-                )
-                isAuthenticated = true
-                return
-            }
-
+            guard !devMode else { return }
             let user = OIDCAuthManager.shared.currentUser()
             currentUser = user
             isAuthenticated = user != nil
@@ -68,43 +36,48 @@ public struct RootView: View {
         }
     }
 
-    // MARK: - Tabs
-
+    // MARK: - Driver Tabs
     private var driverTabs: some View {
         TabView {
-            DriverDashboardView()
-                .tabItem {
-                    Label("Inicio", systemImage: "house.fill")
-                }
-
-            DigitalPassView()
-                .tabItem {
-                    Label("Mi Pase", systemImage: "qrcode")
-                }
-
-            WalletView()
-                .tabItem {
-                    Label("Wallet", systemImage: "creditcard.fill")
-                }
+            Tab("Status", systemImage: "chart.bar.fill") {
+                DriverDashboardView()
+            }
+            Tab("Map", systemImage: "map.fill") {
+                mapPlaceholder
+            }
+            Tab("Permits", systemImage: "doc.text.fill") {
+                Text("Permits coming soon")
+                    .foregroundStyle(Color.upTextSecondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.upBackground)
+            }
+            Tab("Access", systemImage: "qrcode.viewfinder") {
+                DigitalPassView()
+            }
         }
+        .tint(Color.upPrimary)
     }
 
+    // MARK: - Guard Tabs
     private var guardTabs: some View {
         TabView {
-            ScannerView()
-                .tabItem {
-                    Label("Scanner", systemImage: "qrcode.viewfinder")
-                }
-
-            LotCapacityView()
-                .tabItem {
-                    Label("Lotes", systemImage: "car.2.fill")
-                }
-
-            ViolationFormView()
-                .tabItem {
-                    Label("Violación", systemImage: "exclamationmark.triangle")
-                }
+            Tab("Scanner", systemImage: "qrcode.viewfinder") {
+                ScannerView()
+            }
+            Tab("Lotes", systemImage: "car.2.fill") {
+                LotCapacityView()
+            }
+            Tab("Violación", systemImage: "exclamationmark.triangle.fill") {
+                ViolationFormView()
+            }
         }
+        .tint(Color.upPrimary)
+    }
+
+    private var mapPlaceholder: some View {
+        Text("Map coming soon")
+            .foregroundStyle(Color.upTextSecondary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.upBackground)
     }
 }
