@@ -118,15 +118,24 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
         let fullName   = [givenName, familyName].filter { !$0.isEmpty }.joined(separator: " ")
 
         // Keycloak pone los roles en realm_access.roles (array).
-        // El mock backend usa un claim plano "role" (string o array) como fallback.
+        // "guard" en Keycloak → .securityGuard en la app (el rawValue del enum es "securityGuard")
         let role: UserRole
+        func parseRole(_ raw: String) -> UserRole? {
+            switch raw.lowercased() {
+            case "guard", "securityguard", "security_guard": return .securityGuard
+            case "driver":      return .driver
+            case "admin":       return .admin
+            case "superadmin":  return .superadmin
+            default:            return nil
+            }
+        }
         if let realmAccess = claims["realm_access"] as? [String: Any],
            let roles = realmAccess["roles"] as? [String] {
-            role = roles.compactMap { UserRole(rawValue: $0.lowercased()) }.first ?? .driver
+            role = roles.compactMap { parseRole($0) }.first ?? .driver
         } else if let flatRole = claims["role"] as? String {
-            role = UserRole(rawValue: flatRole.lowercased()) ?? .driver
+            role = parseRole(flatRole) ?? .driver
         } else if let flatRoles = claims["role"] as? [String] {
-            role = flatRoles.compactMap { UserRole(rawValue: $0.lowercased()) }.first ?? .driver
+            role = flatRoles.compactMap { parseRole($0) }.first ?? .driver
         } else {
             role = .driver
         }
