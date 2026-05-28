@@ -1,0 +1,102 @@
+<h2>Section 5 — Data Flow & Auth</h2>
+<p class="subtitle">How the Next.js dashboard talks to Spring Boot and Keycloak</p>
+
+<div class="section">
+  <h3>Authentication Flow</h3>
+  <div style="background: #1e2024; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 12px; line-height: 1.8;">
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 4px 10px; border-radius: 6px; font-size: 11px;">Browser</span>
+      <span style="color: #666;">→</span>
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 4px 10px; border-radius: 6px; font-size: 11px;">NextAuth.js</span>
+      <span style="color: #666;">→</span>
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 4px 10px; border-radius: 6px; font-size: 11px;">Keycloak</span>
+    </div>
+    <div style="color: #666; padding-left: 12px; margin-bottom: 16px;">1. User visits /admin → middleware checks session → redirects to Keycloak login</div>
+    <div style="color: #666; padding-left: 12px; margin-bottom: 16px;">2. Keycloak authenticates, returns auth code → NextAuth exchanges for tokens</div>
+    <div style="color: #666; padding-left: 12px; margin-bottom: 16px;">3. JWT stored in httpOnly session cookie. Role + email claims extracted.</div>
+    <div style="color: #666; padding-left: 12px;">4. Middleware reads role from token → gates /admin/* routes</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Data Fetching Patterns</h3>
+  <div class="split">
+    <div class="mockup">
+      <div class="mockup-header">Server Components (RSC)</div>
+      <div class="mockup-body" style="font-size: 12px;">
+        <div style="color: #666; margin-bottom: 12px;">Pages that don't need interactivity fetch data on the server:</div>
+        <div style="background: #0c0e12; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 11px; line-height: 1.7;">
+          <div style="color: #666;">// app/(admin)/dashboard/page.tsx</div>
+          <div style="color: #b9cacb;">export default async function <span style="color: #00dbe9;">DashboardPage</span>() {</div>
+          <div style="padding-left: 12px; color: #b9cacb;">const stats = await <span style="color: #36ffc4;">fetch</span>(</div>
+          <div style="padding-left: 24px; color: #36ffc4;">`${API_URL}/v1/admin/stats`,</div>
+          <div style="padding-left: 24px; color: #849495;">{ headers: { Authorization: `Bearer ${token}` } }</div>
+          <div style="padding-left: 12px; color: #b9cacb;">).then(r => r.json());</div>
+          <div style="padding-left: 12px; color: #b9cacb;">return &lt;DashboardStats data={stats} /&gt;;</div>
+          <div style="color: #b9cacb;">}</div>
+        </div>
+        <div style="color: #36ffc4; font-size: 11px; margin-top: 8px;">Best for: Dashboard, Lots list, Audit log</div>
+      </div>
+    </div>
+    <div class="mockup">
+      <div class="mockup-header">Client Components + SWR</div>
+      <div class="mockup-body" style="font-size: 12px;">
+        <div style="color: #666; margin-bottom: 12px;">Interactive pages (search, filter, mutate) use client-side fetching:</div>
+        <div style="background: #0c0e12; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 11px; line-height: 1.7;">
+          <div style="color: #666;">// app/(admin)/(superadmin)/users/page.tsx</div>
+          <div style="color: #b9cacb;"><span style="color: #ffb4ab;">'use client'</span>;</div>
+          <div style="color: #b9cacb;">export default function <span style="color: #00dbe9;">UsersPage</span>() {</div>
+          <div style="padding-left: 12px; color: #b9cacb;">const { data, mutate } = <span style="color: #36ffc4;">useSWR</span>(</div>
+          <div style="padding-left: 24px; color: #36ffc4;">`/api/admin/users?role=${filter}`,</div>
+          <div style="padding-left: 24px; color: #b9cacb;">fetcher</div>
+          <div style="padding-left: 12px; color: #b9cacb;">);</div>
+          <div style="padding-left: 12px; color: #b9cacb;">// mutate() after PATCH role change</div>
+          <div style="color: #b9cacb;">}</div>
+        </div>
+        <div style="color: #36ffc4; font-size: 11px; margin-top: 8px;">Best for: Users table, Violations queue, Settings form</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Mutation Flow (e.g., changing a user's role)</h3>
+  <div style="background: #1e2024; border-radius: 12px; padding: 20px; text-align: center;">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 6px 14px; border-radius: 6px; font-size: 11px;">Click role dropdown</span>
+      <span style="color: #666;">→</span>
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 6px 14px; border-radius: 6px; font-size: 11px;">ConfirmDialog</span>
+      <span style="color: #666;">→</span>
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 6px 14px; border-radius: 6px; font-size: 11px;">fetch PATCH</span>
+      <span style="color: #666;">→</span>
+      <span style="background: #0c2e1a; color: #36ffc4; padding: 6px 14px; border-radius: 6px; font-size: 11px;">Spring Boot validates + persists</span>
+      <span style="color: #666;">→</span>
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 6px 14px; border-radius: 6px; font-size: 11px;">SWR revalidates</span>
+      <span style="color: #666;">→</span>
+      <span style="background: #1a3a3c; color: #00dbe9; padding: 6px 14px; border-radius: 6px; font-size: 11px;">Toast: "Role updated"</span>
+    </div>
+    <div style="color: #666; font-size: 11px; margin-top: 16px;">Backend writes audit_log entry. UI optimistically updates, reverts on error.</div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Error & Loading States</h3>
+  <table style="width:100%; border-collapse: collapse; margin-top: 8px;">
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Loading</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Glass skeleton cards with shimmer animation (matches Android app)</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Empty</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Centered illustration + "No violations found" copy with clear filters CTA</td>
+    </tr>
+    <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Error</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Toast notification with retry. Inline error for table rows that fail individually.</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Unauthorized</td>
+      <td style="padding: 8px; color: #849495; font-size: 12px;">Middleware redirects to /login. API 403 shows "insufficient permissions" banner.</td>
+    </tr>
+  </table>
+</div>

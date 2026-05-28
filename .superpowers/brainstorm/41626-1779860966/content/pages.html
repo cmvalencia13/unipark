@@ -1,0 +1,140 @@
+<h2>Section 4 — Pages & Component Tree</h2>
+<p class="subtitle">6 pages, broken down by role and key components</p>
+
+<div class="section">
+  <h3>1. Dashboard <span style="color: #00dbe9; font-size: 11px; background: rgba(0,219,233,0.1); padding: 2px 8px; border-radius: 4px;">admin+</span></h3>
+  <div class="mockup" style="margin-top: 8px;">
+    <div class="mockup-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div style="background: rgba(30,32,36,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+        <div style="color: #849495; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Occupancy Overview</div>
+        <div style="color: #e2e2e8; font-size: 24px; font-weight: 700; margin-top: 4px; font-family: Sora;">3 lots</div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+          <div><div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;"><span style="color: #b9cacb;">Lot A</span><span style="color: #36ffc4;">67%</span></div><div style="height: 4px; background: #333539; border-radius: 2px;"><div style="width: 67%; height: 100%; background: #36ffc4; border-radius: 2px;"></div></div></div>
+          <div><div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;"><span style="color: #b9cacb;">Lot B</span><span style="color: #ffb4ab;">92%</span></div><div style="height: 4px; background: #333539; border-radius: 2px;"><div style="width: 92%; height: 100%; background: #ffb4ab; border-radius: 2px;"></div></div></div>
+        </div>
+      </div>
+      <div style="background: rgba(30,32,36,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+        <div style="color: #849495; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">Today's Activity</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+          <div><div style="color: #e2e2e8; font-size: 28px; font-weight: 700; font-family: Sora;">142</div><div style="color: #666; font-size: 11px;">Scans</div></div>
+          <div><div style="color: #ffb4ab; font-size: 28px; font-weight: 700; font-family: Sora;">3</div><div style="color: #666; font-size: 11px;">Pending violations</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>2. Lots <span style="color: #00dbe9; font-size: 11px; background: rgba(0,219,233,0.1); padding: 2px 8px; border-radius: 4px;">admin+</span></h3>
+  <div class="mockup" style="margin-top: 8px;">
+    <div class="mockup-body">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="color: #e2e2e8; font-size: 14px; font-weight: 600;">Parking Lots</div>
+        <div class="mock-button">+ New Lot</div>
+      </div>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <td style="padding: 8px; color: #666; font-size: 11px;">Name</td>
+          <td style="padding: 8px; color: #666; font-size: 11px;">Capacity</td>
+          <td style="padding: 8px; color: #666; font-size: 11px;">Used</td>
+          <td style="padding: 8px; color: #666; font-size: 11px;">Status</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+          <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Commuter A</td>
+          <td style="padding: 8px; color: #b9cacb; font-size: 13px;">200</td>
+          <td style="padding: 8px; color: #b9cacb; font-size: 13px;">134</td>
+          <td style="padding: 8px;"><span style="color: #36ffc4; font-size: 11px; background: rgba(54,255,196,0.1); padding: 2px 8px; border-radius: 4px;">Active</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Visitor V</td>
+          <td style="padding: 8px; color: #b9cacb; font-size: 13px;">80</td>
+          <td style="padding: 8px; color: #b9cacb; font-size: 13px;">76</td>
+          <td style="padding: 8px;"><span style="color: #ffb4ab; font-size: 11px; background: rgba(255,180,171,0.1); padding: 2px 8px; border-radius: 4px;">Near Full</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>3. Users &amp; Roles <span style="color: #36ffc4; font-size: 11px; background: rgba(54,255,196,0.1); padding: 2px 8px; border-radius: 4px;">superadmin</span></h3>
+  <div class="mockup" style="margin-top: 8px;">
+    <div class="mockup-body">
+      <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+        <div class="mock-input" style="flex: 1;">Search by name, email, or university ID...</div>
+        <select style="background: #1e2024; border: 1px solid rgba(255,255,255,0.1); color: #e2e2e8; padding: 6px 12px; border-radius: 6px; font-size: 12px;">
+          <option>All Roles</option><option>driver</option><option>guard</option><option>admin</option><option>superadmin</option>
+        </select>
+      </div>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+          <td style="padding: 8px; color: #666; font-size: 11px;">User</td>
+          <td style="padding: 8px; color: #666; font-size: 11px;">Email</td>
+          <td style="padding: 8px; color: #666; font-size: 11px;">Role</td>
+          <td style="padding: 8px; color: #666; font-size: 11px;">Status</td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+          <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Ana Martinez</td>
+          <td style="padding: 8px; color: #849495; font-size: 12px;">ana@uni.edu</td>
+          <td style="padding: 8px;"><span style="color: #00dbe9; font-size: 11px; background: rgba(0,219,233,0.1); padding: 2px 8px; border-radius: 4px;">driver</span></td>
+          <td style="padding: 8px;"><span style="color: #36ffc4; font-size: 11px;">Active</span></td>
+        </tr>
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+          <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Carlos Ruiz</td>
+          <td style="padding: 8px; color: #849495; font-size: 12px;">carlos@uni.edu</td>
+          <td style="padding: 8px;"><span style="color: #7df4ff; font-size: 11px; background: rgba(125,244,255,0.1); padding: 2px 8px; border-radius: 4px;">admin</span></td>
+          <td style="padding: 8px;"><span style="color: #36ffc4; font-size: 11px;">Active</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 8px; color: #e2e2e8; font-size: 13px;">Luis Gomez</td>
+          <td style="padding: 8px; color: #849495; font-size: 12px;">luis@uni.edu</td>
+          <td style="padding: 8px;"><span style="color: #d1bcff; font-size: 11px; background: rgba(209,188,255,0.1); padding: 2px 8px; border-radius: 4px;">guard</span></td>
+          <td style="padding: 8px;"><span style="color: #666; font-size: 11px;">Inactive</span></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Remaining pages (summary)</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div style="background: rgba(30,32,36,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+      <h4 style="color: #e2e2e8; margin: 0 0 4px;">4. Violations Console</h4>
+      <div style="color: #00dbe9; font-size: 10px; background: rgba(0,219,233,0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px;">admin+</div>
+      <p style="color: #849495; font-size: 12px; margin: 0;">Filterable table (Pending/Approved/Dismissed). Click row → detail drawer with guard photo evidence, vehicle info, and approve/dismiss buttons with resolution note.</p>
+    </div>
+    <div style="background: rgba(30,32,36,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px;">
+      <h4 style="color: #e2e2e8; margin: 0 0 4px;">5. Audit Log</h4>
+      <div style="color: #36ffc4; font-size: 10px; background: rgba(54,255,196,0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px;">superadmin</div>
+      <p style="color: #849495; font-size: 12px; margin: 0;">Date range picker, actor/action dropdowns. Paginated table with expandable rows showing full JSON payload. CSV export button.</p>
+    </div>
+    <div style="background: rgba(30,32,36,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; grid-column: 1 / -1;">
+      <h4 style="color: #e2e2e8; margin: 0 0 4px;">6. Settings</h4>
+      <div style="color: #36ffc4; font-size: 10px; background: rgba(54,255,196,0.1); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 8px;">superadmin</div>
+      <p style="color: #849495; font-size: 12px; margin: 0;">Form sections: Occupancy thresholds (warning %, critical %), Rate limiting (requests per window, window seconds), QR pass expiry (seconds), System toggles (maintenance mode). Save button per section.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Component hierarchy</h3>
+  <div style="background: #1e2024; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 12px; line-height: 1.8;">
+    <div style="color: #666;">app/</div>
+    <div style="padding-left: 16px; color: #b9cacb;">├── layout.tsx          <span style="color: #666;">← RootLayout: theme + auth provider</span></div>
+    <div style="padding-left: 16px; color: #b9cacb;">├── (auth)/</div>
+    <div style="padding-left: 32px; color: #666;">└── login/page.tsx     <span style="color: #666;">← Keycloak redirect</span></div>
+    <div style="padding-left: 16px; color: #b9cacb;">├── (admin)/            <span style="color: #666;">← Layout: Sidebar + Header shell</span></div>
+    <div style="padding-left: 32px; color: #b9cacb;">├── dashboard/page.tsx</div>
+    <div style="padding-left: 32px; color: #b9cacb;">├── lots/page.tsx</div>
+    <div style="padding-left: 32px; color: #b9cacb;">├── violations/page.tsx</div>
+    <div style="padding-left: 32px; color: #b9cacb;">├── (superadmin)/       <span style="color: #666;">← Route group gated by middleware</span></div>
+    <div style="padding-left: 48px; color: #666;">├── users/page.tsx</div>
+    <div style="padding-left: 48px; color: #666;">├── audit/page.tsx</div>
+    <div style="padding-left: 48px; color: #666;">└── settings/page.tsx</div>
+    <div style="padding-left: 16px; color: #b9cacb;">└── components/</div>
+    <div style="padding-left: 32px; color: #666;">├── ui/                 <span style="color: #666;">← GlassPanel, StatusPill, OccupancyBar, DataTable</span></div>
+    <div style="padding-left: 32px; color: #666;">├── layout/             <span style="color: #666;">← Sidebar, Header, RoleGate</span></div>
+    <div style="padding-left: 32px; color: #666;">└── shared/             <span style="color: #666;">← SearchInput, FilterDropdown, ConfirmDialog</span></div>
+  </div>
+</div>
