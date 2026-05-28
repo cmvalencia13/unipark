@@ -7,9 +7,9 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 	public static let shared = OIDCAuthManager()
 	private let devMode: Bool = FeatureFlags.devMode
 
-	public static let issuerURL = "https://auth.universidad.edu/realms/unipark"
-	public static let clientID = "unipark-ios"
-	public static let redirectURI = "com.unipark.app://callback"
+    public static let issuerURL = AppAuthService.issuerURL
+    public static let clientID = AppAuthService.clientID
+    public static let redirectURI = AppAuthService.redirectURI
 
 	private let authService = AppAuthService()
 	private var authSession: ASWebAuthenticationSession?
@@ -98,42 +98,44 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 		TokenStorage.shared.save(accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken)
 	}
 
-	public func currentUser() -> User? {
-		if devMode {
-			return User(
-				email: "test@universidad.edu",
-				fullName: "Carlos Test",
-				role: .driver,
-				universityId: "DEV-000",
-				active: true
-			)
-		}
+    public func currentUser() -> User? {
+        guard let accessToken = TokenStorage.shared.accessToken,
+              let claims = decodeJWTPayload(accessToken) else {
+            return nil
+        }
 
-		guard let accessToken = TokenStorage.shared.accessToken,
-			  let claims = decodeJWTPayload(accessToken) else {
-			return nil
-		}
+        guard let sub   = claims["sub"] as? String,
+              let email = claims["email"] as? String else {
+            return nil
+        }
 
-		guard let sub = claims["sub"] as? String,
-			  let email = claims["email"] as? String else {
-			return nil
-		}
+        let givenName  = claims["given_name"]  as? String ?? ""
+        let familyName = claims["family_name"] as? String ?? ""
+        let fullName   = [givenName, familyName].filter { !$0.isEmpty }.joined(separator: " ")
 
-		let givenName = claims["given_name"] as? String ?? ""
-		let familyName = claims["family_name"] as? String ?? ""
-		let fullName = [givenName, familyName].filter { !$0.isEmpty }.joined(separator: " ")
-		let roleString = (claims["role"] as? String ?? "driver").lowercased()
-		let role = UserRole(rawValue: roleString) ?? .driver
+        // Keycloak pone los roles en realm_access.roles (array).
+        // El mock backend usa un claim plano "role" (string o array) como fallback.
+        let role: UserRole
+        if let realmAccess = claims["realm_access"] as? [String: Any],
+           let roles = realmAccess["roles"] as? [String] {
+            role = roles.compactMap { UserRole(rawValue: $0.lowercased()) }.first ?? .driver
+        } else if let flatRole = claims["role"] as? String {
+            role = UserRole(rawValue: flatRole.lowercased()) ?? .driver
+        } else if let flatRoles = claims["role"] as? [String] {
+            role = flatRoles.compactMap { UserRole(rawValue: $0.lowercased()) }.first ?? .driver
+        } else {
+            role = .driver
+        }
 
-		return User(
-			id: UUID(uuidString: sub) ?? UUID(),
-			email: email,
-			fullName: fullName.isEmpty ? email : fullName,
-			role: role,
-			universityId: sub,
-			active: true
-		)
-	}
+        return User(
+            id: UUID(uuidString: sub) ?? UUID(),
+            email: email,
+            fullName: fullName.isEmpty ? email : fullName,
+            role: role,
+            universityId: sub,
+            active: true
+        )
+    }
 
 	// MARK: - JWT Helpers
 

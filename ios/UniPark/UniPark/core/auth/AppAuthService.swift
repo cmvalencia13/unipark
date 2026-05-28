@@ -3,10 +3,11 @@ import CryptoKit
 import Security
 
 public struct AppAuthService {
-	// Placeholder URLs until backend provides the real environment values.
-	public static let issuerURL = "https://auth.universidad.edu/realms/unipark"
-	public static let clientID = "unipark-ios"
-	public static let redirectURI = "com.unipark.app://callback"
+    // Dev local  → http://localhost:8080/realms/unipark  (simulador iOS accede a localhost directamente)
+    // Producción → https://auth.universidad.edu.sv/realms/unipark
+    public static let issuerURL = "http://localhost:8080/realms/unipark"
+    public static let clientID = "unipark-ios"
+    public static let redirectURI = "com.unipark.app://callback"
 
 	// PKCE material generated when building the auth URL.
 	static var pendingCodeVerifier: String?

@@ -154,19 +154,24 @@ public struct AccessQRTab: View {
         .onDisappear {
             viewModel.stopTimers()
         }
-    }
-    
-    private func generateAndDisplayQR() {
-        let payload: [String: Any] = [
-            "pass": viewModel.passPayload,
-            "exp": Int(Date().addingTimeInterval(60).timeIntervalSince1970),
-            "nonce": UUID().uuidString
-        ]
-        
-        if let data = try? JSONSerialization.data(withJSONObject: payload, options: []),
-           let jsonString = String(data: data, encoding: .utf8) {
-            qrImage = generateQRImage(from: jsonString)
+        .onChange(of: viewModel.passPayload) { _, newPayload in
+            // Regenerar QR cada vez que el backend devuelve un nuevo payload firmado
+            if !newPayload.isEmpty, newPayload != "UNIPARK-NO-PASS" {
+                qrImage = generateQRImage(from: newPayload)
+            }
         }
+    }
+
+    private func generateAndDisplayQR() {
+        // El payload viene firmado del backend ("nonce:HMAC-base64").
+        // Lo mostramos directamente — no generamos HMAC en el dispositivo.
+        let payload = viewModel.passPayload
+        guard !payload.isEmpty, payload != "UNIPARK-NO-PASS" else {
+            // Si todavía no tenemos payload, pedirlo al backend
+            Task { await viewModel.fetchActivePass() }
+            return
+        }
+        qrImage = generateQRImage(from: payload)
     }
     
     private func generateQRImage(from string: String) -> UIImage? {

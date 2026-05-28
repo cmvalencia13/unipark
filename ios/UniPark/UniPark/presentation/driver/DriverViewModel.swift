@@ -35,7 +35,9 @@ public final class DriverViewModel {
     public var stickerPermit: StickerPermit? = nil
 
     // MARK: - QR Pass & Clock
-    public var passPayload: String = "UNIPARK-\(UUID().uuidString)"
+    /// Payload firmado por el backend ("nonce:HMAC-base64").
+    /// Se renueva automáticamente cada qrRotationSeconds consultando GET /v1/passes/active.
+    public var passPayload: String = ""
     public var passCountdown: Int = 60
     public var currentTime: String = ""
     public var currentDate: String = ""
@@ -46,13 +48,9 @@ public final class DriverViewModel {
 
     // MARK: - Init
     public init() {
-        // Inyectar token mock de conductor para que el backend JWT mock acepte las requests
-        // Fase 2: reemplazar por el JWT real de Keycloak
-        if TokenStorage.shared.accessToken == nil {
-            TokenStorage.shared.accessToken = "dev-mock-token-driver"
-        }
         loadData()
         updateClock()
+        Task { await fetchActivePass() }
     }
 
     // MARK: - Timers
@@ -79,10 +77,7 @@ public final class DriverViewModel {
                 self.passCountdown -= 1
                 if self.passCountdown <= 0 {
                     self.passCountdown = FeatureFlags.qrRotationSeconds
-                    // Phase 1 — UUID temporal para que el QR rote visualmente.
-                    // Phase 2 (post-backend) — reemplazar con JWT firmado de
-                    // PassRepository.generateAccessToken() y validar server-side.
-                    self.passPayload = "UNIPARK-\(UUID().uuidString)"
+                    await self.fetchActivePass()
                 }
             }
         }
@@ -122,6 +117,19 @@ public final class DriverViewModel {
     // MARK: - Sticker Permit
     public func saveStickerPermit(_ qrContent: String) {
         stickerPermit = StickerPermit(qrContent: qrContent, savedAt: Date())
+    }
+
+    // MARK: - QR Fetch
+    public func fetchActivePass() async {
+        do {
+            let dto = try await PassAPIClient.shared.fetchActivePass()
+            self.passPayload = dto.qrPayload
+        } catch {
+            // Si falla (sin backend, no conectado) dejamos el payload vacío o el anterior
+            if passPayload.isEmpty {
+                passPayload = "UNIPARK-NO-PASS"
+            }
+        }
     }
 
     // MARK: - Data Loading
