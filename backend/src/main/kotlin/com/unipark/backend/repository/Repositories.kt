@@ -51,9 +51,6 @@ interface ScanRepository : JpaRepository<Scan, UUID> {
 }
 
 @Repository
-interface SystemSettingRepository : JpaRepository<com.unipark.backend.domain.SystemSetting, String>
-
-@Repository
 interface ViolationRepository : JpaRepository<Violation, UUID> {
     fun countByStatus(status: ViolationStatus): Long
 
