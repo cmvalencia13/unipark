@@ -121,8 +121,13 @@ public final class DriverViewModel {
 
     // MARK: - Data Loading
     public func loadData() {
-        if lots.isEmpty {
-            lots = ParkingLot.stubs
+        // Carga inicial con stubs para que la UI no quede vacía
+        if lots.isEmpty { lots = ParkingLot.stubs }
+        // Luego intenta el backend real (GET /v1/lots es público — no requiere auth)
+        Task {
+            if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
+                self.lots = remote
+            }
         }
     }
 }

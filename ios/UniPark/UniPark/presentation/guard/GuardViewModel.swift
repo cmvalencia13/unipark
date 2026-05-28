@@ -34,6 +34,13 @@ public final class GuardViewModel {
     public init() {
         lots = Array(ParkingLot.stubs.prefix(2))
         selectedLotId = lots.first?.id ?? UUID()
+        // Carga lotes reales del backend en background
+        Task {
+            if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
+                self.lots = remote
+                self.selectedLotId = remote.first?.id ?? self.selectedLotId
+            }
+        }
     }
 
     // MARK: - Scanner
