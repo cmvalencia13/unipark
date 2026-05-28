@@ -16,20 +16,11 @@ public final class DriverViewModel {
     )
     public var userName: String? = "María García"
 
-    // MARK: - Scans
-    // Demo scenario: conductor entró hace 12 minutos a Parqueo Key
-    public var lastEntryScan: ScanResult? = ScanResult(
-        lotName: "Parqueo Key",
-        detail: "Acceso autorizado • Spot A-14",
-        timeString: "Hace 12 min",
-        direction: .entry
-    )
-    public var lastScanResult: ScanResult? = ScanResult(
-        lotName: "Parqueo Key",
-        detail: "Acceso autorizado • Spot A-14",
-        timeString: "Hace 12 min",
-        direction: .entry
-    )
+    // MARK: - Parking Status (actualizado desde backend)
+    public var isParked: Bool = false
+    public var parkedLotName: String? = nil
+    public var lastEntryScan: ScanResult? = nil
+    public var lastScanResult: ScanResult? = nil
 
     // MARK: - Sticker Permit
     public var stickerPermit: StickerPermit? = nil
@@ -135,13 +126,43 @@ public final class DriverViewModel {
     // MARK: - Data Loading
     public func loadData() {
         if lots.isEmpty { lots = ParkingLot.stubs }
-        Task { await refreshLots() }
+        Task {
+            await refreshLots()
+            await refreshParkingStatus()
+        }
     }
 
     /// Refresca los lotes desde el backend. Llamar en onAppear de cualquier tab que muestre ocupación.
     public func refreshLots() async {
         if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
             self.lots = remote
+        }
+    }
+
+    /// Refresca el estado de parking del conductor (dentro/fuera, en qué lote).
+    public func refreshParkingStatus() async {
+        guard let status = try? await PassAPIClient.shared.fetchMyStatus() else { return }
+        self.isParked = status.isParked
+        self.parkedLotName = status.lotName
+
+        if let lotName = status.lotName, let dir = status.direction {
+            let timeFmt = DateFormatter()
+            timeFmt.locale = Locale(identifier: "es_ES")
+            timeFmt.dateFormat = "hh:mm a"
+            var timeStr = ""
+            if let scannedAtStr = status.scannedAt,
+               let date = ISO8601DateFormatter().date(from: scannedAtStr) {
+                timeStr = timeFmt.string(from: date)
+            }
+            let scanDir: ScanDirection = dir == "ENTRY" ? .entry : .exit
+            let result = ScanResult(
+                lotName: lotName,
+                detail: dir == "ENTRY" ? "Entrada registrada" : "Salida registrada",
+                timeString: timeStr,
+                direction: scanDir
+            )
+            self.lastScanResult = result
+            if dir == "ENTRY" { self.lastEntryScan = result }
         }
     }
 }

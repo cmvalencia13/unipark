@@ -1,7 +1,10 @@
 import SwiftUI
+import AVFoundation
 
 public struct ScannerTab: View {
     var viewModel: GuardViewModel
+    @State private var scannedPayload: String = ""
+    @State private var cameraActive: Bool = true
 
     public init(viewModel: GuardViewModel) {
         self.viewModel = viewModel
@@ -20,40 +23,55 @@ public struct ScannerTab: View {
                     VStack(spacing: 20) {
 
                         // MARK: Lot Selector
-                        ScrollView(.horizontal, showsIndicators: false) {
+                        if viewModel.lots.isEmpty {
                             HStack(spacing: 8) {
-                                ForEach(viewModel.lots, id: \.id) { lot in
-                                    Button {
-                                        viewModel.selectedLotId = lot.id
-                                    } label: {
-                                        Text(lot.name)
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(
-                                                lot.id == viewModel.selectedLotId
-                                                    ? Color.upBackground : Color.upTextPrimary
-                                            )
-                                            .padding(.horizontal, 12).padding(.vertical, 8)
-                                            .background(
-                                                lot.id == viewModel.selectedLotId
-                                                    ? Color.upPrimary : Color.upSurface
-                                            )
-                                            .clipShape(Capsule())
-                                    }
-                                }
+                                ProgressView().tint(Color.upPrimary).scaleEffect(0.8)
+                                Text("Cargando lotes...")
+                                    .font(.caption)
+                                    .foregroundStyle(Color.upTextSecondary)
                             }
                             .padding(.horizontal, 16)
+                        } else {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    ForEach(viewModel.lots, id: \.id) { lot in
+                                        Button {
+                                            viewModel.selectedLotId = lot.id
+                                        } label: {
+                                            Text(lot.name)
+                                                .font(.caption.weight(.semibold))
+                                                .foregroundStyle(
+                                                    lot.id == viewModel.selectedLotId
+                                                        ? Color.upBackground : Color.upTextPrimary
+                                                )
+                                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                                .background(
+                                                    lot.id == viewModel.selectedLotId
+                                                        ? Color.upPrimary : Color.upSurface
+                                                )
+                                                .clipShape(Capsule())
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                            }
                         }
 
-                        // MARK: Viewfinder
+                        // MARK: Viewfinder con cámara real
                         VStack(spacing: 20) {
                             ZStack {
-                                Color.black
+                                // Cámara real
+                                if cameraActive && viewModel.scanStatus != .verifying {
+                                    QRCameraView(onQRDetected: { payload in
+                                        guard viewModel.lotsLoaded, !viewModel.isScanCooldown else { return }
+                                        scannedPayload = payload
+                                        cameraActive = false
+                                        // Mostrar sheet de dirección
+                                    })
                                     .frame(width: 280, height: 280)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                                // Scan line — solo visible cuando no está verificando
-                                if viewModel.scanStatus != .verifying {
-                                    AnimatedScanLine()
+                                } else {
+                                    Color.black
                                         .frame(width: 280, height: 280)
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
@@ -76,53 +94,131 @@ public struct ScannerTab: View {
                                     .stroke(bracketColor, lineWidth: 2)
                                     .frame(width: 280, height: 280)
                                     .animation(.easeInOut(duration: 0.3), value: bracketColor)
+
+                                // Instrucción cuando cámara activa
+                                if cameraActive && viewModel.scanStatus == .idle {
+                                    VStack {
+                                        Spacer()
+                                        Text("Apunta al QR del conductor")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(.white)
+                                            .padding(.horizontal, 12).padding(.vertical, 6)
+                                            .background(Color.black.opacity(0.6))
+                                            .clipShape(Capsule())
+                                            .padding(.bottom, 10)
+                                    }
+                                    .frame(width: 280, height: 280)
+                                }
                             }
 
-                            // MARK: Direction Buttons
-                            HStack(spacing: 12) {
-                                Button {
-                                    viewModel.processScan(direction: .entry)
-                                } label: {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "arrow.right.circle.fill")
-                                        Text("ENTRADA").font(.caption.weight(.bold))
+                            // Payload detectado — elige dirección
+                            if !scannedPayload.isEmpty && viewModel.scanStatus == .idle {
+                                VStack(spacing: 10) {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "qrcode.viewfinder")
+                                            .foregroundStyle(Color.upPrimary)
+                                        Text("QR detectado — elige dirección")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(Color.upTextPrimary)
                                     }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .foregroundStyle(Color.upBackground)
-                                    .background(
-                                        viewModel.isScanCooldown
-                                            ? Color.upSurfaceHighest : Color.upSecondary
-                                    )
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .neonGlow(color: viewModel.isScanCooldown ? .clear : .upSecondary)
-                                }
-                                .disabled(viewModel.isScanCooldown || !viewModel.lotsLoaded)
 
-                                Button {
-                                    viewModel.processScan(direction: .exit)
-                                } label: {
-                                    HStack(spacing: 8) {
-                                        Image(systemName: "arrow.left.circle")
-                                        Text("SALIDA").font(.caption.weight(.bold))
+                                    HStack(spacing: 12) {
+                                        Button {
+                                            viewModel.processScan(direction: .entry, payload: scannedPayload)
+                                            scannedPayload = ""
+                                        } label: {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "arrow.right.circle.fill")
+                                                Text("ENTRADA").font(.caption.weight(.bold))
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .foregroundStyle(Color.upBackground)
+                                            .background(Color.upSecondary)
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        }
+
+                                        Button {
+                                            viewModel.processScan(direction: .exit, payload: scannedPayload)
+                                            scannedPayload = ""
+                                        } label: {
+                                            HStack(spacing: 6) {
+                                                Image(systemName: "arrow.left.circle")
+                                                Text("SALIDA").font(.caption.weight(.bold))
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .foregroundStyle(Color.upError)
+                                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.upError, lineWidth: 1.5))
+                                        }
                                     }
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .foregroundStyle(
-                                        viewModel.isScanCooldown
-                                            ? Color.upTextSecondary : Color.upError
-                                    )
-                                    .background(Color.clear)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(
-                                                viewModel.isScanCooldown
-                                                    ? Color.upSurfaceHighest : Color.upError,
-                                                lineWidth: 1.5
-                                            )
-                                    )
+
+                                    Button {
+                                        scannedPayload = ""
+                                        cameraActive = true
+                                    } label: {
+                                        Text("Cancelar — volver a escanear")
+                                            .font(.caption)
+                                            .foregroundStyle(Color.upTextSecondary)
+                                    }
                                 }
-                                .disabled(viewModel.isScanCooldown || !viewModel.lotsLoaded)
+                                .padding(14)
+                                .background(Color.upSurface)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                .transition(.move(edge: .bottom).combined(with: .opacity))
+                            }
+
+                            // Botones manuales (modo debug / sin cámara)
+                            if scannedPayload.isEmpty && viewModel.scanStatus == .idle {
+                                VStack(spacing: 8) {
+                                    Text("O usa el payload de prueba:")
+                                        .font(.caption2)
+                                        .foregroundStyle(Color.upTextSecondary)
+
+                                    HStack(spacing: 12) {
+                                        Button {
+                                            viewModel.processScan(direction: .entry)
+                                        } label: {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "arrow.right.circle.fill")
+                                                Text("ENTRADA").font(.caption.weight(.bold))
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .foregroundStyle(Color.upBackground)
+                                            .background(
+                                                viewModel.isScanCooldown || !viewModel.lotsLoaded
+                                                    ? Color.upSurfaceHighest : Color.upSecondary
+                                            )
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        }
+                                        .disabled(viewModel.isScanCooldown || !viewModel.lotsLoaded)
+
+                                        Button {
+                                            viewModel.processScan(direction: .exit)
+                                        } label: {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "arrow.left.circle")
+                                                Text("SALIDA").font(.caption.weight(.bold))
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .foregroundStyle(
+                                                viewModel.isScanCooldown || !viewModel.lotsLoaded
+                                                    ? Color.upTextSecondary : Color.upError
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(
+                                                        viewModel.isScanCooldown || !viewModel.lotsLoaded
+                                                            ? Color.upSurfaceHighest : Color.upError,
+                                                        lineWidth: 1.5
+                                                    )
+                                            )
+                                        }
+                                        .disabled(viewModel.isScanCooldown || !viewModel.lotsLoaded)
+                                    }
+                                }
                             }
 
                             // MARK: Result Card
@@ -132,6 +228,12 @@ public struct ScannerTab: View {
                     }
                     .padding(.vertical, 20)
                 }
+            }
+        }
+        .onChange(of: viewModel.scanStatus) { _, newStatus in
+            // Reactivar cámara cuando el estado vuelve a idle
+            if case .idle = newStatus {
+                cameraActive = true
             }
         }
     }
@@ -191,7 +293,7 @@ public struct ScannerTab: View {
 
     private var bracketColor: Color {
         switch viewModel.scanStatus {
-        case .idle:       return Color.upPrimary
+        case .idle:       return scannedPayload.isEmpty ? Color.upPrimary : Color.upSecondary
         case .verifying:  return Color.upPrimary.opacity(0.4)
         case .accepted:   return Color.upSecondary
         case .rejected:   return Color.upError
@@ -206,6 +308,90 @@ public struct ScannerTab: View {
         case .revoked:          return "nosign"
         case .invalidSignature: return "exclamationmark.shield.fill"
         default:                return "xmark.circle.fill"
+        }
+    }
+}
+
+// MARK: - QR Camera View (AVFoundation)
+
+struct QRCameraView: UIViewRepresentable {
+    let onQRDetected: (String) -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(onQRDetected: onQRDetected)
+    }
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: .zero)
+        view.backgroundColor = .black
+
+        let session = AVCaptureSession()
+        context.coordinator.session = session
+
+        guard let device = AVCaptureDevice.default(for: .video),
+              let input = try? AVCaptureDeviceInput(device: device),
+              session.canAddInput(input) else {
+            return view
+        }
+        session.addInput(input)
+
+        let output = AVCaptureMetadataOutput()
+        if session.canAddOutput(output) {
+            session.addOutput(output)
+            output.setMetadataObjectsDelegate(context.coordinator, queue: .main)
+            output.metadataObjectTypes = [.qr]
+        }
+
+        let preview = AVCaptureVideoPreviewLayer(session: session)
+        preview.videoGravity = .resizeAspectFill
+        preview.frame = CGRect(x: 0, y: 0, width: 280, height: 280)
+        view.layer.addSublayer(preview)
+        context.coordinator.previewLayer = preview
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            session.startRunning()
+        }
+
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {
+        DispatchQueue.main.async {
+            context.coordinator.previewLayer?.frame = uiView.bounds
+        }
+    }
+
+    static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
+        coordinator.session?.stopRunning()
+    }
+
+    class Coordinator: NSObject, AVCaptureMetadataOutputObjectsDelegate {
+        let onQRDetected: (String) -> Void
+        var session: AVCaptureSession?
+        var previewLayer: AVCaptureVideoPreviewLayer?
+        private var didDetect = false
+
+        init(onQRDetected: @escaping (String) -> Void) {
+            self.onQRDetected = onQRDetected
+        }
+
+        func metadataOutput(
+            _ output: AVCaptureMetadataOutput,
+            didOutput metadataObjects: [AVMetadataObject],
+            from connection: AVCaptureConnection
+        ) {
+            guard !didDetect,
+                  let obj = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+                  obj.type == .qr,
+                  let value = obj.stringValue else { return }
+
+            didDetect = true
+            // Feedback háptico
+            let feedback = UINotificationFeedbackGenerator()
+            feedback.notificationOccurred(.success)
+
+            session?.stopRunning()
+            onQRDetected(value)
         }
     }
 }
@@ -236,19 +422,15 @@ private struct ScanCornerBrackets: Shape {
     func path(in rect: CGRect) -> Path {
         var p = Path()
         let len: CGFloat = 20
-        // top-left
         p.move(to: CGPoint(x: rect.minX, y: rect.minY + len))
         p.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
         p.addLine(to: CGPoint(x: rect.minX + len, y: rect.minY))
-        // top-right
         p.move(to: CGPoint(x: rect.maxX - len, y: rect.minY))
         p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
         p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + len))
-        // bottom-left
         p.move(to: CGPoint(x: rect.minX, y: rect.maxY - len))
         p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
         p.addLine(to: CGPoint(x: rect.minX + len, y: rect.maxY))
-        // bottom-right
         p.move(to: CGPoint(x: rect.maxX - len, y: rect.maxY))
         p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
         p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - len))

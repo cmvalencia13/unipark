@@ -1,10 +1,13 @@
 package com.unipark.backend.controller
 
 import com.unipark.backend.domain.Pass
+import com.unipark.backend.domain.Direction
 import com.unipark.backend.repository.PassRepository
+import com.unipark.backend.repository.ScanRepository
 import com.unipark.backend.repository.UserRepository
 import com.unipark.backend.repository.VehicleRepository
 import com.unipark.backend.service.QrService
+import org.springframework.data.domain.PageRequest
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
@@ -20,17 +23,26 @@ data class ActivePassResponse(
     val expiresAt: OffsetDateTime
 )
 
+data class DriverStatusResponse(
+    val isParked: Boolean,           // true = está dentro del parqueo
+    val lotName: String?,            // nombre del lote donde está
+    val direction: String?,          // "ENTRY" o "EXIT" del último scan
+    val scannedAt: String?           // timestamp del último scan
+)
+
 @RestController
 @RequestMapping("/v1/passes")
 class PassController(
     private val passRepository: PassRepository,
     private val vehicleRepository: VehicleRepository,
     private val userRepository: UserRepository,
+    private val scanRepository: ScanRepository,
     private val qrService: QrService
 ) {
 
     /**
      * Devuelve el pass activo del conductor con el payload QR firmado por el backend.
+     * Si no tiene pass activo, auto-crea uno de 12h usando su primer vehículo.
      * iOS muestra este payload directamente — no genera HMAC en el dispositivo.
      */
     @GetMapping("/active")
@@ -40,7 +52,23 @@ class PassController(
         val now = OffsetDateTime.now()
 
         val pass = passRepository.findTopByUserIdAndExpiresAtAfterOrderByExpiresAtDesc(userId, now)
-            ?: throw NoSuchElementException("No active pass found for this user")
+            ?: run {
+                // Auto-crear pass si no existe o expiró
+                val user = userRepository.findById(userId)
+                    .orElseThrow { NoSuchElementException("User not found") }
+                val vehicle = vehicleRepository.findFirstByOwnerId(userId)
+                    ?: throw NoSuchElementException("No vehicle registered — add a vehicle first")
+                passRepository.save(
+                    Pass(
+                        id        = UUID.randomUUID(),
+                        user      = user,
+                        vehicle   = vehicle,
+                        issuedAt  = now,
+                        expiresAt = now.plusHours(12),
+                        nonce     = UUID.randomUUID().toString()
+                    )
+                )
+            }
 
         return ActivePassResponse(
             passId    = pass.id,
@@ -48,6 +76,31 @@ class PassController(
             qrPayload = qrService.buildPayload(pass.nonce),
             expiresAt = pass.expiresAt
         )
+    }
+
+    /**
+     * Estado de parking del conductor: ¿está dentro o fuera?
+     * Mira el último scan de cualquier pass del usuario.
+     */
+    @GetMapping("/my-status")
+    @PreAuthorize("hasRole('DRIVER')")
+    fun getMyStatus(authentication: Authentication): DriverStatusResponse {
+        val userId = UUID.fromString(authentication.name)
+        val lastScan = scanRepository
+            .findTopByPassUserIdOrderByScannedAtDesc(userId, PageRequest.of(0, 1))
+            .content
+            .firstOrNull()
+
+        return if (lastScan == null) {
+            DriverStatusResponse(isParked = false, lotName = null, direction = null, scannedAt = null)
+        } else {
+            DriverStatusResponse(
+                isParked  = lastScan.direction == Direction.ENTRY,
+                lotName   = lastScan.lot.name,
+                direction = lastScan.direction.name,
+                scannedAt = lastScan.scannedAt.toString()
+            )
+        }
     }
 
     /**

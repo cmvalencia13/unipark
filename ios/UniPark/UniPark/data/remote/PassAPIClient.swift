@@ -12,6 +12,14 @@ public struct ActivePassDTO: Decodable {
     }
 }
 
+/// Estado de parking del driver: ¿está dentro o fuera?
+public struct DriverStatusDTO: Decodable {
+    public let isParked: Bool
+    public let lotName: String?
+    public let direction: String?
+    public let scannedAt: String?
+}
+
 public final class PassAPIClient {
     public static let shared = PassAPIClient()
     private let base = URL(string: FeatureFlags.backendBaseURL)!
@@ -27,7 +35,25 @@ public final class PassAPIClient {
         }
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw NetworkError.noConnection }
-        guard (200...299).contains(http.statusCode) else { throw NetworkError.unauthorized }
+        if http.statusCode == 401 { throw NetworkError.unauthorized }
+        guard (200...299).contains(http.statusCode) else {
+            let body = String(data: data, encoding: .utf8) ?? ""
+            print("[PassAPI] Error \(http.statusCode): \(body)")
+            throw NetworkError.serverError(http.statusCode)
+        }
         return try JSONDecoder().decode(ActivePassDTO.self, from: data)
+    }
+
+    /// GET /v1/passes/my-status — estado de parking del conductor.
+    public func fetchMyStatus() async throws -> DriverStatusDTO {
+        var request = URLRequest(url: base.appendingPathComponent("passes/my-status"))
+        request.httpMethod = "GET"
+        if let token = TokenStorage.shared.accessToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode) else { throw NetworkError.noConnection }
+        return try JSONDecoder().decode(DriverStatusDTO.self, from: data)
     }
 }

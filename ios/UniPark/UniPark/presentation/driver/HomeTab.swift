@@ -72,7 +72,10 @@ public struct HomeTab: View {
         }
         .onAppear {
             viewModel.startTimers()
-            Task { await viewModel.refreshLots() }
+            Task {
+                await viewModel.refreshLots()
+                await viewModel.refreshParkingStatus()
+            }
         }
         .onDisappear { viewModel.stopTimers() }
     }
