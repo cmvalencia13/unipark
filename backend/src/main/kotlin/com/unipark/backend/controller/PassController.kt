@@ -4,14 +4,20 @@ import com.unipark.backend.domain.Pass
 import com.unipark.backend.repository.PassRepository
 import com.unipark.backend.repository.UserRepository
 import com.unipark.backend.repository.VehicleRepository
+import com.unipark.backend.service.QrService
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.*
 import java.time.OffsetDateTime
 import java.util.UUID
 
-data class PassRequest(
-    val vehicleId: UUID
+data class PassRequest(val vehicleId: UUID)
+
+data class ActivePassResponse(
+    val passId: UUID,
+    val nonce: String,
+    val qrPayload: String,    // "nonce:HMAC-signature" — listo para mostrar como QR
+    val expiresAt: OffsetDateTime
 )
 
 @RestController
@@ -19,9 +25,34 @@ data class PassRequest(
 class PassController(
     private val passRepository: PassRepository,
     private val vehicleRepository: VehicleRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val qrService: QrService
 ) {
 
+    /**
+     * Devuelve el pass activo del conductor con el payload QR firmado por el backend.
+     * iOS muestra este payload directamente — no genera HMAC en el dispositivo.
+     */
+    @GetMapping("/active")
+    @PreAuthorize("hasRole('DRIVER')")
+    fun getActivePass(authentication: Authentication): ActivePassResponse {
+        val userId = UUID.fromString(authentication.name)
+        val now = OffsetDateTime.now()
+
+        val pass = passRepository.findTopByUserIdAndExpiresAtAfterOrderByExpiresAtDesc(userId, now)
+            ?: throw NoSuchElementException("No active pass found for this user")
+
+        return ActivePassResponse(
+            passId    = pass.id,
+            nonce     = pass.nonce,
+            qrPayload = qrService.buildPayload(pass.nonce),
+            expiresAt = pass.expiresAt
+        )
+    }
+
+    /**
+     * Genera un nuevo pass para el conductor (12h de validez).
+     */
     @PostMapping
     @PreAuthorize("hasRole('DRIVER')")
     fun generatePass(
@@ -29,27 +60,26 @@ class PassController(
         authentication: Authentication
     ): Pass {
         val userId = UUID.fromString(authentication.name)
-        
+
         val user = userRepository.findById(userId)
             .orElseThrow { IllegalArgumentException("User not found") }
-            
+
         val vehicle = vehicleRepository.findById(request.vehicleId)
             .orElseThrow { IllegalArgumentException("Vehicle not found") }
-            
-        if (vehicle.owner.id != userId) {
+
+        if (vehicle.owner.id != userId)
             throw IllegalArgumentException("Vehicle does not belong to the user")
-        }
-        
+
         val now = OffsetDateTime.now()
-        val pass = Pass(
-            id = UUID.randomUUID(),
-            user = user,
-            vehicle = vehicle,
-            issuedAt = now,
-            expiresAt = now.plusHours(12),
-            nonce = UUID.randomUUID().toString()
+        return passRepository.save(
+            Pass(
+                id        = UUID.randomUUID(),
+                user      = user,
+                vehicle   = vehicle,
+                issuedAt  = now,
+                expiresAt = now.plusHours(12),
+                nonce     = UUID.randomUUID().toString()
+            )
         )
-        
-        return passRepository.save(pass)
     }
 }

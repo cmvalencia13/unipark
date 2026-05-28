@@ -40,13 +40,18 @@ interface ParkingSpaceRepository : JpaRepository<ParkingSpace, UUID> {
 @Repository
 interface PassRepository : JpaRepository<Pass, UUID> {
     fun findByNonce(nonce: String): Pass?
+    fun findTopByUserIdAndExpiresAtAfterOrderByExpiresAtDesc(userId: UUID, now: OffsetDateTime): Pass?
 }
 
 @Repository
 interface ScanRepository : JpaRepository<Scan, UUID> {
     fun existsByGuardIdAndIdempotencyKey(guardId: UUID, idempotencyKey: String): Boolean
     fun countByScannedAtAfter(after: OffsetDateTime): Long
+    fun findTopByPassIdOrderByScannedAtDesc(passId: UUID): Scan?
 }
+
+@Repository
+interface SystemSettingRepository : JpaRepository<com.unipark.backend.domain.SystemSetting, String>
 
 @Repository
 interface ViolationRepository : JpaRepository<Violation, UUID> {
