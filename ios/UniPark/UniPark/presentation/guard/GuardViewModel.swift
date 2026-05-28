@@ -15,9 +15,9 @@ public final class GuardViewModel {
     // MARK: - Scanner State
     public enum ScanStatus: Equatable {
         case idle
-        case verifying                          // loading — esperando resultado
-        case accepted(VerificationOutcome)      // verde — acceso autorizado
-        case rejected(VerificationOutcome)      // rojo — razón específica
+        case verifying
+        case accepted(VerificationOutcome)
+        case rejected(VerificationOutcome)
     }
 
     public var scanStatus: ScanStatus = .idle
@@ -32,29 +32,46 @@ public final class GuardViewModel {
 
     // MARK: - Init
     public init() {
+        // Inyectar token mock para que el backend JWT mock acepte las requests
+        // Phase 2: reemplazar por el JWT real de Keycloak
+        if TokenStorage.shared.accessToken == nil {
+            TokenStorage.shared.accessToken = "dev-mock-token-guard"
+        }
+
         lots = Array(ParkingLot.stubs.prefix(2))
         selectedLotId = lots.first?.id ?? UUID()
-        // Carga lotes reales del backend en background
-        Task {
-            if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
-                self.lots = remote
-                self.selectedLotId = remote.first?.id ?? self.selectedLotId
+        Task { await refreshLots() }
+    }
+
+    // MARK: - Lots
+
+    private func refreshLots() async {
+        if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
+            // Preservar selectedLotId si el lote sigue existiendo
+            let currentId = selectedLotId
+            lots = remote
+            if remote.contains(where: { $0.id == currentId }) {
+                selectedLotId = currentId
+            } else {
+                selectedLotId = remote.first?.id ?? currentId
             }
         }
     }
 
     // MARK: - Scanner
 
-    /// Simula escanear un QR con el payload dado en la dirección indicada.
-    /// Para pruebas, usar los prefijos definidos en MockPassVerificationService:
-    ///   "UNIPARK-..."  → válido
-    ///   "EXPIRED-..."  → expirado
-    ///   "USED-..."     → ya usado
-    ///   "WRONG-LOT-..."→ lote incorrecto
-    ///   "REVOKED-..."  → revocado
-    ///   cualquier otro → firma inválida
+    /// Procesa un escaneo de QR.
+    /// Con backend activo: llama POST /v1/scans y actualiza ocupación en Postgres.
+    /// Fallback: actualización local optimista si el backend no responde.
+    ///
+    /// Payload de prueba (devMode):
+    ///   "UNIPARK-DEMO"   → válido (mock local)
+    ///   "EXPIRED-test"   → expirado
+    ///   "USED-test"      → ya usado
+    ///   "WRONG-LOT-test" → lote incorrecto
+    ///   "REVOKED-test"   → revocado
     public func processScan(direction: ScanDirection, payload: String = "UNIPARK-DEMO") {
-        guard !isScanCooldown else { return }
+        guard !isScanCooldown, let lot = selectedLot else { return }
         isScanCooldown = true
 
         let timeFmt = DateFormatter()
@@ -64,31 +81,65 @@ public final class GuardViewModel {
         scanStatus = .verifying
 
         Task {
-            let outcome = await MockPassVerificationService.shared.verify(
+            // 1. Intentar POST /v1/scans en el backend real
+            let backendSuccess = await tryRecordScanInBackend(
                 payload: payload,
-                selectedLotName: selectedLot?.name ?? ""
+                lotId: lot.id,
+                direction: direction
             )
 
-            if outcome.isValid {
-                // Actualizar ocupación optimistamente solo si es válido
-                updateOccupancy(direction: direction)
-                scanStatus = .accepted(outcome)
+            if backendSuccess {
+                // 2a. Backend registró el scan — refrescar lotes para tener
+                //     capacityUsed actualizado desde Postgres
+                await refreshLots()
+                scanStatus = .accepted(.valid(driverName: "Conductor Autorizado", lotId: lot.id))
             } else {
-                scanStatus = .rejected(outcome)
+                // 2b. Backend no disponible o payload inválido — usar mock local
+                let outcome = await MockPassVerificationService.shared.verify(
+                    payload: payload,
+                    selectedLotName: lot.name
+                )
+                if outcome.isValid {
+                    updateOccupancyLocally(direction: direction)
+                    scanStatus = .accepted(outcome)
+                } else {
+                    scanStatus = .rejected(outcome)
+                }
             }
 
             // Reset cooldown tras 2s
             try? await Task.sleep(for: .seconds(2))
             isScanCooldown = false
 
-            // Reset estado tras 6s
+            // Reset estado tras 4s más
             try? await Task.sleep(for: .seconds(4))
             if case .accepted = scanStatus { scanStatus = .idle }
             if case .rejected = scanStatus { scanStatus = .idle }
         }
     }
 
-    private func updateOccupancy(direction: ScanDirection) {
+    /// Intenta registrar el scan en el backend.
+    /// Retorna true si el backend aceptó el scan, false si falló o no está disponible.
+    private func tryRecordScanInBackend(
+        payload: String,
+        lotId: UUID,
+        direction: ScanDirection
+    ) async -> Bool {
+        do {
+            _ = try await ScanAPIClient.shared.recordScan(
+                qrPayload: payload,
+                lotId: lotId,
+                direction: direction
+            )
+            return true
+        } catch {
+            // Backend no disponible, QR inválido o error de red → fallback a mock
+            return false
+        }
+    }
+
+    /// Actualización local optimista cuando el backend no está disponible.
+    private func updateOccupancyLocally(direction: ScanDirection) {
         guard let idx = lots.firstIndex(where: { $0.id == selectedLotId }) else { return }
         let lot = lots[idx]
         let newUsed = direction == .entry
