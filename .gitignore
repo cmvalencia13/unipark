@@ -34,3 +34,4 @@ backend/.gradle/
 *.pem
 *.key
 secrets/
+*.xcuserstate
