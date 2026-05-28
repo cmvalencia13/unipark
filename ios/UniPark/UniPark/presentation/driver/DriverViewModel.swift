@@ -46,6 +46,11 @@ public final class DriverViewModel {
 
     // MARK: - Init
     public init() {
+        // Inyectar token mock de conductor para que el backend JWT mock acepte las requests
+        // Fase 2: reemplazar por el JWT real de Keycloak
+        if TokenStorage.shared.accessToken == nil {
+            TokenStorage.shared.accessToken = "dev-mock-token-driver"
+        }
         loadData()
         updateClock()
     }

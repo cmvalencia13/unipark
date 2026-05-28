@@ -9,7 +9,7 @@ VALUES (
     'c3d4e5f6-a7b8-9012-cdef-123456789012',   -- María García (driver)
     'f6a7b8c9-d0e1-2345-f012-456789012345',   -- Toyota Corolla 2020
     now() - interval '1 hour',
-    now() + interval '12 hours',
+    '2099-12-31 23:59:59+00',   -- nunca expira en dev
     'demo-nonce-unipark-2024'
 )
 ON CONFLICT (nonce) DO NOTHING;
