@@ -212,6 +212,12 @@ public struct MapTab: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .onAppear {
+            // Sincronizar con los datos actuales del viewModel al aparecer
+            if !viewModel.lots.isEmpty {
+                mapVM.lots = viewModel.lots
+            }
+        }
         .onChange(of: viewModel.lots) { _, newLots in
             mapVM.lots = newLots
         }
