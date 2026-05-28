@@ -22,6 +22,7 @@ android {
         manifestPlaceholders["appAuthRedirectScheme"] = "com.unipark.app"
     }
 
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -43,7 +44,9 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+
 }
 
 dependencies {
@@ -76,14 +79,6 @@ dependencies {
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
 
-    // Network + JSON
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.moshi)
-    implementation(libs.moshi)
-    ksp(libs.moshi.codegen)
-    implementation(libs.okhttp)
-    implementation(libs.okhttp.logging)
-
     // Auth + secure token storage
     implementation(libs.appauth)
     implementation(libs.security.crypto)
@@ -105,4 +100,14 @@ dependencies {
     // Core
     implementation(libs.material)
     implementation("androidx.core:core-ktx:1.15.0")
+
+    // Network + JSON
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.moshi)
+    implementation(libs.moshi)
+    ksp(libs.moshi.codegen)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
 }
+
+

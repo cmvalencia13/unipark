@@ -1,5 +1,9 @@
 package com.unipark.android.presentation.auth
 
+import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +30,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +61,15 @@ fun AuthGateScreen(
     val authState by viewModel.authState.collectAsState()
     var email by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(AppRole.DRIVER) }
+    val context = LocalContext.current
+
+    val authLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            viewModel.handleAuthResult(context, result.data)
+        }
+    }
 
     // Navigate when authenticated
     LaunchedEffect(authState) {
@@ -63,6 +78,7 @@ fun AuthGateScreen(
             onAuthenticated(authenticated.role)
         }
     }
+
 
     Box(
         modifier = Modifier
@@ -168,13 +184,25 @@ fun AuthGateScreen(
                 // Sign in button
                 ShineButton(
                     label = if (authState is AuthState.Loading) "Signing In..." else "Sign In with University ID",
-                    onClick = { viewModel.login(email.ifBlank { "student@university.edu" }, selectedRole) },
+                    onClick = {
+                        if (email.lowercase().contains("mock")) {
+                            viewModel.loginWithMocks(selectedRole)
+                        } else {
+                            try {
+                                val intent = viewModel.getAuthIntent(context, selectedRole)
+                                authLauncher.launch(intent)
+                            } catch (e: Exception) {
+                                viewModel.login(email.ifBlank { "student@university.edu" }, selectedRole)
+                            }
+                        }
+                    },
                     icon = Icons.Default.Badge,
                     modifier = Modifier.fillMaxWidth(),
                     containerColor = PrimaryFixedDim.copy(alpha = 0.15f),
                     contentColor = PrimaryFixedDim,
                     borderColor = PrimaryFixedDim.copy(alpha = 0.3f),
                 )
+
 
                 // Error message
                 if (authState is AuthState.Error) {
