@@ -108,6 +108,9 @@ dependencies {
     ksp(libs.moshi.codegen)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
+
+    // Map
+    implementation(libs.osmdroid.android)
 }
 
 

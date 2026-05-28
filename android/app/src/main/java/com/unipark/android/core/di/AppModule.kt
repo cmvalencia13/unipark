@@ -8,6 +8,7 @@ import com.unipark.android.core.auth.OIDCConfig
 import com.unipark.android.core.network.AuthInterceptor
 import com.unipark.android.core.network.NetworkConfig
 import com.unipark.android.data.local.ScanDao
+import com.unipark.android.data.local.StickerPermitDao
 import com.unipark.android.data.local.UniParkDatabase
 import com.unipark.android.data.remote.LotApiService
 import com.unipark.android.data.remote.PassApiService
@@ -104,6 +105,9 @@ object AppModule {
 
     @Provides
     fun provideScanDao(database: UniParkDatabase): ScanDao = database.scanDao()
+
+    @Provides
+    fun provideStickerPermitDao(database: UniParkDatabase): StickerPermitDao = database.stickerPermitDao()
 }
 
 @Module

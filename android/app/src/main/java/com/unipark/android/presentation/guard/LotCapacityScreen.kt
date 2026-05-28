@@ -16,7 +16,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -30,21 +29,12 @@ import com.unipark.android.presentation.UniParkCardRadius
 import com.unipark.android.presentation.UniParkFull
 import com.unipark.android.presentation.UniParkSuccess
 import com.unipark.android.presentation.UniParkWarning
-import com.unipark.android.presentation.driver.DriverDashboardViewModel
-import kotlinx.coroutines.delay
 
 @Composable
 fun LotCapacityScreen(
-    viewModel: DriverDashboardViewModel = hiltViewModel(),
+    viewModel: GuardLotsViewModel = hiltViewModel(),
 ) {
-    val state by viewModel.state.collectAsState()
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(10_000)
-            viewModel.refresh()
-        }
-    }
+    val lots by viewModel.lots.collectAsState()
 
     Column(
         modifier = Modifier
@@ -58,7 +48,7 @@ fun LotCapacityScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(state.lots) { lot ->
+            items(lots) { lot ->
                 CapacityCell(lot)
             }
         }

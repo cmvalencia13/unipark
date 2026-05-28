@@ -33,6 +33,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -122,6 +123,14 @@ fun ScannerScreen(
                 Text("Salida", fontWeight = FontWeight.Bold)
             }
         }
+        OutlinedButton(
+            onClick = viewModel::simulateScan,
+            enabled = state.actionsEnabled,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+        ) {
+            Text("Simular scan para demo")
+        }
         Card(
             modifier = Modifier.fillMaxWidth(),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
@@ -129,7 +138,7 @@ fun ScannerScreen(
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Ultimo scan", style = MaterialTheme.typography.titleMedium)
-                Text(state.lastResult?.let { "${it.status} - ${it.direction} en ${state.selectedLotName}" } ?: "Esperando QR")
+                Text(state.lastResult?.let { "${it.status} - ${it.message} en ${it.lotName}" } ?: "Esperando QR")
                 state.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
         }

@@ -8,10 +8,12 @@ import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.Dashboard
 import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.QrCodeScanner
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,12 +32,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unipark.android.presentation.auth.AppRole
 import com.unipark.android.presentation.auth.AuthGateScreen
-import com.unipark.android.presentation.driver.DigitalPassScreen
-import com.unipark.android.presentation.driver.DriverDashboardScreen
-import com.unipark.android.presentation.driver.WalletScreen
 import com.unipark.android.presentation.guard.LotCapacityScreen
 import com.unipark.android.presentation.guard.ScannerScreen
 import com.unipark.android.presentation.guard.ViolationFormScreen
+import com.unipark.android.ui.driver.DriverExperience
 import java.util.UUID
 
 object Routes {
@@ -82,10 +82,16 @@ private val guardTabs = listOf(
         icon = Icons.Outlined.QrCodeScanner,
         filledIcon = Icons.Filled.QrCodeScanner,
     ),
+    BottomNavTab(
+        route = Routes.VIOLATION,
+        label = "Infracciones",
+        icon = Icons.Outlined.Warning,
+        filledIcon = Icons.Filled.Warning,
+    ),
 )
 
 private fun tabsForRole(role: AppRole?): List<BottomNavTab> = when (role) {
-    AppRole.DRIVER -> driverTabs
+    AppRole.DRIVER -> emptyList()
     AppRole.SECURITY_GUARD -> guardTabs
     null -> emptyList()
 }
@@ -116,17 +122,19 @@ fun UniParkNavGraph() {
 
     Scaffold(
         topBar = {
-            UniParkTopAppBar(
-                showLogout = currentRole != null,
-                onLogoutClick = {
-                    currentRole = null
-                    navController.navigate(Routes.AUTH) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
+            if (currentRole != AppRole.DRIVER) {
+                UniParkTopAppBar(
+                    showLogout = currentRole != null,
+                    onLogoutClick = {
+                        currentRole = null
+                        navController.navigate(Routes.AUTH) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
                         }
-                    }
-                },
-            )
+                    },
+                )
+            }
         },
         bottomBar = {
             if (tabs.isNotEmpty()) {
@@ -166,21 +174,28 @@ fun UniParkNavGraph() {
                 )
             }
             composable(Routes.DASHBOARD) {
-                DriverDashboardScreen(
-                    onOpenPass = { navController.navigate(Routes.DIGITAL_PASS) },
+                DriverExperience(
+                    onSignOut = {
+                        currentRole = null
+                        navController.navigate(Routes.AUTH) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                inclusive = true
+                            }
+                        }
+                    },
                 )
             }
             composable(Routes.MAP) {
                 LotCapacityScreen()
             }
             composable(Routes.PERMITS) {
-                WalletScreen()
+                PlaceholderScreen("Permiso")
             }
             composable(Routes.ACCESS) {
                 ScannerScreen()
             }
             composable(Routes.DIGITAL_PASS) {
-                DigitalPassScreen(vehicleId = UUID(0, 2))
+                PlaceholderScreen("Acceso")
             }
             composable(Routes.VIOLATION) {
                 ViolationFormScreen()

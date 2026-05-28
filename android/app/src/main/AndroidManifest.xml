@@ -36,6 +36,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.driver.DriverActivity"
+            android:exported="false"
+            android:theme="@style/Theme.UniPark.Splash" />
+
         <service
             android:name=".core.nfc.PassHceService"
             android:exported="true"

@@ -18,7 +18,7 @@ data class ScannerState(
     val direction: ScanDirection = ScanDirection.ENTRY,
     val selectedLotId: UUID = UUID(0, 1),
     val selectedLotName: String = "Lote A",
-    val lastResult: Scan? = null,
+    val lastResult: GuardScanResult? = null,
     val error: String? = null,
     val processing: Boolean = false,
     val actionsEnabled: Boolean = true,
@@ -27,6 +27,7 @@ data class ScannerState(
 @HiltViewModel
 class ScannerViewModel @Inject constructor(
     private val scanQRUseCase: ScanQRUseCase,
+    private val guardStateStore: GuardStateStore,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ScannerState())
     val state: StateFlow<ScannerState> = _state.asStateFlow()
@@ -59,8 +60,39 @@ class ScannerViewModel @Inject constructor(
             runCatching {
                 scanQRUseCase.execute(payload, signature, _state.value.direction, _state.value.selectedLotId)
             }
-                .onSuccess { _state.value = _state.value.copy(lastResult = it, processing = false) }
-                .onFailure { _state.value = _state.value.copy(error = it.message, processing = false) }
+                .onSuccess {
+                    val result = guardStateStore.applyScan(
+                        lotId = _state.value.selectedLotId,
+                        lotName = _state.value.selectedLotName,
+                        direction = _state.value.direction,
+                    )
+                    _state.value = _state.value.copy(lastResult = result, processing = false)
+                }
+                .onFailure {
+                    val pending = GuardScanResult(
+                        lotName = _state.value.selectedLotName,
+                        direction = _state.value.direction,
+                        status = com.unipark.android.domain.entities.ScanStatus.OFFLINE_PENDING,
+                        message = "Pendiente por conexion",
+                        scannedAt = java.time.Instant.now(),
+                    )
+                    _state.value = _state.value.copy(lastResult = pending, error = it.message, processing = false)
+                }
+            delay(2_000)
+            _state.value = _state.value.copy(actionsEnabled = true)
+        }
+    }
+
+    fun simulateScan() {
+        if (_state.value.processing || !_state.value.actionsEnabled) return
+        viewModelScope.launch {
+            _state.value = _state.value.copy(processing = true, actionsEnabled = false, error = null)
+            val result = guardStateStore.applyScan(
+                lotId = _state.value.selectedLotId,
+                lotName = _state.value.selectedLotName,
+                direction = _state.value.direction,
+            )
+            _state.value = _state.value.copy(lastResult = result, processing = false)
             delay(2_000)
             _state.value = _state.value.copy(actionsEnabled = true)
         }

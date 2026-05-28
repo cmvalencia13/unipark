@@ -23,9 +23,11 @@ data class ViolationFormState(
 @HiltViewModel
 class ViolationFormViewModel @Inject constructor(
     private val reportViolationUseCase: ReportViolationUseCase,
+    private val guardStateStore: GuardStateStore,
 ) : ViewModel() {
     private val _state = MutableStateFlow(ViolationFormState())
     val state: StateFlow<ViolationFormState> = _state.asStateFlow()
+    val infractions = guardStateStore.infractions
 
     fun setReason(reason: String) {
         _state.value = _state.value.copy(reason = reason)
@@ -45,10 +47,17 @@ class ViolationFormViewModel @Inject constructor(
 
     fun submit(vehicleId: UUID, lotId: UUID) {
         viewModelScope.launch {
+            val record = InfractionRecord(
+                plate = _state.value.plate,
+                lotName = _state.value.selectedLotName,
+                reason = _state.value.reason,
+                photoUri = _state.value.photoUri,
+            )
+            guardStateStore.addInfraction(record)
             runCatching {
                 reportViolationUseCase.execute(vehicleId, lotId, _state.value.reason, _state.value.photoUri)
             }
-                .onSuccess { _state.value = _state.value.copy(saved = true, error = null) }
+                .onSuccess { _state.value = ViolationFormState(saved = true) }
                 .onFailure { _state.value = _state.value.copy(error = it.message) }
         }
     }
