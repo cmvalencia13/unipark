@@ -134,13 +134,14 @@ public final class DriverViewModel {
 
     // MARK: - Data Loading
     public func loadData() {
-        // Carga inicial con stubs para que la UI no quede vacía
         if lots.isEmpty { lots = ParkingLot.stubs }
-        // Luego intenta el backend real (GET /v1/lots es público — no requiere auth)
-        Task {
-            if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
-                self.lots = remote
-            }
+        Task { await refreshLots() }
+    }
+
+    /// Refresca los lotes desde el backend. Llamar en onAppear de cualquier tab que muestre ocupación.
+    public func refreshLots() async {
+        if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
+            self.lots = remote
         }
     }
 }

@@ -6,156 +6,172 @@ public struct AccessQRTab: View {
     @State var viewModel: DriverViewModel
     @State private var qrExpanded = false
     @State private var qrImage: UIImage?
-    
+
     public init(viewModel: DriverViewModel) {
         self.viewModel = viewModel
     }
-    
+
     public var body: some View {
         ZStack {
-            Color.upBackground
-                .ignoresSafeArea()
-            
+            Color.upBackground.ignoresSafeArea()
+
             VStack(spacing: 0) {
+                // Header
                 UniParkHeader {
                     NotificationCenter.default.post(name: Notification.Name("signOut"), object: nil)
                 }
-                
+
                 Spacer()
-                
-                Text(viewModel.currentTime)
-                    .font(.system(size: 36, weight: .bold))
-                    .foregroundStyle(Color.upPrimary)
-                
-                Text(viewModel.currentDate)
-                    .font(.subheadline)
-                    .foregroundStyle(Color.upTextSecondary)
-                
-                Spacer(minLength: 16)
-                
-                // QR Card (tappable)
+
+                // Clock
+                VStack(spacing: 2) {
+                    Text(viewModel.currentTime)
+                        .font(.system(size: 42, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.upPrimary)
+                    Text(viewModel.currentDate)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.upTextSecondary)
+                }
+                .padding(.bottom, 20)
+
+                // QR Card — ocupa la mayoría de la pantalla
                 Button(action: { qrExpanded = true }) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.white)
-                            .shadow(radius: 20)
-                        
-                        VStack(spacing: 8) {
-                            if let qrImage = qrImage {
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .fill(.white)
+                            .shadow(color: Color.upPrimary.opacity(0.18), radius: 24, x: 0, y: 8)
+
+                        VStack(spacing: 12) {
+                            if let qrImage {
                                 Image(uiImage: qrImage)
                                     .resizable()
                                     .interpolation(.none)
-                                    .frame(width: 260, height: 260)
+                                    .frame(width: 280, height: 280)
+                                    .padding(8)
                             } else {
-                                Image(systemName: "qrcode.viewfinder")
-                                    .font(.system(size: 80, weight: .semibold))
-                                    .foregroundStyle(Color.upSurface)
+                                // Placeholder mientras carga
+                                VStack(spacing: 12) {
+                                    ProgressView()
+                                        .tint(Color.upPrimary)
+                                        .scaleEffect(1.4)
+                                    Text("Cargando pase...")
+                                        .font(.caption)
+                                        .foregroundStyle(Color.upTextSecondary)
+                                }
+                                .frame(width: 280, height: 280)
                             }
-                            
-                            Text("Toca para ampliar")
-                                .font(.caption)
-                                .foregroundStyle(Color.upTextSecondary)
+
+                            Divider().padding(.horizontal, 16)
+
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Pase de Acceso")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.black.opacity(0.6))
+                                    Text("Toca para ampliar")
+                                        .font(.caption2)
+                                        .foregroundStyle(.black.opacity(0.35))
+                                }
+                                Spacer()
+                                // Countdown pill
+                                HStack(spacing: 4) {
+                                    Image(systemName: "clock.fill")
+                                        .font(.caption2)
+                                    Text("\(viewModel.passCountdown)s")
+                                        .font(.caption.weight(.bold))
+                                        .monospacedDigit()
+                                }
+                                .foregroundStyle(viewModel.passCountdown < 15 ? Color.red : Color.upPrimary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 5)
+                                .background((viewModel.passCountdown < 15 ? Color.red : Color.upPrimary).opacity(0.1))
+                                .clipShape(Capsule())
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 16)
                         }
-                        .padding(20)
                     }
-                    .frame(width: 300)
                 }
                 .buttonStyle(.plain)
-                
-                Text("Expira en \(viewModel.passCountdown)s")
-                    .font(.headline)
-                    .foregroundStyle(Color.upPrimary)
-                    .padding(.top, 12)
-                
-                Spacer()
-                
+                .padding(.horizontal, 20)
+
                 // Last scan result
                 if let result = viewModel.lastScanResult {
                     HStack(spacing: 12) {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 28, weight: .semibold))
-                            .foregroundStyle(Color.upSecondary)
-                        
-                        VStack(alignment: .leading, spacing: 4) {
+                        Image(systemName: result.direction == .entry ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                            .font(.system(size: 26))
+                            .foregroundStyle(result.direction == .entry ? Color.upSecondary : Color.orange)
+
+                        VStack(alignment: .leading, spacing: 2) {
                             Text(result.direction == .entry ? "Entrada registrada" : "Salida registrada")
-                                .font(.headline)
+                                .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Color.upTextPrimary)
-                            
-                            Text("\(result.lotName) • \(result.timeString)")
-                                .font(.subheadline)
+                            Text("\(result.lotName) · \(result.timeString)")
+                                .font(.caption)
                                 .foregroundStyle(Color.upTextSecondary)
                         }
-                        
                         Spacer()
                     }
-                    .padding(16)
-                    .glassCard(cornerRadius: 16, glowColor: .upSecondary)
-                    .overlay(alignment: .leading) {
-                        Rectangle()
-                            .fill(Color.upSecondary)
-                            .frame(width: 4)
-                            .clipShape(RoundedRectangle(cornerRadius: 2))
-                    }
-                    .padding(.horizontal, 16)
+                    .padding(14)
+                    .background(Color.upSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
-                            withAnimation {
-                                viewModel.lastScanResult = nil
-                            }
-                        }
-                    }
                 }
-                
-                Spacer(minLength: 20)
+
+                Spacer()
             }
-            .padding(.horizontal, 16)
         }
+        // Full-screen expanded QR
         .fullScreenCover(isPresented: $qrExpanded) {
             ZStack {
-                Color.black
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 24) {
+                Color.black.ignoresSafeArea()
+
+                VStack(spacing: 28) {
                     Text("Pase de Acceso")
-                        .font(.title2.weight(.bold))
-                        .foregroundStyle(Color.white)
-                    
-                    if let qrImage = qrImage {
+                        .font(.title2.bold())
+                        .foregroundStyle(.white)
+
+                    if let qrImage {
                         Image(uiImage: qrImage)
                             .resizable()
                             .interpolation(.none)
                             .frame(width: 340, height: 340)
-                            .background(Color.white)
-                            .cornerRadius(16)
+                            .background(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 20))
+                            .shadow(color: Color.upPrimary.opacity(0.4), radius: 32)
                     }
-                    
-                    Text("Expira en \(viewModel.passCountdown)s")
-                        .font(.headline)
-                        .foregroundStyle(Color.upPrimary)
-                    
-                    Button(action: { qrExpanded = false }) {
+
+                    HStack(spacing: 6) {
+                        Image(systemName: "clock")
+                            .font(.subheadline)
+                        Text("Expira en \(viewModel.passCountdown)s")
+                            .font(.subheadline.weight(.semibold))
+                            .monospacedDigit()
+                    }
+                    .foregroundStyle(viewModel.passCountdown < 15 ? Color.red : Color.upPrimary)
+
+                    Button { qrExpanded = false } label: {
                         Text("Cerrar")
-                            .foregroundStyle(Color.white)
-                            .padding(.horizontal, 32)
-                            .padding(.vertical, 12)
-                            .overlay(Capsule().stroke(Color.white.opacity(0.4)))
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 160)
+                            .padding(.vertical, 14)
+                            .overlay(Capsule().stroke(Color.white.opacity(0.3), lineWidth: 1))
                     }
-                    
                     Spacer()
                 }
-                .padding(20)
+                .padding(.top, 48)
+                .padding(.horizontal, 24)
             }
         }
         .onAppear {
             viewModel.startTimers()
             generateAndDisplayQR()
         }
-        .onDisappear {
-            viewModel.stopTimers()
-        }
+        .onDisappear { viewModel.stopTimers() }
         .onChange(of: viewModel.passPayload) { _, newPayload in
-            // Regenerar QR cada vez que el backend devuelve un nuevo payload firmado
             if !newPayload.isEmpty, newPayload != "UNIPARK-NO-PASS" {
                 qrImage = generateQRImage(from: newPayload)
             }
@@ -163,37 +179,26 @@ public struct AccessQRTab: View {
     }
 
     private func generateAndDisplayQR() {
-        // El payload viene firmado del backend ("nonce:HMAC-base64").
-        // Lo mostramos directamente — no generamos HMAC en el dispositivo.
         let payload = viewModel.passPayload
         guard !payload.isEmpty, payload != "UNIPARK-NO-PASS" else {
-            // Si todavía no tenemos payload, pedirlo al backend
             Task { await viewModel.fetchActivePass() }
             return
         }
         qrImage = generateQRImage(from: payload)
     }
-    
+
     private func generateQRImage(from string: String) -> UIImage? {
         let context = CIContext()
         let filter = CIFilter.qrCodeGenerator()
         filter.setValue(Data(string.utf8), forKey: "inputMessage")
         filter.setValue("M", forKey: "inputCorrectionLevel")
-        
-        guard var ciImage = filter.outputImage else {
-            return nil
-        }
-        
-        let targetSize: CGFloat = 260
+        guard let ciImage = filter.outputImage else { return nil }
+
+        let targetSize: CGFloat = 340
         let extent = ciImage.extent.integral
         let scale = min(targetSize / extent.width, targetSize / extent.height)
-        let transform = CGAffineTransform(scaleX: scale, y: scale)
-        let scaled = ciImage.transformed(by: transform)
-        
-        guard let cgImage = context.createCGImage(scaled, from: scaled.extent) else {
-            return nil
-        }
-        
+        let scaled = ciImage.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        guard let cgImage = context.createCGImage(scaled, from: scaled.extent) else { return nil }
         return UIImage(cgImage: cgImage, scale: UIScreen.main.scale, orientation: .up)
     }
 }

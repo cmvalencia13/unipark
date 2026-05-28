@@ -213,8 +213,9 @@ public struct MapTab: View {
             }
         }
         .onAppear {
-            // Sincronizar con los datos actuales del viewModel al aparecer
-            if !viewModel.lots.isEmpty {
+            if !viewModel.lots.isEmpty { mapVM.lots = viewModel.lots }
+            Task {
+                await viewModel.refreshLots()
                 mapVM.lots = viewModel.lots
             }
         }

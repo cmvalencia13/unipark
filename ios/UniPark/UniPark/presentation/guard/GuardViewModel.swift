@@ -24,6 +24,7 @@ public final class GuardViewModel {
     public var lastScanDirection: String? = nil
     public var lastScanTime: String? = nil
     public var isScanCooldown: Bool = false
+    public var backendErrorMessage: String? = nil
 
     // MARK: - Violations
     public var violations: [ViolationEntry] = ViolationEntry.stubs
@@ -79,38 +80,23 @@ public final class GuardViewModel {
         scanStatus = .verifying
 
         Task {
-            // 1. Intentar POST /v1/scans en el backend real
-            let backendSuccess = await tryRecordScanInBackend(
-                payload: payload,
-                lotId: lot.id,
-                direction: direction
-            )
+            backendErrorMessage = nil
+            let result = await tryRecordScanInBackend(payload: payload, lotId: lot.id, direction: direction)
 
-            if backendSuccess {
-                // 2a. Backend registró el scan — refrescar lotes para tener
-                //     capacityUsed actualizado desde Postgres
+            switch result {
+            case .success:
                 await refreshLots()
                 scanStatus = .accepted(.valid(driverName: "Conductor Autorizado", lotId: lot.id))
-            } else {
-                // 2b. Backend no disponible o payload inválido — usar mock local
-                let outcome = await MockPassVerificationService.shared.verify(
-                    payload: payload,
-                    selectedLotName: lot.name
-                )
-                if outcome.isValid {
-                    updateOccupancyLocally(direction: direction)
-                    scanStatus = .accepted(outcome)
-                } else {
-                    scanStatus = .rejected(outcome)
-                }
+            case .failure(let msg):
+                // Mostrar el mensaje del backend directamente (ej: "ya tiene entrada registrada")
+                backendErrorMessage = msg
+                scanStatus = .rejected(.invalid(reason: msg))
             }
 
-            // Reset cooldown tras 2s
             try? await Task.sleep(for: .seconds(2))
             isScanCooldown = false
-
-            // Reset estado tras 4s más
             try? await Task.sleep(for: .seconds(4))
+            backendErrorMessage = nil
             if case .accepted = scanStatus { scanStatus = .idle }
             if case .rejected = scanStatus { scanStatus = .idle }
         }
@@ -122,17 +108,19 @@ public final class GuardViewModel {
         payload: String,
         lotId: UUID,
         direction: ScanDirection
-    ) async -> Bool {
+    ) async -> Result<Void, String> {
         do {
             _ = try await ScanAPIClient.shared.recordScan(
                 qrPayload: payload,
                 lotId: lotId,
                 direction: direction
             )
-            return true
+            return .success(())
+        } catch let NetworkError.clientError(code) where code == 400 {
+            // Mensaje de error del backend (ej: entrada doble, QR inválido)
+            return .failure(ScanAPIClient.lastErrorMessage ?? "QR inválido o acceso denegado.")
         } catch {
-            // Backend no disponible, QR inválido o error de red → fallback a mock
-            return false
+            return .failure("Sin conexión con el servidor.")
         }
     }
 
