@@ -17,7 +17,8 @@
       "webOrigins": ["*"],
       "attributes": {
         "pkce.code.challenge.method": "S256"
-      }
+      },
+      "optionalClientScopes": ["offline_access", "address", "phone", "microprofile-jwt"]
     },
     {
       "clientId": "unipark-android",

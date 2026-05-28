@@ -31,8 +31,12 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 
 		let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)
 		let queryItems = components?.queryItems ?? []
-		if let state = queryItems.first(where: { $0.name == "state" })?.value, state != expectedState {
-			throw NetworkError.unauthorized
+		print("[OIDCAuth] callback: \(callbackURL.absoluteString.prefix(200))")
+		if let state = queryItems.first(where: { $0.name == "state" })?.value {
+			print("[OIDCAuth] state match=\(state == expectedState)")
+			if state != expectedState {
+				throw NSError(domain: "OIDCAuth", code: 401, userInfo: [NSLocalizedDescriptionKey: "State mismatch: got \(state)"])
+			}
 		}
 
 		if let error = queryItems.first(where: { $0.name == "error" })?.value {
@@ -40,7 +44,7 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 		}
 
 		guard let code = queryItems.first(where: { $0.name == "code" })?.value else {
-			throw NetworkError.unauthorized
+			throw NSError(domain: "OIDCAuth", code: 401, userInfo: [NSLocalizedDescriptionKey: "No code in callback"])
 		}
 
 		let tokens = try await authService.exchangeCode(code, codeVerifier: codeVerifier)

@@ -62,8 +62,14 @@ public struct AppAuthService {
 			.data(using: .utf8)
 
 		let (data, response) = try await URLSession.shared.data(for: request)
-		guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-			throw NetworkError.unauthorized
+		let http = response as? HTTPURLResponse
+		let statusCode = http?.statusCode ?? 0
+		let body = String(data: data, encoding: .utf8) ?? ""
+		print("[AppAuthService] exchangeCode status=\(statusCode) body=\(body)")
+
+		guard let http, (200...299).contains(http.statusCode) else {
+			throw NSError(domain: "OIDCAuth", code: statusCode,
+				userInfo: [NSLocalizedDescriptionKey: "Token exchange \(statusCode): \(body)"])
 		}
 
 		let payload = try JSONDecoder().decode(TokenExchangeResponse.self, from: data)
