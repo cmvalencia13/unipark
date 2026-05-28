@@ -51,7 +51,9 @@ class SecurityConfig {
     fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
         val converter = JwtAuthenticationConverter()
         converter.setJwtGrantedAuthoritiesConverter { jwt ->
-            val claim = jwt.claims["role"]
+            // Dev mock: roles in "role" claim. Keycloak: roles in realm_access.roles
+            val realmAccess = jwt.claims["realm_access"] as? Map<*, *>
+            val claim = realmAccess?.get("roles") ?: jwt.claims["role"]
             val roles = when (claim) {
                 is List<*> -> claim.mapNotNull { it?.toString() }
                 is String -> listOf(claim)
@@ -62,4 +64,3 @@ class SecurityConfig {
         return converter
     }
 }
-

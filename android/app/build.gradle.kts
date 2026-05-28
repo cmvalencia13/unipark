@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
 }
@@ -18,7 +19,10 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.unipark.android"
     }
+
 
     buildTypes {
         release {
@@ -41,7 +45,9 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+
 }
 
 dependencies {
@@ -67,12 +73,56 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.compiler.androidx)
 
     // Coroutines
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
 
+    // Network + JSON
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.moshi)
+    implementation(libs.moshi)
+    ksp(libs.moshi.codegen)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+
+    // Auth + secure token storage
+    implementation(libs.appauth)
+    implementation(libs.security.crypto)
+
+    // Offline persistence + sync
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    implementation(libs.workmanager.ktx)
+
+    // Scanner, QR and Android-only NFC HCE
+    implementation(libs.camerax.core)
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
+    implementation(libs.barcode.scanning)
+    implementation(libs.zxing.core)
+
     // Core
     implementation(libs.material)
     implementation("androidx.core:core-ktx:1.15.0")
+
+    // Red (Retrofit, OkHttp, Moshi)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.moshi)
+    implementation(libs.moshi)
+    ksp(libs.moshi.codegen)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+
+    // Seguridad (EncryptedSharedPreferences)
+    implementation(libs.androidx.security)
+
+    // Auth (AppAuth OIDC PKCE)
+    implementation(libs.appauth)
 }
+
+

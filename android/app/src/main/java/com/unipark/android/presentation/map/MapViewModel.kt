@@ -1,17 +1,26 @@
 package com.unipark.android.presentation.map
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.unipark.android.domain.model.LotInfo
+import com.unipark.android.domain.model.Resource
+import com.unipark.android.domain.repository.LotRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MapViewModel @Inject constructor() : ViewModel() {
+class MapViewModel @Inject constructor(
+    private val lotRepository: LotRepository
+) : ViewModel() {
 
-    private val _lots = MutableStateFlow(fakeLots)
+    private val _lotsState = MutableStateFlow<Resource<List<LotInfo>>>(Resource.Loading)
+    val lotsState: StateFlow<Resource<List<LotInfo>>> = _lotsState.asStateFlow()
+
+    private val _lots = MutableStateFlow<List<LotInfo>>(emptyList())
     val lots: StateFlow<List<LotInfo>> = _lots.asStateFlow()
 
     private val _selectedLot = MutableStateFlow<LotInfo?>(null)
@@ -19,6 +28,31 @@ class MapViewModel @Inject constructor() : ViewModel() {
 
     private val _filters = MutableStateFlow(fakeFilters)
     val filters: StateFlow<List<String>> = _filters.asStateFlow()
+
+    init {
+        fetchLots()
+    }
+
+    fun fetchLots() {
+        viewModelScope.launch {
+            _lotsState.value = Resource.Loading
+            lotRepository.getLots().collect { resource ->
+                _lotsState.value = resource
+                when (resource) {
+                    is Resource.Success -> {
+                        _lots.value = resource.data
+                    }
+                    is Resource.Error -> {
+                        // Caída de gracia a mocks para evitar pantalla vacía/bloqueo de carga en desarrollo local
+                        _lots.value = fakeLots
+                    }
+                    is Resource.Loading -> {
+                        // Se mantiene cargando
+                    }
+                }
+            }
+        }
+    }
 
     fun selectLot(lot: LotInfo) {
         _selectedLot.value = lot
