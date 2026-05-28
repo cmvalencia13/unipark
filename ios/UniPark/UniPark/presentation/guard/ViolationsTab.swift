@@ -257,7 +257,7 @@ private struct NewViolationSheet: View {
                                     reason: reason,
                                     hasPhoto: hasPhoto
                                 )
-                                await viewModel.submitViolation(violation)
+                                viewModel.submitViolation(violation)
                                 isPresented = false
                             }
                         }

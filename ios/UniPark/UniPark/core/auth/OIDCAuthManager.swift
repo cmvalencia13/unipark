@@ -210,6 +210,7 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 
 	// MARK: - Presentation
 
+	@available(iOS, deprecated: 26.0)
 	public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
 		UIApplication.shared.connectedScenes
 			.compactMap { $0 as? UIWindowScene }

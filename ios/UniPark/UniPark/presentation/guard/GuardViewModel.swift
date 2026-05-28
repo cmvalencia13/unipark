@@ -83,12 +83,11 @@ public final class GuardViewModel {
             backendErrorMessage = nil
             let result = await tryRecordScanInBackend(payload: payload, lotId: lot.id, direction: direction)
 
-            switch result {
-            case .success:
+            if result.success {
                 await refreshLots()
                 scanStatus = .accepted(.valid(driverName: "Conductor Autorizado", lotId: lot.id))
-            case .failure(let msg):
-                // Mostrar el mensaje del backend directamente (ej: "ya tiene entrada registrada")
+            } else {
+                let msg = result.errorMessage ?? "Acceso denegado."
                 backendErrorMessage = msg
                 scanStatus = .rejected(.invalid(reason: msg))
             }
@@ -108,19 +107,18 @@ public final class GuardViewModel {
         payload: String,
         lotId: UUID,
         direction: ScanDirection
-    ) async -> Result<Void, String> {
+    ) async -> (success: Bool, errorMessage: String?) {
         do {
             _ = try await ScanAPIClient.shared.recordScan(
                 qrPayload: payload,
                 lotId: lotId,
                 direction: direction
             )
-            return .success(())
+            return (true, nil)
         } catch let NetworkError.clientError(code) where code == 400 {
-            // Mensaje de error del backend (ej: entrada doble, QR inválido)
-            return .failure(ScanAPIClient.lastErrorMessage ?? "QR inválido o acceso denegado.")
+            return (false, ScanAPIClient.lastErrorMessage ?? "QR inválido o acceso denegado.")
         } catch {
-            return .failure("Sin conexión con el servidor.")
+            return (false, "Sin conexión con el servidor.")
         }
     }
 
