@@ -32,12 +32,6 @@ public final class GuardViewModel {
 
     // MARK: - Init
     public init() {
-        // Inyectar token mock para que el backend JWT mock acepte las requests
-        // Phase 2: reemplazar por el JWT real de Keycloak
-        if TokenStorage.shared.accessToken == nil {
-            TokenStorage.shared.accessToken = "dev-mock-token-guard"
-        }
-
         lots = Array(ParkingLot.stubs.prefix(2))
         selectedLotId = lots.first?.id ?? UUID()
         Task { await refreshLots() }
