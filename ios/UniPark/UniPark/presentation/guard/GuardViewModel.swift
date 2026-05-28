@@ -12,6 +12,9 @@ public final class GuardViewModel {
         lots.first { $0.id == selectedLotId }
     }
 
+    // MARK: - Lots loading state
+    public var lotsLoaded: Bool = false
+
     // MARK: - Scanner State
     public enum ScanStatus: Equatable {
         case idle
@@ -48,8 +51,9 @@ public final class GuardViewModel {
             if remote.contains(where: { $0.id == currentId }) {
                 selectedLotId = currentId
             } else {
-                selectedLotId = remote.first?.id ?? currentId
+                selectedLotId = remote.first?.id ?? UUID()
             }
+            lotsLoaded = true
         }
     }
 

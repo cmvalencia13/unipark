@@ -1,7 +1,7 @@
 import SwiftUI
 
 public struct ViolationsTab: View {
-    @State var viewModel: GuardViewModel
+    var viewModel: GuardViewModel
     @State private var showNewViolationSheet = false
     @State private var dismissSuccessAlert = false
     
@@ -191,7 +191,7 @@ private struct ViolationRow: View {
 }
 
 private struct NewViolationSheet: View {
-    @State var viewModel: GuardViewModel
+    var viewModel: GuardViewModel
     @Binding var isPresented: Bool
     
     @State private var plate = ""

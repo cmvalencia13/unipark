@@ -3,7 +3,7 @@ import CoreImage
 import CoreImage.CIFilterBuiltins
 
 public struct PermitStickerTab: View {
-    @State var viewModel: DriverViewModel
+    var viewModel: DriverViewModel
     @State private var showScanner = false
 
     public init(viewModel: DriverViewModel) {

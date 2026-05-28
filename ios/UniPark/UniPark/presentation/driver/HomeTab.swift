@@ -32,7 +32,7 @@ private func nextStickerRenewalString() -> String {
 
 // MARK: - Home Tab
 public struct HomeTab: View {
-    @State var viewModel: DriverViewModel
+    var viewModel: DriverViewModel
 
     public init(viewModel: DriverViewModel) {
         self.viewModel = viewModel

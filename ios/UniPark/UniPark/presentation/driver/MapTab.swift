@@ -30,10 +30,7 @@ final class LocationPermissionManager: NSObject, CLLocationManagerDelegate {
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedWhenInUse ||
-           manager.authorizationStatus == .authorizedAlways {
-            manager.requestLocation()
-        }
+        // Do not auto-center on user location — only move camera when user taps the location button.
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}

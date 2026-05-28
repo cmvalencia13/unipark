@@ -3,7 +3,7 @@ import CoreImage
 import CoreImage.CIFilterBuiltins
 
 public struct AccessQRTab: View {
-    @State var viewModel: DriverViewModel
+    var viewModel: DriverViewModel
     @State private var qrExpanded = false
     @State private var qrImage: UIImage?
 

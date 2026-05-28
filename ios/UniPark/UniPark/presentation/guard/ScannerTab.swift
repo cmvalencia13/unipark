@@ -1,7 +1,7 @@
 import SwiftUI
 
 public struct ScannerTab: View {
-    @State var viewModel: GuardViewModel
+    var viewModel: GuardViewModel
 
     public init(viewModel: GuardViewModel) {
         self.viewModel = viewModel
@@ -97,7 +97,7 @@ public struct ScannerTab: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
                                     .neonGlow(color: viewModel.isScanCooldown ? .clear : .upSecondary)
                                 }
-                                .disabled(viewModel.isScanCooldown)
+                                .disabled(viewModel.isScanCooldown || !viewModel.lotsLoaded)
 
                                 Button {
                                     viewModel.processScan(direction: .exit)
@@ -122,7 +122,7 @@ public struct ScannerTab: View {
                                             )
                                     )
                                 }
-                                .disabled(viewModel.isScanCooldown)
+                                .disabled(viewModel.isScanCooldown || !viewModel.lotsLoaded)
                             }
 
                             // MARK: Result Card
