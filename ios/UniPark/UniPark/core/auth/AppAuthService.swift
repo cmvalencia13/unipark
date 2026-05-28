@@ -32,7 +32,7 @@ public struct AppAuthService {
 			URLQueryItem(name: "response_type", value: "code"),
 			URLQueryItem(name: "client_id", value: Self.clientID),
 			URLQueryItem(name: "redirect_uri", value: Self.redirectURI),
-			URLQueryItem(name: "scope", value: "openid profile email offline_access"),
+			URLQueryItem(name: "scope", value: "openid profile email"),
 			URLQueryItem(name: "state", value: state),
 			URLQueryItem(name: "nonce", value: nonce),
 			URLQueryItem(name: "code_challenge", value: challenge),
@@ -73,7 +73,7 @@ public struct AppAuthService {
 		}
 
 		let payload = try JSONDecoder().decode(TokenExchangeResponse.self, from: data)
-		return (accessToken: payload.accessToken, refreshToken: payload.refreshToken)
+		return (accessToken: payload.accessToken, refreshToken: payload.refreshToken ?? "")
 	}
 
 	public func generateCodeVerifier() -> String {
@@ -98,7 +98,7 @@ public struct AppAuthService {
 
 private struct TokenExchangeResponse: Decodable {
 	let accessToken: String
-	let refreshToken: String
+	let refreshToken: String?
 
 	private enum CodingKeys: String, CodingKey {
 		case accessToken = "access_token"

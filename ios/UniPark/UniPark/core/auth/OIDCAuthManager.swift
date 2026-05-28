@@ -99,7 +99,7 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 		}
 
 		let refreshed = try JSONDecoder().decode(RefreshResponse.self, from: data)
-		TokenStorage.shared.save(accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken)
+		TokenStorage.shared.save(accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken ?? "")
 	}
 
     public func currentUser() -> User? {
@@ -211,7 +211,7 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 
 private struct RefreshResponse: Decodable {
 	let accessToken: String
-	let refreshToken: String
+	let refreshToken: String?
 
 	private enum CodingKeys: String, CodingKey {
 		case accessToken = "access_token"
