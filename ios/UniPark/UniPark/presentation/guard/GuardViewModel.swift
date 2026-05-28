@@ -89,7 +89,21 @@ public final class GuardViewModel {
             } else {
                 let msg = result.errorMessage ?? "Acceso denegado."
                 backendErrorMessage = msg
-                scanStatus = .rejected(.invalid(reason: msg))
+                // Mapear el mensaje del backend al caso más cercano de VerificationOutcome
+                let outcome: VerificationOutcome
+                let lower = msg.lowercased()
+                if lower.contains("entrada registrada") || lower.contains("already") {
+                    outcome = .alreadyUsed
+                } else if lower.contains("expirado") || lower.contains("expired") {
+                    outcome = .expired
+                } else if lower.contains("lote") || lower.contains("lot") {
+                    outcome = .wrongLot(expected: "")
+                } else if lower.contains("revocado") || lower.contains("revoked") {
+                    outcome = .revoked
+                } else {
+                    outcome = .invalidSignature
+                }
+                scanStatus = .rejected(outcome)
             }
 
             try? await Task.sleep(for: .seconds(2))

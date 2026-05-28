@@ -179,7 +179,7 @@ public struct ScannerTab: View {
                 badge: "RECHAZADO",
                 badgeColor: .upError,
                 title: outcome.displayTitle,
-                detail: outcome.displayDetail,
+                detail: viewModel.backendErrorMessage ?? outcome.displayDetail,
                 lot: viewModel.selectedLot?.name ?? "",
                 time: viewModel.lastScanTime ?? ""
             )
