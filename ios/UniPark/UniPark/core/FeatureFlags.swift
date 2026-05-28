@@ -18,7 +18,7 @@ public enum FeatureFlags {
     public static let backendBaseURL: String = "http://localhost:8081/v1"
     #else
     // ⚠️ Cambia esta IP a la IP local de tu Mac antes de correr en iPhone físico
-    public static let backendBaseURL: String = "http://192.168.1.100:8081/v1"
+    public static let backendBaseURL: String = "http://10.74.10.127:8081/v1"
     #endif
 
     // MARK: - QR

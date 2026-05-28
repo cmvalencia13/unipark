@@ -10,7 +10,7 @@ public struct AppAuthService {
     public static let issuerURL = "http://localhost:8080/realms/unipark"
     #else
     // ⚠️ Cambia esta IP a la IP local de tu Mac antes de correr en iPhone físico
-    public static let issuerURL = "http://192.168.1.100:8080/realms/unipark"
+    public static let issuerURL = "http://10.74.10.127:8080/realms/unipark"
     #endif
     public static let clientID = "unipark-ios"
     public static let redirectURI = "com.unipark.app://callback"
