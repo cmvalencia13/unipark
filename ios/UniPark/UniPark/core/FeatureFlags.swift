@@ -19,10 +19,21 @@ public enum FeatureFlags {
     public static let devMode: Bool = true
 
     /// URL base del backend Spring Boot.
-    /// Dev local:        "http://localhost:8080/v1"
+    /// Dev local:        "http://localhost:8081/v1"   ← puerto 8081 (evita conflicto con Apache)
     /// Staging:          "https://api-staging.unipark.edu.sv/v1"
     /// Producción:       "https://api.unipark.edu.sv/v1"
-    public static let backendBaseURL: String = "http://localhost:8080/v1"
+    public static let backendBaseURL: String = "http://localhost:8081/v1"
+
+    // MARK: - QR
+
+    /// Segundos antes de que el QR rote y genere un nuevo payload.
+    public static let qrRotationSeconds: Int = 60
+
+    /// Formato real del QR: "nonce:HMAC-SHA256-signature"
+    /// Phase 1 (actual): payload es UUID temporal, el guardia usa MockPassVerificationService
+    /// Phase 2 (post-backend): el backend genera el nonce y la firma via POST /v1/passes
+    ///   y iOS construye el payload como "\(nonce):\(signature)"
+    public static let qrUsesRealSignature: Bool = false
 
     // MARK: - Features Phase 2 (post-backend)
 
@@ -32,9 +43,4 @@ public enum FeatureFlags {
 
     /// Push notifications. Requiere certificado APNs y endpoint /push en el backend.
     public static let pushNotificationsEnabled: Bool = false
-
-    // MARK: - QR
-
-    /// Segundos antes de que el QR rote y genere un nuevo payload.
-    public static let qrRotationSeconds: Int = 60
 }

@@ -83,11 +83,19 @@ class ScanValidationService(
         val lot = parkingLotRepository.findById(lotId)
             .orElseThrow { IllegalArgumentException("Parking lot not found") }
 
-        // 6. Record Scan
+        // 6. Update lot occupancy
+        val newCapacityUsed = when (direction) {
+            Direction.ENTRY -> minOf(lot.capacityUsed + 1, lot.capacityTotal)
+            Direction.EXIT  -> maxOf(lot.capacityUsed - 1, 0)
+        }
+        val updatedLot = lot.copy(capacityUsed = newCapacityUsed)
+        parkingLotRepository.save(updatedLot)
+
+        // 7. Record Scan
         val scan = Scan(
             pass = pass,
             guard = guard,
-            lot = lot,
+            lot = updatedLot,
             direction = direction,
             scannedAt = now,
             idempotencyKey = idempotencyKey
