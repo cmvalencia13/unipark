@@ -40,13 +40,6 @@ class AuthViewModel @Inject constructor(
         Uri.parse("http://10.0.2.2:8082/realms/unipark/protocol/openid-connect/token"),
     )
 
-    init {
-        val token = tokenManager.getAccessToken()
-        if (!token.isNullOrBlank()) {
-            _authState.value = AuthState.Authenticated("user@university.edu", AppRole.DRIVER)
-        }
-    }
-
     fun getAuthIntent(context: Context, role: AppRole): Intent {
         pendingRole = role
         val authRequest = AuthorizationRequest.Builder(

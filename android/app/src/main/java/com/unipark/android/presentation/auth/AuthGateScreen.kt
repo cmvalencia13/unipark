@@ -1,9 +1,5 @@
 package com.unipark.android.presentation.auth
 
-import android.app.Activity
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -30,7 +25,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,15 +55,6 @@ fun AuthGateScreen(
     val authState by viewModel.authState.collectAsState()
     var email by remember { mutableStateOf("") }
     var selectedRole by remember { mutableStateOf(AppRole.DRIVER) }
-    val context = LocalContext.current
-
-    val authLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            viewModel.handleAuthResult(context, result.data)
-        }
-    }
 
     // Navigate when authenticated
     LaunchedEffect(authState) {
@@ -181,20 +166,18 @@ fun AuthGateScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Sign in button
                 ShineButton(
-                    label = if (authState is AuthState.Loading) "Signing In..." else "Sign In with University ID",
+                    label = if (authState is AuthState.Loading) {
+                        "Entrando..."
+                    } else {
+                        "Entrar como ${if (selectedRole == AppRole.DRIVER) "Driver" else "Guard"}"
+                    },
                     onClick = {
-                        if (email.lowercase().contains("mock")) {
-                            viewModel.loginWithMocks(selectedRole)
-                        } else {
-                            try {
-                                val intent = viewModel.getAuthIntent(context, selectedRole)
-                                authLauncher.launch(intent)
-                            } catch (e: Exception) {
-                                viewModel.login(email.ifBlank { "student@university.edu" }, selectedRole)
-                            }
+                        val demoEmail = when (selectedRole) {
+                            AppRole.DRIVER -> "driver@unipark.demo"
+                            AppRole.SECURITY_GUARD -> "guard@unipark.demo"
                         }
+                        viewModel.login(email.ifBlank { demoEmail }, selectedRole)
                     },
                     icon = Icons.Default.Badge,
                     modifier = Modifier.fillMaxWidth(),
