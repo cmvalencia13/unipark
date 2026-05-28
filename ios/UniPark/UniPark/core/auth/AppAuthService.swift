@@ -3,9 +3,15 @@ import CryptoKit
 import Security
 
 public struct AppAuthService {
-    // Dev local  → http://localhost:8080/realms/unipark  (simulador iOS accede a localhost directamente)
+    // Simulador  → http://localhost:8080/realms/unipark
+    // iPhone físico → http://<TU_IP_LOCAL>:8080/realms/unipark
     // Producción → https://auth.universidad.edu.sv/realms/unipark
+    #if targetEnvironment(simulator)
     public static let issuerURL = "http://localhost:8080/realms/unipark"
+    #else
+    // ⚠️ Cambia esta IP a la IP local de tu Mac antes de correr en iPhone físico
+    public static let issuerURL = "http://192.168.1.100:8080/realms/unipark"
+    #endif
     public static let clientID = "unipark-ios"
     public static let redirectURI = "com.unipark.app://callback"
 

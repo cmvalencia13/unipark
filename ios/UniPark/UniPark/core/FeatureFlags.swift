@@ -10,10 +10,16 @@ public enum FeatureFlags {
     public static let devMode: Bool = false
 
     /// URL base del backend Spring Boot.
-    /// Dev local:   "http://localhost:8081/v1"
-    /// Staging:     "https://api-staging.unipark.edu.sv/v1"
-    /// Producción:  "https://api.unipark.edu.sv/v1"
+    /// Simulador:        "http://localhost:8081/v1"
+    /// iPhone físico:    "http://<TU_IP_LOCAL>:8081/v1"  (ej: 192.168.1.45)
+    /// Staging:          "https://api-staging.unipark.edu.sv/v1"
+    /// Producción:       "https://api.unipark.edu.sv/v1"
+    #if targetEnvironment(simulator)
     public static let backendBaseURL: String = "http://localhost:8081/v1"
+    #else
+    // ⚠️ Cambia esta IP a la IP local de tu Mac antes de correr en iPhone físico
+    public static let backendBaseURL: String = "http://192.168.1.100:8081/v1"
+    #endif
 
     // MARK: - QR
 
