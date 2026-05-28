@@ -27,6 +27,8 @@ turbine = "1.2.0"
 testcontainers = "1.20.4"
 espresso = "3.6.1"
 material = "1.12.0"
+security-crypto = "1.0.0"
+
 
 [libraries]
 # Compose BOM
@@ -78,7 +80,8 @@ appauth = { group = "net.openid", name = "appauth", version.ref = "appauth" }
 
 # Crypto
 tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "security-crypto" }
+androidx-security = { group = "androidx.security", name = "security-crypto", version.ref = "security-crypto" }
+
 
 # Camera + Barcode
 camerax-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
