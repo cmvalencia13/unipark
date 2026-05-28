@@ -154,7 +154,7 @@ public final class DriverViewModel {
                let date = ISO8601DateFormatter().date(from: scannedAtStr) {
                 timeStr = timeFmt.string(from: date)
             }
-            let scanDir: ScanDirection = dir == "ENTRY" ? .entry : .exit
+            let scanDir: ScanResult.Direction = dir == "ENTRY" ? .entry : .exit
             let result = ScanResult(
                 lotName: lotName,
                 detail: dir == "ENTRY" ? "Entrada registrada" : "Salida registrada",
