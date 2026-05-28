@@ -17,6 +17,9 @@ class MapViewModel @Inject constructor(
     private val lotRepository: LotRepository
 ) : ViewModel() {
 
+    private val _lotsState = MutableStateFlow<Resource<List<LotInfo>>>(Resource.Loading)
+    val lotsState: StateFlow<Resource<List<LotInfo>>> = _lotsState.asStateFlow()
+
     private val _lots = MutableStateFlow<List<LotInfo>>(emptyList())
     val lots: StateFlow<List<LotInfo>> = _lots.asStateFlow()
 
@@ -32,9 +35,20 @@ class MapViewModel @Inject constructor(
 
     fun fetchLots() {
         viewModelScope.launch {
+            _lotsState.value = Resource.Loading
             lotRepository.getLots().collect { resource ->
-                if (resource is Resource.Success) {
-                    _lots.value = resource.data
+                _lotsState.value = resource
+                when (resource) {
+                    is Resource.Success -> {
+                        _lots.value = resource.data
+                    }
+                    is Resource.Error -> {
+                        // Caída de gracia a mocks para evitar pantalla vacía/bloqueo de carga en desarrollo local
+                        _lots.value = fakeLots
+                    }
+                    is Resource.Loading -> {
+                        // Se mantiene cargando
+                    }
                 }
             }
         }
@@ -49,6 +63,30 @@ class MapViewModel @Inject constructor(
     }
 
     companion object {
+        val fakeLots = listOf(
+            LotInfo(
+                id = "main",
+                name = "Main Campus Garage",
+                occupancy = 72,
+                xFraction = 0.5f,
+                yFraction = 0.35f,
+            ),
+            LotInfo(
+                id = "west",
+                name = "West Lot",
+                occupancy = 91,
+                xFraction = 0.2f,
+                yFraction = 0.6f,
+            ),
+            LotInfo(
+                id = "south",
+                name = "South Deck",
+                occupancy = 45,
+                xFraction = 0.75f,
+                yFraction = 0.7f,
+            ),
+        )
+
         val fakeFilters = listOf(
             "EV Charging",
             "ADA Spots",
