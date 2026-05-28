@@ -20,9 +20,11 @@ import javax.inject.Inject
 sealed interface AuthState {
     data object Idle : AuthState
     data object Loading : AuthState
-    data class Authenticated(val email: String) : AuthState
+    data class Authenticated(val email: String, val role: AppRole) : AuthState
     data class Error(val message: String) : AuthState
 }
+
+enum class AppRole { DRIVER, SECURITY_GUARD }
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
