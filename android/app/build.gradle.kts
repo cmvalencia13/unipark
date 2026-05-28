@@ -18,7 +18,10 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        manifestPlaceholders["appAuthRedirectScheme"] = "com.unipark.android"
     }
+
 
     buildTypes {
         release {
@@ -88,5 +91,9 @@ dependencies {
 
     // Seguridad (EncryptedSharedPreferences)
     implementation(libs.androidx.security)
+
+    // Auth (AppAuth OIDC PKCE)
+    implementation(libs.appauth)
 }
+
 
