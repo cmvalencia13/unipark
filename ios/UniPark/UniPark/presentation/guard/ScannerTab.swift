@@ -313,6 +313,7 @@ public struct ScannerTab: View {
 }
 
 // MARK: - QR Camera View (AVFoundation)
+// sessionQueue exclusiva: startRunning/stopRunning NUNCA en main thread.
 
 struct QRCameraView: UIViewRepresentable {
     let onQRDetected: (String) -> Void
@@ -325,31 +326,14 @@ struct QRCameraView: UIViewRepresentable {
         let view = UIView(frame: .zero)
         view.backgroundColor = .black
 
-        let session = AVCaptureSession()
-        context.coordinator.session = session
-
-        guard let device = AVCaptureDevice.default(for: .video),
-              let input = try? AVCaptureDeviceInput(device: device),
-              session.canAddInput(input) else {
-            return view
-        }
-        session.addInput(input)
-
-        let output = AVCaptureMetadataOutput()
-        if session.canAddOutput(output) {
-            session.addOutput(output)
-            output.setMetadataObjectsDelegate(context.coordinator, queue: .main)
-            output.metadataObjectTypes = [.qr]
-        }
-
-        let preview = AVCaptureVideoPreviewLayer(session: session)
+        let preview = AVCaptureVideoPreviewLayer()
         preview.videoGravity = .resizeAspectFill
-        preview.frame = CGRect(x: 0, y: 0, width: 280, height: 280)
+        preview.frame = view.bounds
         view.layer.addSublayer(preview)
         context.coordinator.previewLayer = preview
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            session.startRunning()
+        context.coordinator.sessionQueue.async {
+            context.coordinator.setupSession(preview: preview)
         }
 
         return view
@@ -362,17 +346,43 @@ struct QRCameraView: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
-        coordinator.session?.stopRunning()
+        coordinator.sessionQueue.async {
+            coordinator.session?.stopRunning()
+            coordinator.session = nil
+        }
     }
 
-    class Coordinator: NSObject, AVCaptureMetadataOutputObjectsDelegate {
+    final class Coordinator: NSObject, AVCaptureMetadataOutputObjectsDelegate {
         let onQRDetected: (String) -> Void
         var session: AVCaptureSession?
         var previewLayer: AVCaptureVideoPreviewLayer?
+        let sessionQueue = DispatchQueue(label: "com.unipark.camera", qos: .userInitiated)
         private var didDetect = false
 
         init(onQRDetected: @escaping (String) -> Void) {
             self.onQRDetected = onQRDetected
+        }
+
+        func setupSession(preview: AVCaptureVideoPreviewLayer) {
+            let s = AVCaptureSession()
+            self.session = s
+
+            guard let device = AVCaptureDevice.default(for: .video),
+                  let input = try? AVCaptureDeviceInput(device: device),
+                  s.canAddInput(input) else { return }
+
+            s.beginConfiguration()
+            s.addInput(input)
+            let output = AVCaptureMetadataOutput()
+            if s.canAddOutput(output) {
+                s.addOutput(output)
+                output.setMetadataObjectsDelegate(self, queue: sessionQueue)
+                output.metadataObjectTypes = [.qr]
+            }
+            s.commitConfiguration()
+
+            DispatchQueue.main.async { preview.session = s }
+            s.startRunning()
         }
 
         func metadataOutput(
@@ -384,14 +394,12 @@ struct QRCameraView: UIViewRepresentable {
                   let obj = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
                   obj.type == .qr,
                   let value = obj.stringValue else { return }
-
             didDetect = true
-            // Feedback háptico
-            let feedback = UINotificationFeedbackGenerator()
-            feedback.notificationOccurred(.success)
-
             session?.stopRunning()
-            onQRDetected(value)
+            DispatchQueue.main.async { [weak self] in
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                self?.onQRDetected(value)
+            }
         }
     }
 }
