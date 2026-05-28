@@ -70,7 +70,11 @@ public final class GuardViewModel {
     ///   "USED-test"      → ya usado
     ///   "WRONG-LOT-test" → lote incorrecto
     ///   "REVOKED-test"   → revocado
-    public func processScan(direction: ScanDirection, payload: String = "UNIPARK-DEMO") {
+    // Payload demo: nonce real + HMAC-SHA256 firmado con el secret del backend.
+    // Phase 2: el conductor genera este payload desde POST /v1/passes → iOS lo muestra como QR.
+    public static let demoPayload = "demo-nonce-unipark-2024:c1g/f+9vlffqM6biUXEUHEqH87X7NBUz2wFoNa2L15I="
+
+    public func processScan(direction: ScanDirection, payload: String = GuardViewModel.demoPayload) {
         guard !isScanCooldown, let lot = selectedLot else { return }
         isScanCooldown = true
 

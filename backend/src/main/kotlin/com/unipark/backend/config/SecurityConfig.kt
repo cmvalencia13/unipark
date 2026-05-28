@@ -41,7 +41,7 @@ class SecurityConfig {
         return JwtDecoder { token ->
             Jwt.withTokenValue(token)
                 .header("alg", "none")
-                .claim("sub", "mock-user")
+                .claim("sub", "d4e5f6a7-b8c9-0123-def0-234567890123") // Carlos Guardián (guard, seeded in V003)
                 .claim("role", listOf("driver", "guard", "admin"))
                 .build()
         }
