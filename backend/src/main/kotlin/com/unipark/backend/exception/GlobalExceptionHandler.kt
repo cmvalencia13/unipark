@@ -3,8 +3,10 @@ package com.unipark.backend.exception
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import java.time.OffsetDateTime
 
 data class ErrorResponse(
@@ -51,6 +53,40 @@ class GlobalExceptionHandler {
                 status = HttpStatus.FORBIDDEN.value(),
                 error = HttpStatus.FORBIDDEN.reasonPhrase,
                 message = "Access denied"
+            )
+        )
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
+    fun handleMethodNotSupported(ex: HttpRequestMethodNotSupportedException): ResponseEntity<ErrorResponse> {
+        val allowed = ex.supportedMethods?.joinToString(", ") ?: ""
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(
+            ErrorResponse(
+                status = HttpStatus.METHOD_NOT_ALLOWED.value(),
+                error = HttpStatus.METHOD_NOT_ALLOWED.reasonPhrase,
+                message = "Method ${ex.method} not allowed. Allowed: $allowed"
+            )
+        )
+    }
+
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun handleNoResourceFound(ex: NoResourceFoundException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+            ErrorResponse(
+                status = HttpStatus.NOT_FOUND.value(),
+                error = HttpStatus.NOT_FOUND.reasonPhrase,
+                message = "Endpoint not found: ${ex.resourcePath}"
+            )
+        )
+    }
+
+    @ExceptionHandler(NoSuchElementException::class)
+    fun handleNoSuchElement(ex: NoSuchElementException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+            ErrorResponse(
+                status = HttpStatus.NOT_FOUND.value(),
+                error = HttpStatus.NOT_FOUND.reasonPhrase,
+                message = ex.message ?: "Resource not found"
             )
         )
     }

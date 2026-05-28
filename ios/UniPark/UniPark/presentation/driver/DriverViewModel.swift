@@ -46,6 +46,11 @@ public final class DriverViewModel {
 
     // MARK: - Init
     public init() {
+        // Inyectar token mock de conductor para que el backend JWT mock acepte las requests
+        // Fase 2: reemplazar por el JWT real de Keycloak
+        if TokenStorage.shared.accessToken == nil {
+            TokenStorage.shared.accessToken = "dev-mock-token-driver"
+        }
         loadData()
         updateClock()
     }
@@ -121,8 +126,13 @@ public final class DriverViewModel {
 
     // MARK: - Data Loading
     public func loadData() {
-        if lots.isEmpty {
-            lots = ParkingLot.stubs
+        // Carga inicial con stubs para que la UI no quede vacía
+        if lots.isEmpty { lots = ParkingLot.stubs }
+        // Luego intenta el backend real (GET /v1/lots es público — no requiere auth)
+        Task {
+            if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
+                self.lots = remote
+            }
         }
     }
 }
