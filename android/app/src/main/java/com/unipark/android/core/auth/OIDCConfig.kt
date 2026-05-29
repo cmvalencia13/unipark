@@ -16,5 +16,5 @@ import android.net.Uri
 data class OIDCConfig(
     val issuerUrl: String = "http://10.0.2.2:8080/realms/unipark",
     val clientId: String = "unipark-android",
-    val redirectUri: Uri = Uri.parse("com.unipark.app://callback"),
+    val redirectUri: Uri = Uri.parse("com.unipark.android:/oauth2redirect"),
 )
