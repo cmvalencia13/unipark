@@ -20,10 +20,9 @@ services:
     volumes:
       - redis_data:/data
 
-  # Keycloak eliminado — autenticación migrada a Auth0 (hosted)
-  # Auth0 domain: dev-5ndrp8gm0rm3r0mw.us.auth0.com
+# Autenticación: migrada a Auth0 (SaaS gestionado). Ya no se ejecuta Keycloak localmente.
+# Config por plataforma en application.properties (backend), OIDCConfig (Android/iOS) y .env (web).
 
 volumes:
   redis_data:
-
 

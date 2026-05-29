@@ -1,1 +1,3 @@
-CREATE DATABASE keycloak;
+-- Inicialización de base de datos para UniPark.
+-- (Antes creaba la base `keycloak`; eliminado tras migrar la autenticación a Auth0.)
+-- El esquema de la app lo gestiona Flyway desde el backend.

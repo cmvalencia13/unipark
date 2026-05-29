@@ -22,14 +22,11 @@
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.UniPark.Splash">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:host="oauth2redirect"
-                    android:scheme="com.unipark.android" />
-            </intent-filter>
+            <!--
+              El callback de Auth0 lo maneja com.auth0.android.provider.RedirectActivity,
+              registrada automáticamente por el SDK con manifestPlaceholders
+              auth0Domain / auth0Scheme (ver build.gradle.kts).
+            -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

@@ -1,81 +1,51 @@
 package com.unipark.android.core.auth
 
 import android.content.Context
-import android.content.Intent
+import com.auth0.android.Auth0
+import com.auth0.android.authentication.AuthenticationAPIClient
+import com.auth0.android.authentication.AuthenticationException
+import com.auth0.android.callback.Callback
+import com.auth0.android.result.Credentials
 import dagger.hilt.android.qualifiers.ApplicationContext
-import net.openid.appauth.AppAuthConfiguration
-import net.openid.appauth.AuthorizationRequest
-import net.openid.appauth.AuthorizationService
-import net.openid.appauth.AuthorizationServiceConfiguration
-import net.openid.appauth.ResponseTypeValues
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+/**
+ * Renovación de tokens contra **Auth0** usando el refresh token.
+ * El login interactivo vive en [com.unipark.android.presentation.auth.AuthViewModel]
+ * (WebAuthProvider). Aquí solo se renueva la sesión sin UI.
+ */
 @Singleton
 class OIDCAuthManager @Inject constructor(
     private val config: OIDCConfig,
     @ApplicationContext context: Context,
     private val tokenStorage: TokenStorage,
 ) {
-    private val authService = AuthorizationService(
-        context,
-        AppAuthConfiguration.Builder().build(),
-    )
+    private val account = Auth0(config.clientId, config.domain)
+    private val authClient = AuthenticationAPIClient(account)
 
-    fun buildLoginIntent(serviceConfig: AuthorizationServiceConfiguration): Intent {
-        val request = AuthorizationRequest.Builder(
-            serviceConfig,
-            config.clientId,
-            ResponseTypeValues.CODE,
-            config.redirectUri,
-        )
-            .setScopes("openid", "profile", "email", "offline_access")
-            .build()
-
-        return authService.getAuthorizationRequestIntent(request)
-    }
-
-    suspend fun exchangeCode(request: net.openid.appauth.TokenRequest): String? =
-        suspendCoroutine { continuation ->
-            authService.performTokenRequest(request) { response, exception ->
-                when {
-                    response != null -> {
-                        tokenStorage.save(response.accessToken, response.refreshToken)
-                        continuation.resume(response.accessToken)
-                    }
-                    exception != null -> continuation.resumeWithException(exception)
-                    else -> continuation.resume(null)
-                }
-            }
-        }
-
+    /** Renueva el access token con el refresh token persistido; null si no hay sesión. */
     suspend fun refreshAccessToken(): String? {
         val refreshToken = tokenStorage.getRefreshToken() ?: return null
-        val serviceConfig = discoverConfiguration()
-        val request = net.openid.appauth.TokenRequest.Builder(
-            serviceConfig,
-            config.clientId,
-        )
-            .setGrantType("refresh_token")
-            .setRefreshToken(refreshToken)
-            .build()
 
-        return exchangeCode(request)
-    }
-
-    suspend fun discoverConfiguration(): AuthorizationServiceConfiguration =
-        suspendCoroutine { continuation ->
-            AuthorizationServiceConfiguration.fetchFromIssuer(
-                android.net.Uri.parse(config.issuerUrl),
-            ) { serviceConfig, exception ->
-                when {
-                    serviceConfig != null -> continuation.resume(serviceConfig)
-                    exception != null -> continuation.resumeWithException(exception)
-                    else -> continuation.resumeWithException(IllegalStateException("OIDC discovery failed"))
-                }
-            }
+        val credentials: Credentials = suspendCoroutine { continuation ->
+            authClient
+                .renewAuth(refreshToken)
+                .start(object : Callback<Credentials, AuthenticationException> {
+                    override fun onSuccess(result: Credentials) = continuation.resume(result)
+                    override fun onFailure(error: AuthenticationException) =
+                        continuation.resumeWithException(error)
+                })
         }
+
+        tokenStorage.save(
+            accessToken = credentials.accessToken,
+            refreshToken = credentials.refreshToken ?: refreshToken,
+            idToken = credentials.idToken,
+        )
+        return credentials.accessToken
+    }
 }

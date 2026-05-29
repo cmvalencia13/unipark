@@ -73,10 +73,10 @@ Stack elegido para **rigor académico, escalabilidad y empleabilidad**. Cada ele
 
 ## 🔐 Identidad
 
-- **Keycloak 25** auto-hosteado (o Auth0 si presupuesto lo permite).
-- OIDC con PKCE para apps móviles.
-- Restricción de dominio `@universidad.edu` vía Authentication Flow.
-- Claims custom: `role`, `university_id`, `vehicle_ids`.
+- **Auth0** (SaaS gestionado) como Identity Provider OIDC.
+- OIDC con PKCE para apps móviles (Native apps) y Regular Web App para el dashboard.
+- Restricción de dominio `@universidad.edu` vía post-login Action.
+- Claims custom namespaced (`https://unipark.edu.sv/...`): `email`, `realm_access.roles`.
 - JWT firmado RS256, rotación de claves.
 
 ## 🚫 Explícitamente NO usar

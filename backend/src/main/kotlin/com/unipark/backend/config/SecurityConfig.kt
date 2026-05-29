@@ -15,6 +15,14 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableMethodSecurity // Permite usar @PreAuthorize
 class SecurityConfig {
 
+    companion object {
+        // Namespace de los custom claims emitidos por el Auth0 Action.
+        // Auth0 exige namespace en claims custom del access token.
+        private const val NS = "https://unipark.edu.sv"
+        const val EMAIL_CLAIM = "$NS/email"
+        const val REALM_ACCESS_CLAIM = "$NS/realm_access"
+    }
+
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
@@ -35,12 +43,13 @@ class SecurityConfig {
     @Bean
     fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
         val converter = JwtAuthenticationConverter()
-        // El principal es el email del JWT, no el `sub`. Así el backend resuelve el
-        // usuario local por email y no depende de que el UUID de Keycloak == users.id.
-        converter.setPrincipalClaimName("email")
+        // El principal es el email del JWT (claim namespaced de Auth0), no el `sub`.
+        // Así el backend resuelve el usuario local por email y no depende de UUIDs.
+        converter.setPrincipalClaimName(EMAIL_CLAIM)
         converter.setJwtGrantedAuthoritiesConverter { jwt ->
-            // Keycloak: roles en realm_access.roles
-            val realmAccess = jwt.claims["realm_access"] as? Map<*, *>
+            // Auth0 Action emite roles en {NS}/realm_access.roles (namespaced).
+            // Se mantienen fallbacks a los claims sin namespace por compatibilidad.
+            val realmAccess = (jwt.claims[REALM_ACCESS_CLAIM] ?: jwt.claims["realm_access"]) as? Map<*, *>
             val claim = realmAccess?.get("roles") ?: jwt.claims["role"]
             val roles = when (claim) {
                 is List<*> -> claim.mapNotNull { it?.toString() }

@@ -110,12 +110,13 @@ fun UniParkNavGraph(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val authState by viewModel.authState.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     when (val state = authState) {
         is AuthState.Authenticated -> {
             MainGraph(
                 role = state.role,
-                onLogout = { viewModel.logout() }
+                onLogout = { viewModel.logout(context) }
             )
         }
         else -> {

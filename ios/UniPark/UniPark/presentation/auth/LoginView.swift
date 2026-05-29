@@ -90,7 +90,7 @@ public struct LoginView: View {
 
                             // Info pills
                             HStack(spacing: 8) {
-                                InfoPill(icon: "shield.fill", label: "Keycloak OIDC")
+                                InfoPill(icon: "shield.fill", label: "Auth0 OIDC")
                                 InfoPill(icon: "lock.fill", label: "PKCE Seguro")
                                 InfoPill(icon: "person.2.fill", label: "Roles")
                             }

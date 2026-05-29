@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
-const KEYCLOAK_LOGOUT = `${process.env.NEXT_PUBLIC_KEYCLOAK_ISSUER || "http://localhost:8090/realms/unipark"}/protocol/openid-connect/logout`;
+// Logout federado de Auth0: limpia la sesión SSO del tenant además de la cookie local.
+const AUTH0_ISSUER = process.env.NEXT_PUBLIC_AUTH0_ISSUER || "https://dev-5ndrp8gm0rm3r0mw.us.auth0.com";
+const AUTH0_CLIENT_ID = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || "";
 
 const adminLinks = [
   { href: "/admin/dashboard", icon: "dashboard", label: "Dashboard" },
@@ -72,10 +74,10 @@ export function Sidebar() {
       <div className="border-t border-white/5 pt-3">
         <button
           onClick={async () => {
-            const idToken = (session as any)?.idToken;
             await signOut({ redirect: false });
-            const url = new URL(KEYCLOAK_LOGOUT);
-            if (idToken) url.searchParams.set("id_token_hint", idToken);
+            const url = new URL(`${AUTH0_ISSUER}/v2/logout`);
+            if (AUTH0_CLIENT_ID) url.searchParams.set("client_id", AUTH0_CLIENT_ID);
+            url.searchParams.set("returnTo", window.location.origin);
             window.location.href = url.toString();
           }}
           className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant hover:text-error transition-all w-full text-left"

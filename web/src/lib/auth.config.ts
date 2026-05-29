@@ -26,7 +26,12 @@ export const authConfig: NextAuthConfig = {
       if (account?.access_token) {
         const payload = account.access_token.split(".")[1];
         const decoded = JSON.parse(Buffer.from(payload, "base64").toString());
-        const roles: string[] = decoded?.realm_access?.roles ?? [];
+        // El Auth0 Action emite los roles namespaced ({NS}/realm_access.roles),
+        // igual que consumen el backend y las apps móviles.
+        const roles: string[] =
+          decoded?.["https://unipark.edu.sv/realm_access"]?.roles ??
+          decoded?.realm_access?.roles ??
+          [];
         (token as any).role = roles.includes("superadmin")
           ? "superadmin"
           : roles.includes("admin")
