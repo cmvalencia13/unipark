@@ -23,16 +23,19 @@ class TokenStorage @Inject constructor(
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
     )
 
-    fun save(accessToken: String?, refreshToken: String?) {
+    fun save(accessToken: String?, refreshToken: String?, idToken: String? = null) {
         prefs.edit()
             .putString(KEY_ACCESS_TOKEN, accessToken)
             .putString(KEY_REFRESH_TOKEN, refreshToken)
+            .apply { if (idToken != null) putString(KEY_ID_TOKEN, idToken) }
             .apply()
     }
 
     fun getAccessToken(): String? = prefs.getString(KEY_ACCESS_TOKEN, null)
 
     fun getRefreshToken(): String? = prefs.getString(KEY_REFRESH_TOKEN, null)
+
+    fun getIdToken(): String? = prefs.getString(KEY_ID_TOKEN, null)
 
     fun clear() {
         prefs.edit().clear().apply()
@@ -41,5 +44,6 @@ class TokenStorage @Inject constructor(
     private companion object {
         const val KEY_ACCESS_TOKEN = "access_token"
         const val KEY_REFRESH_TOKEN = "refresh_token"
+        const val KEY_ID_TOKEN = "id_token"
     }
 }

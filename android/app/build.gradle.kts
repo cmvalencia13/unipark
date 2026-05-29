@@ -20,7 +20,10 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        manifestPlaceholders["appAuthRedirectScheme"] = "com.unipark.android"
+        // Auth0: el SDK registra su RedirectActivity con estos placeholders.
+        // TODO(Auth0): reemplazar auth0Domain por el dominio real del tenant.
+        manifestPlaceholders["auth0Domain"] = "TU_DOMINIO.us.auth0.com"
+        manifestPlaceholders["auth0Scheme"] = "com.unipark.android"
     }
 
 
@@ -89,7 +92,7 @@ dependencies {
     implementation(libs.okhttp.logging)
 
     // Auth + secure token storage
-    implementation(libs.appauth)
+    implementation(libs.auth0)
     implementation(libs.androidx.security)
 
     // Offline persistence + sync
@@ -120,9 +123,6 @@ dependencies {
 
     // Seguridad (EncryptedSharedPreferences)
     implementation(libs.androidx.security)
-
-    // Auth (AppAuth OIDC PKCE)
-    implementation(libs.appauth)
 }
 
 
