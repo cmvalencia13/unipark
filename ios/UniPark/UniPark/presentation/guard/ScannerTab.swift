@@ -63,10 +63,9 @@ public struct ScannerTab: View {
                                 // Cámara real
                                 if cameraActive && viewModel.scanStatus != .verifying {
                                     QRCameraView(onQRDetected: { payload in
-                                        guard viewModel.lotsLoaded, !viewModel.isScanCooldown else { return }
+                                        guard !viewModel.isScanCooldown else { return }
                                         scannedPayload = payload
                                         cameraActive = false
-                                        // Mostrar sheet de dirección
                                     })
                                     .frame(width: 280, height: 280)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -116,40 +115,49 @@ public struct ScannerTab: View {
                                 VStack(spacing: 10) {
                                     HStack(spacing: 6) {
                                         Image(systemName: "qrcode.viewfinder")
-                                            .foregroundStyle(Color.upPrimary)
+                                            .foregroundStyle(Color.upSecondary)
                                         Text("QR detectado — elige dirección")
                                             .font(.caption.weight(.semibold))
                                             .foregroundStyle(Color.upTextPrimary)
                                     }
 
-                                    HStack(spacing: 12) {
-                                        Button {
-                                            viewModel.processScan(direction: .entry, payload: scannedPayload)
-                                            scannedPayload = ""
-                                        } label: {
-                                            HStack(spacing: 6) {
-                                                Image(systemName: "arrow.right.circle.fill")
-                                                Text("ENTRADA").font(.caption.weight(.bold))
-                                            }
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 12)
-                                            .foregroundStyle(Color.upBackground)
-                                            .background(Color.upSecondary)
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    if !viewModel.lotsLoaded {
+                                        HStack(spacing: 8) {
+                                            ProgressView().tint(Color.upPrimary).scaleEffect(0.8)
+                                            Text("Esperando lotes del servidor...")
+                                                .font(.caption)
+                                                .foregroundStyle(Color.upTextSecondary)
                                         }
-
-                                        Button {
-                                            viewModel.processScan(direction: .exit, payload: scannedPayload)
-                                            scannedPayload = ""
-                                        } label: {
-                                            HStack(spacing: 6) {
-                                                Image(systemName: "arrow.left.circle")
-                                                Text("SALIDA").font(.caption.weight(.bold))
+                                    } else {
+                                        HStack(spacing: 12) {
+                                            Button {
+                                                viewModel.processScan(direction: .entry, payload: scannedPayload)
+                                                scannedPayload = ""
+                                            } label: {
+                                                HStack(spacing: 6) {
+                                                    Image(systemName: "arrow.right.circle.fill")
+                                                    Text("ENTRADA").font(.caption.weight(.bold))
+                                                }
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 12)
+                                                .foregroundStyle(Color.upBackground)
+                                                .background(Color.upSecondary)
+                                                .clipShape(RoundedRectangle(cornerRadius: 8))
                                             }
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 12)
-                                            .foregroundStyle(Color.upError)
-                                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.upError, lineWidth: 1.5))
+
+                                            Button {
+                                                viewModel.processScan(direction: .exit, payload: scannedPayload)
+                                                scannedPayload = ""
+                                            } label: {
+                                                HStack(spacing: 6) {
+                                                    Image(systemName: "arrow.left.circle")
+                                                    Text("SALIDA").font(.caption.weight(.bold))
+                                                }
+                                                .frame(maxWidth: .infinity)
+                                                .padding(.vertical, 12)
+                                                .foregroundStyle(Color.upError)
+                                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.upError, lineWidth: 1.5))
+                                            }
                                         }
                                     }
 

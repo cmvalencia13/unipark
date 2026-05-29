@@ -168,23 +168,21 @@ public struct AccessQRTab: View {
         }
         .onAppear {
             viewModel.startTimers()
-            generateAndDisplayQR()
         }
         .onDisappear { viewModel.stopTimers() }
-        .onChange(of: viewModel.passPayload) { _, newPayload in
-            if !newPayload.isEmpty, newPayload != "UNIPARK-NO-PASS" {
-                qrImage = generateQRImage(from: newPayload)
+        // task(id:) corre al aparecer la vista Y cada vez que passPayload cambia —
+        // soluciona el race condition donde onChange no dispara si el valor
+        // ya estaba seteado antes de que la vista comenzara a observar.
+        .task(id: viewModel.passPayload) {
+            let payload = viewModel.passPayload
+            if payload.isEmpty || payload == "UNIPARK-NO-PASS" {
+                // Sin payload: pedir uno al backend
+                await viewModel.fetchActivePass()
+            } else {
+                // Con payload: generar imagen directamente
+                qrImage = generateQRImage(from: payload)
             }
         }
-    }
-
-    private func generateAndDisplayQR() {
-        let payload = viewModel.passPayload
-        guard !payload.isEmpty, payload != "UNIPARK-NO-PASS" else {
-            Task { await viewModel.fetchActivePass() }
-            return
-        }
-        qrImage = generateQRImage(from: payload)
     }
 
     private func generateQRImage(from string: String) -> UIImage? {
