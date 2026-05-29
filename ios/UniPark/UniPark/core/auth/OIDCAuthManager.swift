@@ -124,13 +124,23 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 
         // Roles from access token (Auth0 Action sets realm_access.roles)
         let role: UserRole
-        if let realmAccess = accessClaims["realm_access"] as? [String: Any],
-           let roles = realmAccess["roles"] as? [String] {
+        // Auth0 exige namespace en custom claims del access token.
+        // El Action emite "https://unipark.edu.sv/realm_access" en el access token
+        // y también "https://unipark.edu.sv/realm_access" en el id_token.
+        let ns = "https://unipark.edu.sv"
+        let realmAccessNS  = accessClaims["\(ns)/realm_access"] as? [String: Any]
+        let realmAccessPlain = accessClaims["realm_access"] as? [String: Any]
+        // También intentar en id_token (fallback)
+        let idClaims = TokenStorage.shared.idToken.flatMap { decodeJWTPayload($0) } ?? [:]
+        let realmAccessId = idClaims["\(ns)/realm_access"] as? [String: Any]
+                         ?? idClaims["realm_access"] as? [String: Any]
+
+        let realmAccess = realmAccessNS ?? realmAccessPlain ?? realmAccessId
+
+        if let roles = realmAccess?["roles"] as? [String] {
             role = roles.compactMap { parseRole($0) }.first ?? .driver
         } else if let flatRole = accessClaims["role"] as? String {
             role = parseRole(flatRole) ?? .driver
-        } else if let flatRoles = accessClaims["role"] as? [String] {
-            role = flatRoles.compactMap { parseRole($0) }.first ?? .driver
         } else {
             role = .driver
         }
