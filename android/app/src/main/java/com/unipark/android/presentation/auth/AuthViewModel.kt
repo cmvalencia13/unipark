@@ -9,12 +9,14 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import net.openid.appauth.AppAuthConfiguration
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.ResponseTypeValues
+import java.net.HttpURLConnection
 import javax.inject.Inject
 
 sealed interface AuthState {
@@ -37,6 +39,11 @@ class AuthViewModel @Inject constructor(
         Uri.parse("http://10.0.2.2:8082/realms/unipark/protocol/openid-connect/token")
     )
 
+    private val appAuthConfig = AppAuthConfiguration.Builder()
+        .setConnectionBuilder { uri -> java.net.URL(uri.toString()).openConnection() as HttpURLConnection }
+        .build()
+
+
     init {
         // Auto-login si ya existe un Access Token persistido
         val token = tokenManager.getAccessToken()
@@ -54,7 +61,7 @@ class AuthViewModel @Inject constructor(
         ).setScope("openid profile email offline_access")
          .build()
 
-        val authService = AuthorizationService(context)
+        val authService = AuthorizationService(context, appAuthConfig)
         val intent = authService.getAuthorizationRequestIntent(authRequest)
         authService.dispose()
         return intent
@@ -77,7 +84,7 @@ class AuthViewModel @Inject constructor(
         }
 
         if (response != null) {
-            val authService = AuthorizationService(context)
+            val authService = AuthorizationService(context, appAuthConfig)
             authService.performTokenRequest(
                 response.createTokenExchangeRequest()
             ) { tokenResponse, tokenException ->

@@ -34,3 +34,6 @@ backend/.gradle/
 *.pem
 *.key
 secrets/
+
+# Database Persistence
+postgres_data/

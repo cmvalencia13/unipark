@@ -9,7 +9,8 @@ services:
       POSTGRES_USER: unipark
       POSTGRES_PASSWORD: unipark
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./infra/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
 
   redis:
     image: redis:7-alpine
@@ -19,6 +20,23 @@ services:
     volumes:
       - redis_data:/data
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.5
+    container_name: unipark-keycloak
+    command: start-dev
+    ports:
+      - "8082:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: unipark
+      KC_DB_PASSWORD: unipark
+    depends_on:
+      - postgres
+
 volumes:
-  postgres_data:
   redis_data:
+
+

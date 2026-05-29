@@ -16,9 +16,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -27,6 +29,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unipark.android.presentation.access.AccessGateScreen
 import com.unipark.android.presentation.auth.AuthGateScreen
+import com.unipark.android.presentation.auth.AuthState
+import com.unipark.android.presentation.auth.AuthViewModel
 import com.unipark.android.presentation.dashboard.DashboardScreen
 import com.unipark.android.presentation.map.MapScreen
 import com.unipark.android.presentation.permits.PermitsScreen
@@ -89,11 +93,31 @@ fun PlaceholderScreen(title: String) {
     }
 }
 
+@Composable
+fun UniParkNavGraph(
+    viewModel: AuthViewModel = hiltViewModel()
+) {
+    val authState by viewModel.authState.collectAsState()
+
+    when (authState) {
+        is AuthState.Authenticated -> {
+            MainGraph()
+        }
+        else -> {
+            AuthGateScreen(
+                onAuthenticated = {
+                    // La navegación reactiva se encarga de transicionar de forma automática
+                }
+            )
+        }
+    }
+}
+
 /**
  * Main navigation scaffold with TopAppBar + BottomNavBar + NavHost.
  */
 @Composable
-fun UniParkNavGraph() {
+fun MainGraph() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.hierarchy?.firstOrNull { dest ->
@@ -120,18 +144,9 @@ fun UniParkNavGraph() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Routes.AUTH,
+            startDestination = Routes.DASHBOARD,
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable(Routes.AUTH) {
-                AuthGateScreen(
-                    onAuthenticated = {
-                        navController.navigate(Routes.DASHBOARD) {
-                            popUpTo(Routes.AUTH) { inclusive = true }
-                        }
-                    },
-                )
-            }
             composable(Routes.DASHBOARD) {
                 DashboardScreen()
             }
@@ -147,3 +162,4 @@ fun UniParkNavGraph() {
         }
     }
 }
+

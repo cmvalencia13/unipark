@@ -160,15 +160,11 @@ fun AuthGateScreen(
                 ShineButton(
                     label = if (authState is AuthState.Loading) "Signing In..." else "Sign In with University ID",
                     onClick = {
-                        if (email.lowercase().contains("mock")) {
-                            viewModel.loginWithMocks()
-                        } else {
-                            try {
-                                val intent = viewModel.getAuthIntent(context)
-                                authLauncher.launch(intent)
-                            } catch (e: Exception) {
-                                viewModel.loginWithMocks()
-                            }
+                        try {
+                            val intent = viewModel.getAuthIntent(context)
+                            authLauncher.launch(intent)
+                        } catch (e: Exception) {
+                            android.util.Log.e("UniParkAuth", "Error al lanzar Keycloak: ${e.message}", e)
                         }
                     },
                     icon = Icons.Default.Badge,
@@ -177,6 +173,7 @@ fun AuthGateScreen(
                     contentColor = PrimaryFixedDim,
                     borderColor = PrimaryFixedDim.copy(alpha = 0.3f),
                 )
+
 
 
                 // Error message

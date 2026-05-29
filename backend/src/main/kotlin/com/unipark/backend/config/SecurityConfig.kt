@@ -1,5 +1,6 @@
 package com.unipark.backend.config
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -22,8 +23,6 @@ class SecurityConfig {
         http
             .csrf { it.disable() }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers(HttpMethod.GET, "/v1/lots").permitAll()
-                auth.requestMatchers(HttpMethod.GET, "/v1/lots/**").permitAll()
                 auth.requestMatchers("/v1/**").authenticated()
                 auth.anyRequest().permitAll()
             }
@@ -37,6 +36,7 @@ class SecurityConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(name = ["unipark.security.mock-jwt"], havingValue = "true")
     fun jwtDecoder(): JwtDecoder {
         return JwtDecoder { token ->
             Jwt.withTokenValue(token)
