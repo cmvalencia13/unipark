@@ -1,6 +1,10 @@
 package com.unipark.android.presentation.guard
 
 import android.annotation.SuppressLint
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -37,9 +41,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,6 +73,23 @@ fun ScannerScreen(
     viewModel: ScannerViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED,
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        hasCameraPermission = granted
+    }
+
+    LaunchedEffect(Unit) {
+        if (!hasCameraPermission) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -90,11 +114,34 @@ fun ScannerScreen(
                 .clip(RoundedCornerShape(UniParkViewfinderRadius))
                 .background(Color.Black),
         ) {
-            CameraScanner(
-                modifier = Modifier.matchParentSize(),
-                onQrDetected = viewModel::onQRDetected,
-            )
-            AnimatedScanLine()
+            if (hasCameraPermission) {
+                CameraScanner(
+                    modifier = Modifier.matchParentSize(),
+                    onQrDetected = viewModel::onQRDetected,
+                )
+                AnimatedScanLine()
+            } else {
+                Column(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        "Permiso de camara requerido",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        "Activa la camara para escanear QRs con el Samsung.",
+                        color = Color.White.copy(alpha = 0.72f),
+                    )
+                    OutlinedButton(onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) }) {
+                        Text("Dar permiso")
+                    }
+                }
+            }
         }
         Text(
             "Apunta al QR del conductor",

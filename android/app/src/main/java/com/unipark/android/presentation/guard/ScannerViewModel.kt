@@ -51,7 +51,12 @@ class ScannerViewModel @Inject constructor(
         val payload = parts.getOrNull(0).orEmpty()
         val signature = parts.getOrNull(1).orEmpty()
         if (payload.isBlank() || signature.isBlank()) {
-            _state.value = _state.value.copy(error = "QR invalido")
+            _state.value = _state.value.copy(error = "QR invalido: usa el pase digital de UniPark")
+            return
+        }
+
+        if (payload.startsWith("unipark-pass:") && signature == "demo-signature") {
+            applyLocalDemoScan()
             return
         }
 
@@ -85,6 +90,10 @@ class ScannerViewModel @Inject constructor(
 
     fun simulateScan() {
         if (_state.value.processing || !_state.value.actionsEnabled) return
+        applyLocalDemoScan()
+    }
+
+    private fun applyLocalDemoScan() {
         viewModelScope.launch {
             _state.value = _state.value.copy(processing = true, actionsEnabled = false, error = null)
             val result = guardStateStore.applyScan(

@@ -75,10 +75,11 @@ class DriverViewModel @Inject constructor(
     }
 
     fun refreshPass() {
+        val nonce = UUID.randomUUID().toString()
         _passPayload.value = PassPayload(
-            payload = "unipark-pass:${UUID.randomUUID()}",
+            payload = "unipark-pass:$nonce.demo-signature",
             expiresAt = Instant.now().plusSeconds(60),
-            nonce = UUID.randomUUID().toString(),
+            nonce = nonce,
         )
     }
 
