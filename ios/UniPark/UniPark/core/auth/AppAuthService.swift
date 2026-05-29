@@ -2,132 +2,172 @@ import Foundation
 import CryptoKit
 import Security
 
+/// Configuración de Auth0 para UniPark.
+/// El archivo Auth0.plist debe estar en el target con ClientId y Domain.
+/// Callback URL registrada en Auth0 Dashboard:
+///   com.unipark.app://dev-5ndrp8gm0rm3r0mw.us.auth0.com/ios/com.unipark.app/callback
 public struct AppAuthService {
-    // Simulador local:  http://localhost:8082/realms/unipark
-    // ngrok (todos):    https://yyyy.ngrok-free.app/realms/unipark  ← reemplaza con tu URL
-    // Producción:       https://auth.universidad.edu.sv/realms/unipark
-    //
-    // Con ngrok el mismo string funciona en simulador y iPhone físico.
-    // Keycloak: usar IP local (mismo WiFi) — ngrok gratuito solo da 1 URL
-    // Si usas Tailscale: reemplaza con la IP de Tailscale (100.x.x.x)
-    public static let issuerURL = "http://192.168.0.22:8082/realms/unipark"
-    // Simulador: "http://localhost:8082/realms/unipark"
-    // iPhone físico (LAN): reemplaza 192.168.0.22 con tu IP (ifconfig en0 en la Mac)
 
-    public static let clientID = "unipark-ios"
-    public static let redirectURI = "com.unipark.app://callback"
+    // MARK: - Auth0 Config
+    public static let domain    = "dev-5ndrp8gm0rm3r0mw.us.auth0.com"
+    public static let clientID  = "mEzhjEcOibjtfwUoxKRRlykEebqlgYHT"
+    public static let audience  = "https://api.unipark.edu.sv"
+    public static let scheme    = "com.unipark.app"
 
-	// PKCE material generated when building the auth URL.
-	static var pendingCodeVerifier: String?
-	static var pendingState: String?
-	static var pendingNonce: String?
+    // Callback URL que Auth0 redirige de vuelta a la app
+    // Formato SDK: {scheme}://{domain}/ios/{bundle-id}/callback
+    public static let redirectURI = "\(scheme)://\(domain)/ios/\(scheme)/callback"
 
-	public init() {}
+    // Endpoints construidos desde el domain
+    public static var authEndpoint: String {
+        "https://\(domain)/authorize"
+    }
+    public static var tokenEndpoint: String {
+        "https://\(domain)/oauth/token"
+    }
+    public static var logoutEndpoint: String {
+        "https://\(domain)/v2/logout"
+    }
 
-	public func buildAuthURL() -> URL {
-		let verifier = generateCodeVerifier()
-		let challenge = generateCodeChallenge(from: verifier)
-		let state = randomURLSafeString(byteCount: 16)
-		let nonce = randomURLSafeString(byteCount: 16)
+    // MARK: - PKCE state (generado al construir la URL de auth)
+    static var pendingCodeVerifier: String?
+    static var pendingState: String?
 
-		Self.pendingCodeVerifier = verifier
-		Self.pendingState = state
-		Self.pendingNonce = nonce
+    public init() {}
 
-		let authEndpoint = "\(Self.issuerURL)/protocol/openid-connect/auth"
-		var components = URLComponents(string: authEndpoint)!
-		components.queryItems = [
-			URLQueryItem(name: "response_type", value: "code"),
-			URLQueryItem(name: "client_id", value: Self.clientID),
-			URLQueryItem(name: "redirect_uri", value: Self.redirectURI),
-			URLQueryItem(name: "scope", value: "openid profile email"),
-			URLQueryItem(name: "state", value: state),
-			URLQueryItem(name: "nonce", value: nonce),
-			URLQueryItem(name: "code_challenge", value: challenge),
-			URLQueryItem(name: "code_challenge_method", value: "S256")
-		]
+    // MARK: - Build Auth URL
 
-		return components.url!
-	}
+    public func buildAuthURL() -> URL {
+        let verifier  = generateCodeVerifier()
+        let challenge = generateCodeChallenge(from: verifier)
+        let state     = randomURLSafeString(byteCount: 16)
 
-	public func exchangeCode(_ code: String, codeVerifier: String) async throws -> (accessToken: String, refreshToken: String) {
-		let tokenEndpoint = URL(string: "\(Self.issuerURL)/protocol/openid-connect/token")!
-		var request = URLRequest(url: tokenEndpoint)
-		request.httpMethod = "POST"
-		request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-		request.setValue("application/json", forHTTPHeaderField: "Accept")
+        Self.pendingCodeVerifier = verifier
+        Self.pendingState        = state
 
-		let bodyItems: [URLQueryItem] = [
-			URLQueryItem(name: "grant_type", value: "authorization_code"),
-			URLQueryItem(name: "client_id", value: Self.clientID),
-			URLQueryItem(name: "code", value: code),
-			URLQueryItem(name: "redirect_uri", value: Self.redirectURI),
-			URLQueryItem(name: "code_verifier", value: codeVerifier)
-		]
-		request.httpBody = bodyItems
-			.map { "\($0.name)=\(($0.value ?? "").urlEncoded())" }
-			.joined(separator: "&")
-			.data(using: .utf8)
+        var components = URLComponents(string: Self.authEndpoint)!
+        components.queryItems = [
+            URLQueryItem(name: "response_type",         value: "code"),
+            URLQueryItem(name: "client_id",             value: Self.clientID),
+            URLQueryItem(name: "redirect_uri",          value: Self.redirectURI),
+            URLQueryItem(name: "scope",                 value: "openid profile email offline_access"),
+            URLQueryItem(name: "audience",              value: Self.audience),
+            URLQueryItem(name: "state",                 value: state),
+            URLQueryItem(name: "code_challenge",        value: challenge),
+            URLQueryItem(name: "code_challenge_method", value: "S256"),
+        ]
+        return components.url!
+    }
 
-		let (data, response) = try await URLSession.shared.data(for: request)
-		let http = response as? HTTPURLResponse
-		let statusCode = http?.statusCode ?? 0
-		let body = String(data: data, encoding: .utf8) ?? ""
-		print("[AppAuthService] exchangeCode status=\(statusCode) body=\(body)")
+    // MARK: - Exchange code for tokens
 
-		guard let http, (200...299).contains(http.statusCode) else {
-			throw NSError(domain: "OIDCAuth", code: statusCode,
-				userInfo: [NSLocalizedDescriptionKey: "Token exchange \(statusCode): \(body)"])
-		}
+    public func exchangeCode(_ code: String, codeVerifier: String) async throws -> (accessToken: String, refreshToken: String) {
+        let request = try buildTokenRequest(
+            body: [
+                "grant_type":    "authorization_code",
+                "client_id":     Self.clientID,
+                "code":          code,
+                "redirect_uri":  Self.redirectURI,
+                "code_verifier": codeVerifier,
+            ]
+        )
 
-		let payload = try JSONDecoder().decode(TokenExchangeResponse.self, from: data)
-		return (accessToken: payload.accessToken, refreshToken: payload.refreshToken ?? "")
-	}
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+        let body = String(data: data, encoding: .utf8) ?? ""
+        print("[Auth0] exchangeCode status=\(statusCode)")
 
-	public func generateCodeVerifier() -> String {
-		// 32 bytes => 43 chars base64url, within PKCE requirements.
-		randomURLSafeString(byteCount: 32)
-	}
+        guard (200...299).contains(statusCode) else {
+            throw NSError(domain: "Auth0", code: statusCode,
+                userInfo: [NSLocalizedDescriptionKey: "Token exchange failed (\(statusCode)): \(body)"])
+        }
 
-	public func generateCodeChallenge(from verifier: String) -> String {
-		let digest = SHA256.hash(data: Data(verifier.utf8))
-		return Data(digest).base64URLEncodedString()
-	}
+        let payload = try JSONDecoder().decode(TokenResponse.self, from: data)
+        return (payload.accessToken, payload.refreshToken ?? "")
+    }
 
-	// MARK: - Private helpers
+    // MARK: - Refresh token
 
-	private func randomURLSafeString(byteCount: Int) -> String {
-		var bytes = [UInt8](repeating: 0, count: byteCount)
-		let result = SecRandomCopyBytes(kSecRandomDefault, byteCount, &bytes)
-		precondition(result == errSecSuccess, "Unable to generate secure random bytes")
-		return Data(bytes).base64URLEncodedString()
-	}
+    public func refreshToken(_ refreshToken: String) async throws -> (accessToken: String, refreshToken: String) {
+        let request = try buildTokenRequest(
+            body: [
+                "grant_type":    "refresh_token",
+                "client_id":     Self.clientID,
+                "refresh_token": refreshToken,
+            ]
+        )
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let statusCode = (response as? HTTPURLResponse)?.statusCode ?? 0
+
+        guard (200...299).contains(statusCode) else {
+            throw NetworkError.unauthorized
+        }
+
+        let payload = try JSONDecoder().decode(TokenResponse.self, from: data)
+        return (payload.accessToken, payload.refreshToken ?? refreshToken)
+    }
+
+    // MARK: - PKCE helpers
+
+    public func generateCodeVerifier() -> String {
+        randomURLSafeString(byteCount: 32)
+    }
+
+    public func generateCodeChallenge(from verifier: String) -> String {
+        let digest = SHA256.hash(data: Data(verifier.utf8))
+        return Data(digest).base64URLEncodedString()
+    }
+
+    // MARK: - Private
+
+    private func buildTokenRequest(body: [String: String]) throws -> URLRequest {
+        var request = URLRequest(url: URL(string: Self.tokenEndpoint)!)
+        request.httpMethod = "POST"
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.httpBody = body
+            .map { "\($0.key)=\($0.value.urlEncoded())" }
+            .joined(separator: "&")
+            .data(using: .utf8)
+        return request
+    }
+
+    private func randomURLSafeString(byteCount: Int) -> String {
+        var bytes = [UInt8](repeating: 0, count: byteCount)
+        let result = SecRandomCopyBytes(kSecRandomDefault, byteCount, &bytes)
+        precondition(result == errSecSuccess, "Unable to generate secure random bytes")
+        return Data(bytes).base64URLEncodedString()
+    }
 }
 
-private struct TokenExchangeResponse: Decodable {
-	let accessToken: String
-	let refreshToken: String?
+// MARK: - Decodable response
 
-	private enum CodingKeys: String, CodingKey {
-		case accessToken = "access_token"
-		case refreshToken = "refresh_token"
-	}
+private struct TokenResponse: Decodable {
+    let accessToken:  String
+    let refreshToken: String?
+    private enum CodingKeys: String, CodingKey {
+        case accessToken  = "access_token"
+        case refreshToken = "refresh_token"
+    }
 }
+
+// MARK: - String helpers
 
 private extension String {
-	func urlEncoded() -> String {
-		addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)?
-			.replacingOccurrences(of: "+", with: "%2B")
-			.replacingOccurrences(of: "&", with: "%26")
-			.replacingOccurrences(of: "=", with: "%3D") ?? self
-	}
+    func urlEncoded() -> String {
+        addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)?
+            .replacingOccurrences(of: "+", with: "%2B")
+            .replacingOccurrences(of: "&", with: "%26")
+            .replacingOccurrences(of: "=", with: "%3D") ?? self
+    }
 }
 
 private extension Data {
-	func base64URLEncodedString() -> String {
-		base64EncodedString()
-			.replacingOccurrences(of: "+", with: "-")
-			.replacingOccurrences(of: "/", with: "_")
-			.replacingOccurrences(of: "=", with: "")
-	}
+    func base64URLEncodedString() -> String {
+        base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
 }

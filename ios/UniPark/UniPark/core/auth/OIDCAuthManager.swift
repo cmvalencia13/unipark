@@ -7,8 +7,7 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 	public static let shared = OIDCAuthManager()
 	private let devMode: Bool = FeatureFlags.devMode
 
-    public static let issuerURL = AppAuthService.issuerURL
-    public static let clientID = AppAuthService.clientID
+    public static let clientID   = AppAuthService.clientID
     public static let redirectURI = AppAuthService.redirectURI
 
 	private let authService = AppAuthService()
@@ -69,37 +68,15 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 		if let payload = decodeJWTPayload(accessToken),
 		   let exp = payload["exp"] as? Double {
 			let expiration = Date(timeIntervalSince1970: exp)
-			if expiration > Date() {
-				return
-			}
+			if expiration > Date() { return }
 		}
 
-		guard let refreshToken = TokenStorage.shared.refreshToken else {
+		guard let storedRefresh = TokenStorage.shared.refreshToken, !storedRefresh.isEmpty else {
 			throw NetworkError.unauthorized
 		}
 
-		let tokenEndpoint = URL(string: "\(Self.issuerURL)/protocol/openid-connect/token")!
-		var request = URLRequest(url: tokenEndpoint)
-		request.httpMethod = "POST"
-		request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-		request.setValue("application/json", forHTTPHeaderField: "Accept")
-		let body = [
-			"grant_type": "refresh_token",
-			"client_id": Self.clientID,
-			"refresh_token": refreshToken
-		]
-		request.httpBody = body
-			.map { "\($0.key)=\($0.value.urlEncoded())" }
-			.joined(separator: "&")
-			.data(using: .utf8)
-
-		let (data, response) = try await URLSession.shared.data(for: request)
-		guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-			throw NetworkError.unauthorized
-		}
-
-		let refreshed = try JSONDecoder().decode(RefreshResponse.self, from: data)
-		TokenStorage.shared.save(accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken ?? "")
+		let tokens = try await authService.refreshToken(storedRefresh)
+		TokenStorage.shared.save(accessToken: tokens.accessToken, refreshToken: tokens.refreshToken)
 	}
 
     public func currentUser() -> User? {
@@ -219,24 +196,6 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 	}
 }
 
-private struct RefreshResponse: Decodable {
-	let accessToken: String
-	let refreshToken: String?
-
-	private enum CodingKeys: String, CodingKey {
-		case accessToken = "access_token"
-		case refreshToken = "refresh_token"
-	}
-}
-
-private extension String {
-	func urlEncoded() -> String {
-		addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)?
-			.replacingOccurrences(of: "+", with: "%2B")
-			.replacingOccurrences(of: "&", with: "%26")
-			.replacingOccurrences(of: "=", with: "%3D") ?? self
-	}
-}
 
 public extension Notification.Name {
 	static let oidcAuthStateDidChange = Notification.Name("oidcAuthStateDidChange")

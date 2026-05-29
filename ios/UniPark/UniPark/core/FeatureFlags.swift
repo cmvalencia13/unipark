@@ -5,8 +5,8 @@ public enum FeatureFlags {
 
     // MARK: - Entorno
 
-    /// `false` → Login OIDC real con Keycloak, datos del backend.
-    /// `true`  → Modo desarrollo local (sin Keycloak, stubs).
+    /// `false` → Login OIDC real con Auth0, datos del backend.
+    /// `true`  → Modo desarrollo local (sin Auth0, stubs).
     public static let devMode: Bool = false
 
     /// URL base del backend Spring Boot.

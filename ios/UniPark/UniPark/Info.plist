@@ -4,12 +4,17 @@
 <dict>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- Permite HTTP en redes locales (localhost y *.local) -->
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-		<!-- Permite HTTP arbitrario — solo para desarrollo/testing en LAN -->
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
+		<!-- Auth0 es HTTPS — no se necesita NSAllowsArbitraryLoads.
+		     Solo se permite HTTP al backend local vía localhost para el simulador.
+		     El backend en producción usará HTTPS. -->
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
 	</dict>
 	<key>CFBundleURLTypes</key>
 	<array>
