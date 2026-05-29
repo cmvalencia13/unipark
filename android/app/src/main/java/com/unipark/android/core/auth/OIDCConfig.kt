@@ -14,7 +14,7 @@ import android.net.Uri
  *   docker compose --profile auth up keycloak
  */
 data class OIDCConfig(
-    val issuerUrl: String = "http://10.0.2.2:8080/realms/unipark",
+    val issuerUrl: String = "http://10.0.2.2:8082/realms/unipark",
     val clientId: String = "unipark-android",
     val redirectUri: Uri = Uri.parse("com.unipark.android:/oauth2redirect"),
 )
