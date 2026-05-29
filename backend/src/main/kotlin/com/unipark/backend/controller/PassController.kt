@@ -48,14 +48,14 @@ class PassController(
     @GetMapping("/active")
     @PreAuthorize("hasRole('DRIVER')")
     fun getActivePass(authentication: Authentication): ActivePassResponse {
-        val userId = UUID.fromString(authentication.name)
+        val user = userRepository.findByEmail(authentication.name)
+            ?: throw NoSuchElementException("User not found")
+        val userId = user.id
         val now = OffsetDateTime.now()
 
         val pass = passRepository.findTopByUserIdAndExpiresAtAfterOrderByExpiresAtDesc(userId, now)
             ?: run {
                 // Auto-crear pass si no existe o expiró
-                val user = userRepository.findById(userId)
-                    .orElseThrow { NoSuchElementException("User not found") }
                 val vehicle = vehicleRepository.findFirstByOwnerId(userId)
                     ?: throw NoSuchElementException("No vehicle registered — add a vehicle first")
                 passRepository.save(
@@ -85,7 +85,8 @@ class PassController(
     @GetMapping("/my-status")
     @PreAuthorize("hasRole('DRIVER')")
     fun getMyStatus(authentication: Authentication): DriverStatusResponse {
-        val userId = UUID.fromString(authentication.name)
+        val userId = userRepository.findByEmail(authentication.name)
+            ?.id ?: throw NoSuchElementException("User not found")
         val lastScan = scanRepository
             .findTopByPassUserIdOrderByScannedAtDesc(userId, PageRequest.of(0, 1))
             .content
@@ -112,10 +113,9 @@ class PassController(
         @RequestBody request: PassRequest,
         authentication: Authentication
     ): Pass {
-        val userId = UUID.fromString(authentication.name)
-
-        val user = userRepository.findById(userId)
-            .orElseThrow { IllegalArgumentException("User not found") }
+        val user = userRepository.findByEmail(authentication.name)
+            ?: throw IllegalArgumentException("User not found")
+        val userId = user.id
 
         val vehicle = vehicleRepository.findById(request.vehicleId)
             .orElseThrow { IllegalArgumentException("Vehicle not found") }

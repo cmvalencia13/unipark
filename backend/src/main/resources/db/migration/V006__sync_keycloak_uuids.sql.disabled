@@ -1,3 +1,10 @@
+-- DISABLED — kept for reference only, NOT run by Flyway (note the .disabled suffix).
+-- Reason: the backend now resolves the local user by the JWT `email` claim
+-- (SecurityConfig.setPrincipalClaimName("email") + userRepository.findByEmail),
+-- so user UUIDs no longer need to equal the Keycloak `sub`. This migration was also
+-- broken: V001 FKs are not DEFERRABLE, so SET CONSTRAINTS ALL DEFERRED is a no-op and
+-- the UPDATE users SET id=... violated FKs at startup.
+--
 -- V006: Synchronise user UUIDs with Keycloak subject (sub) claims.
 -- Uses deferred constraints to allow updating PKs and FKs in one transaction.
 

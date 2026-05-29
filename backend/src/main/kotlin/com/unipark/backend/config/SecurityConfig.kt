@@ -37,6 +37,9 @@ class SecurityConfig {
     @Bean
     fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
         val converter = JwtAuthenticationConverter()
+        // El principal es el email del JWT, no el `sub`. Así el backend resuelve el
+        // usuario local por email y no depende de que el UUID de Keycloak == users.id.
+        converter.setPrincipalClaimName("email")
         converter.setJwtGrantedAuthoritiesConverter { jwt ->
             // Keycloak: roles en realm_access.roles
             val realmAccess = jwt.claims["realm_access"] as? Map<*, *>
