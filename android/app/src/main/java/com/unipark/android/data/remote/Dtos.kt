@@ -32,29 +32,21 @@ data class LotDto(
     val active: Boolean,
 )
 
+// Coincide con ActivePassResponse del backend: { passId, nonce, qrPayload, expiresAt }.
 @JsonClass(generateAdapter = true)
 data class PassDto(
-    val id: String,
-    @Json(name = "user_id") val userId: String,
-    @Json(name = "vehicle_id") val vehicleId: String,
-    @Json(name = "lot_id") val lotId: String?,
-    val payload: String,
-    val signature: String,
-    @Json(name = "expires_at") val expiresAt: String,
-    val active: Boolean,
+    val passId: String,
+    val nonce: String,
+    val qrPayload: String,
+    val expiresAt: String,
 )
 
-@JsonClass(generateAdapter = true)
-data class GeneratePassRequestDto(
-    @Json(name = "vehicle_id") val vehicleId: String,
-)
-
+// Coincide con ScanRequest del backend: { qrPayload, lotId, direction }.
 @JsonClass(generateAdapter = true)
 data class ScanRequestDto(
-    @Json(name = "pass_payload") val passPayload: String,
-    @Json(name = "pass_signature") val passSignature: String,
+    val qrPayload: String,
+    val lotId: String,
     val direction: String,
-    @Json(name = "lot_id") val lotId: String,
 )
 
 @JsonClass(generateAdapter = true)

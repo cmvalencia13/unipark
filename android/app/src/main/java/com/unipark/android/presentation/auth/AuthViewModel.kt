@@ -36,6 +36,12 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
+    private var selectedRole: AppRole = AppRole.DRIVER
+
+    fun selectRole(role: AppRole) {
+        selectedRole = role
+    }
+
     private val authServiceConfiguration = AuthorizationServiceConfiguration(
         Uri.parse("http://10.0.2.2:8082/realms/unipark/protocol/openid-connect/auth"),
         Uri.parse("http://10.0.2.2:8082/realms/unipark/protocol/openid-connect/token")
@@ -50,7 +56,7 @@ class AuthViewModel @Inject constructor(
         // Auto-login si ya existe un Access Token persistido
         val token = tokenManager.getAccessToken()
         if (!token.isNullOrBlank()) {
-            _authState.value = AuthState.Authenticated("user@university.edu")
+            _authState.value = AuthState.Authenticated("user@university.edu", selectedRole)
         }
     }
 
@@ -102,7 +108,7 @@ class AuthViewModel @Inject constructor(
                         refreshToken = tokenResponse.refreshToken,
                         idToken = tokenResponse.idToken
                     )
-                    _authState.value = AuthState.Authenticated("user@university.edu")
+                    _authState.value = AuthState.Authenticated("user@university.edu", selectedRole)
                 } else {
                     _authState.value = AuthState.Error("Empty token response")
                 }
@@ -121,7 +127,7 @@ class AuthViewModel @Inject constructor(
             refreshToken = "mock_jwt_refresh_token",
             idToken = "mock_jwt_id_token"
         )
-        _authState.value = AuthState.Authenticated("student@university.edu")
+        _authState.value = AuthState.Authenticated("student@university.edu", selectedRole)
     }
 
     fun logout() {

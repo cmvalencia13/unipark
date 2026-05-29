@@ -60,6 +60,7 @@ fun AuthGateScreen(
 ) {
     val authState by viewModel.authState.collectAsState()
     var email by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf(AppRole.DRIVER) }
     val context = LocalContext.current
 
     val authLauncher = rememberLauncherForActivityResult(
@@ -134,13 +135,19 @@ fun AuthGateScreen(
                 ) {
                     FilterChip(
                         selected = selectedRole == AppRole.DRIVER,
-                        onClick = { selectedRole = AppRole.DRIVER },
+                        onClick = {
+                            selectedRole = AppRole.DRIVER
+                            viewModel.selectRole(AppRole.DRIVER)
+                        },
                         label = { Text("Driver") },
                         modifier = Modifier.weight(1f),
                     )
                     FilterChip(
                         selected = selectedRole == AppRole.SECURITY_GUARD,
-                        onClick = { selectedRole = AppRole.SECURITY_GUARD },
+                        onClick = {
+                            selectedRole = AppRole.SECURITY_GUARD
+                            viewModel.selectRole(AppRole.SECURITY_GUARD)
+                        },
                         label = { Text("Guard") },
                         modifier = Modifier.weight(1f),
                     )

@@ -90,7 +90,7 @@ dependencies {
 
     // Auth + secure token storage
     implementation(libs.appauth)
-    implementation(libs.security.crypto)
+    implementation(libs.androidx.security)
 
     // Offline persistence + sync
     implementation(libs.room.runtime)

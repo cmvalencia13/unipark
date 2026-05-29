@@ -41,14 +41,9 @@ fun LotDto.toDomain() = ParkingLot(
 )
 
 fun PassDto.toDomain() = Pass(
-    id = UUID.fromString(id),
-    userId = UUID.fromString(userId),
-    vehicleId = UUID.fromString(vehicleId),
-    lotId = lotId?.let(UUID::fromString),
-    payload = payload,
-    signature = signature,
+    id = UUID.fromString(passId),
+    qrPayload = qrPayload,
     expiresAt = Instant.parse(expiresAt),
-    active = active,
 )
 
 fun ScanResponseDto.toDomain() = Scan(

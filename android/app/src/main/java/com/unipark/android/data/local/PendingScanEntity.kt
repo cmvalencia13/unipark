@@ -7,16 +7,14 @@ import com.unipark.android.data.remote.ScanRequestDto
 @Entity(tableName = "pending_scans")
 data class PendingScanEntity(
     @PrimaryKey val idempotencyKey: String,
-    val passPayload: String,
-    val passSignature: String,
+    val qrPayload: String,
     val direction: String,
     val lotId: String,
     val scannedAt: Long,
     val synced: Boolean = false,
 ) {
     fun toDto() = ScanRequestDto(
-        passPayload = passPayload,
-        passSignature = passSignature,
+        qrPayload = qrPayload,
         direction = direction,
         lotId = lotId,
     )

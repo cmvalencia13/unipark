@@ -8,13 +8,9 @@ import java.util.UUID
 @Parcelize
 data class Pass(
     val id: UUID,
-    val userId: UUID,
-    val vehicleId: UUID,
-    val lotId: UUID?,
-    val payload: String,
-    val signature: String,
+    // Cadena QR canónica del backend: "nonce:base64(HMAC-SHA256)". Se muestra tal cual.
+    val qrPayload: String,
     val expiresAt: Instant,
-    val active: Boolean,
 ) : Parcelable {
     val isExpired: Boolean get() = Instant.now().isAfter(expiresAt)
 }
