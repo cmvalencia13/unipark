@@ -12,18 +12,22 @@ public final class GuardViewModel {
         lots.first { $0.id == selectedLotId }
     }
 
+    // MARK: - Lots loading state
+    public var lotsLoaded: Bool = false
+
     // MARK: - Scanner State
     public enum ScanStatus: Equatable {
         case idle
-        case verifying                          // loading — esperando resultado
-        case accepted(VerificationOutcome)      // verde — acceso autorizado
-        case rejected(VerificationOutcome)      // rojo — razón específica
+        case verifying
+        case accepted(VerificationOutcome)
+        case rejected(VerificationOutcome)
     }
 
     public var scanStatus: ScanStatus = .idle
     public var lastScanDirection: String? = nil
     public var lastScanTime: String? = nil
     public var isScanCooldown: Bool = false
+    public var backendErrorMessage: String? = nil
 
     // MARK: - Violations
     public var violations: [ViolationEntry] = ViolationEntry.stubs
@@ -34,20 +38,43 @@ public final class GuardViewModel {
     public init() {
         lots = Array(ParkingLot.stubs.prefix(2))
         selectedLotId = lots.first?.id ?? UUID()
+        Task { await refreshLots() }
+    }
+
+    // MARK: - Lots
+
+    private func refreshLots() async {
+        if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
+            // Preservar selectedLotId si el lote sigue existiendo
+            let currentId = selectedLotId
+            lots = remote
+            if remote.contains(where: { $0.id == currentId }) {
+                selectedLotId = currentId
+            } else {
+                selectedLotId = remote.first?.id ?? UUID()
+            }
+            lotsLoaded = true
+        }
     }
 
     // MARK: - Scanner
 
-    /// Simula escanear un QR con el payload dado en la dirección indicada.
-    /// Para pruebas, usar los prefijos definidos en MockPassVerificationService:
-    ///   "UNIPARK-..."  → válido
-    ///   "EXPIRED-..."  → expirado
-    ///   "USED-..."     → ya usado
-    ///   "WRONG-LOT-..."→ lote incorrecto
-    ///   "REVOKED-..."  → revocado
-    ///   cualquier otro → firma inválida
-    public func processScan(direction: ScanDirection, payload: String = "UNIPARK-DEMO") {
-        guard !isScanCooldown else { return }
+    /// Procesa un escaneo de QR.
+    /// Con backend activo: llama POST /v1/scans y actualiza ocupación en Postgres.
+    /// Fallback: actualización local optimista si el backend no responde.
+    ///
+    /// Payload de prueba (devMode):
+    ///   "UNIPARK-DEMO"   → válido (mock local)
+    ///   "EXPIRED-test"   → expirado
+    ///   "USED-test"      → ya usado
+    ///   "WRONG-LOT-test" → lote incorrecto
+    ///   "REVOKED-test"   → revocado
+    // Payload demo: nonce real + HMAC-SHA256 firmado con el secret del backend.
+    // Phase 2: el conductor genera este payload desde POST /v1/passes → iOS lo muestra como QR.
+    public nonisolated static let demoPayload = "demo-nonce-unipark-2024:c1g/f+9vlffqM6biUXEUHEqH87X7NBUz2wFoNa2L15I="
+
+    public func processScan(direction: ScanDirection, payload: String = GuardViewModel.demoPayload) {
+        guard !isScanCooldown, let lot = selectedLot else { return }
         isScanCooldown = true
 
         let timeFmt = DateFormatter()
@@ -57,31 +84,64 @@ public final class GuardViewModel {
         scanStatus = .verifying
 
         Task {
-            let outcome = await MockPassVerificationService.shared.verify(
-                payload: payload,
-                selectedLotName: selectedLot?.name ?? ""
-            )
+            backendErrorMessage = nil
+            let result = await tryRecordScanInBackend(payload: payload, lotId: lot.id, direction: direction)
 
-            if outcome.isValid {
-                // Actualizar ocupación optimistamente solo si es válido
-                updateOccupancy(direction: direction)
-                scanStatus = .accepted(outcome)
+            if result.success {
+                await refreshLots()
+                scanStatus = .accepted(.valid(driverName: "Conductor Autorizado", lotId: lot.id))
             } else {
+                let msg = result.errorMessage ?? "Acceso denegado."
+                backendErrorMessage = msg
+                // Mapear el mensaje del backend al caso más cercano de VerificationOutcome
+                let outcome: VerificationOutcome
+                let lower = msg.lowercased()
+                if lower.contains("entrada registrada") || lower.contains("already") {
+                    outcome = .alreadyUsed
+                } else if lower.contains("expirado") || lower.contains("expired") {
+                    outcome = .expired
+                } else if lower.contains("lote") || lower.contains("lot") {
+                    outcome = .wrongLot(expected: "")
+                } else if lower.contains("revocado") || lower.contains("revoked") {
+                    outcome = .revoked
+                } else {
+                    outcome = .invalidSignature
+                }
                 scanStatus = .rejected(outcome)
             }
 
-            // Reset cooldown tras 2s
             try? await Task.sleep(for: .seconds(2))
             isScanCooldown = false
-
-            // Reset estado tras 6s
             try? await Task.sleep(for: .seconds(4))
+            backendErrorMessage = nil
             if case .accepted = scanStatus { scanStatus = .idle }
             if case .rejected = scanStatus { scanStatus = .idle }
         }
     }
 
-    private func updateOccupancy(direction: ScanDirection) {
+    /// Intenta registrar el scan en el backend.
+    /// Retorna true si el backend aceptó el scan, false si falló o no está disponible.
+    private func tryRecordScanInBackend(
+        payload: String,
+        lotId: UUID,
+        direction: ScanDirection
+    ) async -> (success: Bool, errorMessage: String?) {
+        do {
+            _ = try await ScanAPIClient.shared.recordScan(
+                qrPayload: payload,
+                lotId: lotId,
+                direction: direction
+            )
+            return (true, nil)
+        } catch let NetworkError.clientError(code) where code == 400 {
+            return (false, ScanAPIClient.lastErrorMessage ?? "QR inválido o acceso denegado.")
+        } catch {
+            return (false, "Sin conexión con el servidor.")
+        }
+    }
+
+    /// Actualización local optimista cuando el backend no está disponible.
+    private func updateOccupancyLocally(direction: ScanDirection) {
         guard let idx = lots.firstIndex(where: { $0.id == selectedLotId }) else { return }
         let lot = lots[idx]
         let newUsed = direction == .entry

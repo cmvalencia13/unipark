@@ -23,7 +23,7 @@ services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.5
     container_name: unipark-keycloak
-    command: start-dev
+    command: start-dev --import-realm
     ports:
       - "8082:8080"
     environment:
@@ -33,8 +33,15 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: unipark
       KC_DB_PASSWORD: unipark
+    volumes:
+      - ./keycloak/realms:/opt/keycloak/data/import
     depends_on:
       - postgres
+    # Para levantar solo: docker compose --profile auth up keycloak
+    # URL admin: http://localhost:8082
+    # Realm unipark: http://localhost:8082/realms/unipark
+    profiles:
+      - auth
 
 volumes:
   redis_data:

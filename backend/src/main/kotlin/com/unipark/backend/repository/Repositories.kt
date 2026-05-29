@@ -27,7 +27,9 @@ interface UserRepository : JpaRepository<User, UUID> {
 }
 
 @Repository
-interface VehicleRepository : JpaRepository<Vehicle, UUID>
+interface VehicleRepository : JpaRepository<Vehicle, UUID> {
+    fun findFirstByOwnerId(ownerId: UUID): Vehicle?
+}
 
 @Repository
 interface ParkingLotRepository : JpaRepository<ParkingLot, UUID>
@@ -40,12 +42,17 @@ interface ParkingSpaceRepository : JpaRepository<ParkingSpace, UUID> {
 @Repository
 interface PassRepository : JpaRepository<Pass, UUID> {
     fun findByNonce(nonce: String): Pass?
+    fun findTopByUserIdAndExpiresAtAfterOrderByExpiresAtDesc(userId: UUID, now: OffsetDateTime): Pass?
 }
 
 @Repository
 interface ScanRepository : JpaRepository<Scan, UUID> {
     fun existsByGuardIdAndIdempotencyKey(guardId: UUID, idempotencyKey: String): Boolean
     fun countByScannedAtAfter(after: OffsetDateTime): Long
+    fun findTopByPassIdOrderByScannedAtDesc(passId: UUID): Scan?
+    // Último scan de cualquier pass del driver — para mostrar estado en la app del conductor
+    @Query("SELECT s FROM Scan s WHERE s.pass.user.id = :userId ORDER BY s.scannedAt DESC")
+    fun findTopByPassUserIdOrderByScannedAtDesc(userId: UUID, pageable: Pageable): Page<Scan>
 }
 
 @Repository

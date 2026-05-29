@@ -1,40 +1,32 @@
 import Foundation
 
 /// Punto único de configuración para el entorno de UniPark.
-///
-/// Día de conexión al backend:
-///   1. Cambia `devMode` a `false`
-///   2. Cambia `backendBaseURL` a la URL real del servidor
-///   3. Activa `nfcEnabled` cuando tengas entitlement + backend
-///   4. Activa `pushNotificationsEnabled` cuando tengas APNs
-///
-/// Nada más debe cambiar — todos los ViewModels y APIClients
-/// leen estas propiedades desde aquí.
 public enum FeatureFlags {
 
     // MARK: - Entorno
 
-    /// `true` → DevRoleSelector activo, sin auth real, datos stub.
-    /// `false` → Login OIDC real, datos del backend.
-    public static let devMode: Bool = true
+    /// `false` → Login OIDC real con Keycloak, datos del backend.
+    /// `true`  → Modo desarrollo local (sin Keycloak, stubs).
+    public static let devMode: Bool = false
 
     /// URL base del backend Spring Boot.
-    /// Dev local:        "http://localhost:8080/v1"
-    /// Staging:          "https://api-staging.unipark.edu.sv/v1"
-    /// Producción:       "https://api.unipark.edu.sv/v1"
-    public static let backendBaseURL: String = "http://localhost:8080/v1"
-
-    // MARK: - Features Phase 2 (post-backend)
-
-    /// NFC habilitado. Requiere entitlement com.apple.developer.nfc.readersession.formats
-    /// y endpoint de validación en el backend. Solo funciona en dispositivo físico.
-    public static let nfcEnabled: Bool = false
-
-    /// Push notifications. Requiere certificado APNs y endpoint /push en el backend.
-    public static let pushNotificationsEnabled: Bool = false
+    ///
+    /// OPCIONES:
+    ///   Simulador local:   "http://localhost:8081/v1"
+    ///   ngrok (todos):     "https://xxxx.ngrok-free.app/v1"   ← reemplaza con tu URL
+    ///   IP LAN (fallback): "http://10.74.10.127:8081/v1"
+    ///   Producción:        "https://api.unipark.edu.sv/v1"
+    ///
+    /// Con ngrok el mismo string funciona en simulador, iPhone físico y cualquier red.
+    // ✅ ngrok — funciona desde iPhone en cualquier red
+    public static let backendBaseURL: String = "https://crested-monogram-ethanol.ngrok-free.dev/v1"
+    // Simulador local (sin ngrok): "http://localhost:8081/v1"
 
     // MARK: - QR
-
-    /// Segundos antes de que el QR rote y genere un nuevo payload.
     public static let qrRotationSeconds: Int = 60
+    public static let qrUsesRealSignature: Bool = true
+
+    // MARK: - Features Phase 2
+    public static let nfcEnabled: Bool = false
+    public static let pushNotificationsEnabled: Bool = false
 }

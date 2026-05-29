@@ -10,9 +10,22 @@
 		2BD6A4AB2FC6022D00905B57 /* UniPark.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = UniPark.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2B1D9C632FC8D23200E58703 /* Exceptions for "UniPark" folder in "UniPark" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2BD6A4AA2FC6022D00905B57 /* UniPark */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2BD6A4AD2FC6022D00905B57 /* UniPark */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2B1D9C632FC8D23200E58703 /* Exceptions for "UniPark" folder in "UniPark" target */,
+			);
 			path = UniPark;
 			sourceTree = "<group>";
 		};
@@ -251,8 +264,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UBN99V87V7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UniPark/Info.plist;
+				INFOPLIST_KEY_NSAppTransportSecurity = "{NSAllowsLocalNetworking = true;}";
 				INFOPLIST_KEY_NSCameraUsageDescription = "UniPark necesita la cámara para escanear el código QR de tu permiso de parqueo.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "UniPark usa tu ubicación para centrarse en tu posición en el mapa del campus.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -284,8 +300,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = UBN99V87V7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = UniPark/Info.plist;
+				INFOPLIST_KEY_NSAppTransportSecurity = "{NSAllowsLocalNetworking = true;}";
 				INFOPLIST_KEY_NSCameraUsageDescription = "UniPark necesita la cámara para escanear el código QR de tu permiso de parqueo.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "UniPark usa tu ubicación para centrarse en tu posición en el mapa del campus.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

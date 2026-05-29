@@ -64,16 +64,34 @@ extension VerificationOutcome {
 ///   "REVOKED-..."         → revocado
 ///   cualquier otro        → firma inválida
 ///
-/// Phase 2: borrar esta clase y reemplazar la llamada en GuardViewModel por:
-///   let result = try await passRepository.verify(payload: payload, lotId: lotId)
+/// Phase 2: reemplazar con llamada real a POST /v1/scans via ScanAPIClient.
+///
+/// Formato real del QR (backend ScanValidationService):
+///   payload = "nonce:HMAC-SHA256-base64-signature"
+///   El backend valida: firma, expiración del pass, idempotency.
+///
+/// Para migrar:
+///   1. El driver genera el payload via POST /v1/passes → recibe nonce + expiresAt
+///   2. iOS construye: "\(nonce):\(signature)" donde signature viene del backend
+///   3. El guardia escanea → iOS llama ScanAPIClient.recordScan(qrPayload:lotId:direction:)
+///   4. El backend devuelve Scan o lanza error → mapear a VerificationOutcome
+///   5. Borrar MockPassVerificationService
 public final class MockPassVerificationService {
     public static let shared = MockPassVerificationService()
     private init() {}
 
     public func verify(payload: String, selectedLotName: String) async -> VerificationOutcome {
-        // Simula latencia de verificación en servidor
+        // Simula latencia de verificación (~red real)
         try? await Task.sleep(for: .milliseconds(800))
 
+        // Formato real del backend: "nonce:signature" (dos partes separadas por ":")
+        // Si el payload tiene ese formato, lo tratamos como válido en Phase 1
+        let parts = payload.split(separator: ":")
+        if parts.count == 2 {
+            return .valid(driverName: "María García", lotId: UUID())
+        }
+
+        // Prefijos de prueba para la demo
         if payload.hasPrefix("UNIPARK-") {
             return .valid(driverName: "María García", lotId: UUID())
         } else if payload.hasPrefix("EXPIRED-") {

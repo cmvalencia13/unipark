@@ -34,11 +34,9 @@ public struct ParkingLot: Identifiable, Codable, Sendable, Equatable {
 		self.active = active
 	}
 
-	// MARK: - Dev stubs
-	/// Escenario demo: hora pico martes 7:45 AM
-	/// Parqueo Key casi lleno (82%), Parqueo Matías con espacio (40%)
+	// MARK: - Dev stubs (placeholder mientras carga del backend)
 	public static let stubs: [ParkingLot] = [
-		ParkingLot(name: "Parqueo Key",    capacityTotal: 200, capacityUsed: 164, active: true),
-		ParkingLot(name: "Parqueo Matías", capacityTotal: 120, capacityUsed: 48,  active: true),
+		ParkingLot(name: "Parqueo Key",    capacityTotal: 200, capacityUsed: 0, active: true),
+		ParkingLot(name: "Parqueo Matías", capacityTotal: 120, capacityUsed: 0, active: true),
 	]
 }

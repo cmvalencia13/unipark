@@ -2,7 +2,7 @@ import SwiftUI
 import MapKit
 
 public struct LotCapacityTab: View {
-    @State var viewModel: GuardViewModel
+    var viewModel: GuardViewModel
     @State private var refreshTimer: Timer?
     
     public init(viewModel: GuardViewModel) {

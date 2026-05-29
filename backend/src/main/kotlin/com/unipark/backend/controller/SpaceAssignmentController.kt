@@ -1,6 +1,7 @@
 package com.unipark.backend.controller
 
 import com.unipark.backend.domain.ParkingSpace
+import com.unipark.backend.repository.UserRepository
 import com.unipark.backend.service.SpaceAssignmentService
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
@@ -14,7 +15,8 @@ data class SpaceAssignmentRequest(
 @RestController
 @RequestMapping("/v1/spaces")
 class SpaceAssignmentController(
-    private val spaceAssignmentService: SpaceAssignmentService
+    private val spaceAssignmentService: SpaceAssignmentService,
+    private val userRepository: UserRepository
 ) {
 
     @PostMapping("/assign")
@@ -23,7 +25,8 @@ class SpaceAssignmentController(
         @RequestBody request: SpaceAssignmentRequest,
         authentication: Authentication
     ): ParkingSpace {
-        val userId = UUID.fromString(authentication.name)
+        val userId = userRepository.findByEmail(authentication.name)
+            ?.id ?: throw NoSuchElementException("User not found")
         return spaceAssignmentService.assignSpace(userId, request.lotId)
     }
 }

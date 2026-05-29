@@ -1,6 +1,5 @@
 package com.unipark.backend.config
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
@@ -8,8 +7,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.oauth2.jwt.JwtDecoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.web.SecurityFilterChain
 
@@ -36,32 +33,22 @@ class SecurityConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(name = ["unipark.security.mock-jwt"], havingValue = "true")
-    fun jwtDecoder(): JwtDecoder {
-        return JwtDecoder { token ->
-            Jwt.withTokenValue(token)
-                .header("alg", "none")
-                .claim("sub", "mock-user")
-                .claim("role", listOf("driver", "guard", "admin"))
-                .build()
-        }
-    }
-
-    @Bean
     fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
         val converter = JwtAuthenticationConverter()
+        // El principal es el email del JWT, no el `sub`. Así el backend resuelve el
+        // usuario local por email y no depende de que el UUID de Keycloak == users.id.
+        converter.setPrincipalClaimName("email")
         converter.setJwtGrantedAuthoritiesConverter { jwt ->
-            // Keycloak puts roles in realm_access.roles
+            // Keycloak: roles en realm_access.roles
             val realmAccess = jwt.claims["realm_access"] as? Map<*, *>
-            val claim = realmAccess?.get("roles")
+            val claim = realmAccess?.get("roles") ?: jwt.claims["role"]
             val roles = when (claim) {
                 is List<*> -> claim.mapNotNull { it?.toString() }
-                is String -> listOf(claim)
-                else -> emptyList()
+                is String  -> listOf(claim)
+                else       -> emptyList()
             }
             roles.map { role -> SimpleGrantedAuthority("ROLE_${role.uppercase()}") }
         }
         return converter
     }
 }
-
