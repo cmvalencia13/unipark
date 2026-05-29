@@ -1,6 +1,6 @@
 # 04 — Roles y Permisos (RBAC)
 
-Los roles se almacenan como claim `role` en el JWT emitido por Keycloak.
+Los roles se emiten como claim namespaced `https://unipark.edu.sv/realm_access.roles` en el access token de Auth0 (vía un post-login Action). El backend los mapea a autoridades `ROLE_*`.
 
 | Rol | Plataformas | Vistas | Permisos clave |
 |---|---|---|---|
@@ -26,6 +26,6 @@ Los roles se almacenan como claim `role` en el JWT emitido por Keycloak.
 
 ## Restricción de dominio
 
-Keycloak Authentication Flow: `Conditional - User attribute email matches *@<universidad>.edu`. Si no, login falla con `access_denied`.
+Auth0 post-login Action: rechaza el login si el email no coincide con `*@<universidad>.edu` (devuelve `access_denied`).
 
 Backend además valida en `JwtAuthenticationConverter` que `email_verified=true` y dominio coincide; doble defensa.

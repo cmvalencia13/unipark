@@ -12,7 +12,7 @@
 - En móvil, navegación condicionada por rol leído del JWT decodificado.
 
 ## 3. Restricción de dominio universitario
-- Doble validación: Keycloak flow + backend `JwtAuthenticationConverter`.
+- Doble validación: Auth0 post-login Action + backend `JwtAuthenticationConverter`.
 - Lista blanca de dominios en config (`security.allowed-domains`).
 
 ## 4. Rate Limiting
