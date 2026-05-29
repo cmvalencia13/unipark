@@ -3,15 +3,15 @@ import CryptoKit
 import Security
 
 public struct AppAuthService {
-    // Simulador  → http://localhost:8080/realms/unipark
-    // iPhone físico → http://<TU_IP_LOCAL>:8080/realms/unipark
-    // Producción → https://auth.universidad.edu.sv/realms/unipark
-    #if targetEnvironment(simulator)
+    // Simulador local:  http://localhost:8080/realms/unipark
+    // ngrok (todos):    https://yyyy.ngrok-free.app/realms/unipark  ← reemplaza con tu URL
+    // Producción:       https://auth.universidad.edu.sv/realms/unipark
+    //
+    // Con ngrok el mismo string funciona en simulador y iPhone físico.
     public static let issuerURL = "http://localhost:8080/realms/unipark"
-    #else
-    // ⚠️ Cambia esta IP a la IP local de tu Mac antes de correr en iPhone físico
-    public static let issuerURL = "http://10.74.10.127:8080/realms/unipark"
-    #endif
+    // ↑ Cambia a tu URL de ngrok cuando lo actives, ej:
+    // public static let issuerURL = "https://yyyy.ngrok-free.app/realms/unipark"
+
     public static let clientID = "unipark-ios"
     public static let redirectURI = "com.unipark.app://callback"
 
