@@ -2,13 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!--
+	  Auth0 usa HTTPS, así que no se requieren excepciones de ATS para el login.
+	  Si el backend aún se prueba por HTTP en LAN/localhost, descomenta NSAllowsLocalNetworking.
+	-->
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<!-- Permite HTTP en redes locales (localhost y *.local) -->
 		<key>NSAllowsLocalNetworking</key>
-		<true/>
-		<!-- Permite HTTP arbitrario — solo para desarrollo/testing en LAN -->
-		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
 	<key>CFBundleURLTypes</key>

@@ -1,125 +1,105 @@
 import Foundation
-import AuthenticationServices
-import UIKit
+import Auth0
 
+/// Coordinador de autenticación de la app sobre **Auth0**.
+///
+/// Mantiene la misma API pública (`login`/`logout`/`currentUser`/`refreshTokenIfNeeded`)
+/// para que `LoginView`, `AuthRepositoryImpl` y la capa de red (que lee
+/// `TokenStorage.shared.accessToken`) no necesiten cambios.
 @MainActor
-public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationContextProviding {
-	public static let shared = OIDCAuthManager()
-	private let devMode: Bool = FeatureFlags.devMode
+public final class OIDCAuthManager: NSObject {
+    public static let shared = OIDCAuthManager()
 
-    public static let issuerURL = AppAuthService.issuerURL
-    public static let clientID = AppAuthService.clientID
-    public static let redirectURI = AppAuthService.redirectURI
+    /// Namespace de los custom claims emitidos por el Auth0 Action.
+    /// Debe coincidir con `SecurityConfig` del backend.
+    private static let ns = "https://unipark.edu.sv"
+    private static let emailClaim = "\(ns)/email"
+    private static let realmAccessClaim = "\(ns)/realm_access"
 
-	private let authService = AppAuthService()
-	private var authSession: ASWebAuthenticationSession?
+    private let authService = AppAuthService()
 
-	private override init() {
-		super.init()
-	}
+    private override init() {
+        super.init()
+    }
 
-	// MARK: - Public API
+    // MARK: - Public API
 
-	public func login() async throws -> User {
-		let authURL = authService.buildAuthURL()
-		guard let codeVerifier = AppAuthService.pendingCodeVerifier,
-			  let expectedState = AppAuthService.pendingState else {
-			throw NetworkError.decodingError
-		}
+    public func login() async throws -> User {
+        let credentials = try await authService.login()
+        TokenStorage.shared.save(
+            accessToken: credentials.accessToken,
+            refreshToken: credentials.refreshToken ?? "",
+            idToken: credentials.idToken
+        )
 
-		let callbackURL = try await startWebAuthSession(authURL: authURL)
+        guard let user = currentUser() else {
+            throw NetworkError.decodingError
+        }
+        return user
+    }
 
-		let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)
-		let queryItems = components?.queryItems ?? []
-		print("[OIDCAuth] callback: \(callbackURL.absoluteString.prefix(200))")
-		if let state = queryItems.first(where: { $0.name == "state" })?.value {
-			print("[OIDCAuth] state match=\(state == expectedState)")
-			if state != expectedState {
-				throw NSError(domain: "OIDCAuth", code: 401, userInfo: [NSLocalizedDescriptionKey: "State mismatch: got \(state)"])
-			}
-		}
+    public func logout() async throws {
+        // Intenta cerrar la sesión SSO en Auth0; aunque falle, limpia el estado local.
+        try? await authService.logout()
+        TokenStorage.shared.clear()
+    }
 
-		if let error = queryItems.first(where: { $0.name == "error" })?.value {
-			throw NSError(domain: "OIDCAuthManager", code: -1, userInfo: [NSLocalizedDescriptionKey: error])
-		}
+    public func refreshTokenIfNeeded() async throws {
+        guard let accessToken = TokenStorage.shared.accessToken else {
+            throw NetworkError.unauthorized
+        }
 
-		guard let code = queryItems.first(where: { $0.name == "code" })?.value else {
-			throw NSError(domain: "OIDCAuth", code: 401, userInfo: [NSLocalizedDescriptionKey: "No code in callback"])
-		}
+        if let payload = decodeJWTPayload(accessToken),
+           let exp = payload["exp"] as? Double {
+            let expiration = Date(timeIntervalSince1970: exp)
+            // Margen de 60s para evitar usar un token al borde de expirar.
+            if expiration > Date().addingTimeInterval(60) {
+                return
+            }
+        }
 
-		let tokens = try await authService.exchangeCode(code, codeVerifier: codeVerifier)
-		TokenStorage.shared.save(accessToken: tokens.accessToken, refreshToken: tokens.refreshToken)
+        guard let refreshToken = TokenStorage.shared.refreshToken,
+              !refreshToken.isEmpty else {
+            throw NetworkError.unauthorized
+        }
 
-		guard let user = currentUser() else {
-			throw NetworkError.decodingError
-		}
-
-		return user
-	}
-
-	public func logout() async throws {
-		authSession?.cancel()
-		authSession = nil
-		TokenStorage.shared.clear()
-	}
-
-	public func refreshTokenIfNeeded() async throws {
-		guard let accessToken = TokenStorage.shared.accessToken else { throw NetworkError.unauthorized }
-
-		if let payload = decodeJWTPayload(accessToken),
-		   let exp = payload["exp"] as? Double {
-			let expiration = Date(timeIntervalSince1970: exp)
-			if expiration > Date() {
-				return
-			}
-		}
-
-		guard let refreshToken = TokenStorage.shared.refreshToken else {
-			throw NetworkError.unauthorized
-		}
-
-		let tokenEndpoint = URL(string: "\(Self.issuerURL)/protocol/openid-connect/token")!
-		var request = URLRequest(url: tokenEndpoint)
-		request.httpMethod = "POST"
-		request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-		request.setValue("application/json", forHTTPHeaderField: "Accept")
-		let body = [
-			"grant_type": "refresh_token",
-			"client_id": Self.clientID,
-			"refresh_token": refreshToken
-		]
-		request.httpBody = body
-			.map { "\($0.key)=\($0.value.urlEncoded())" }
-			.joined(separator: "&")
-			.data(using: .utf8)
-
-		let (data, response) = try await URLSession.shared.data(for: request)
-		guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-			throw NetworkError.unauthorized
-		}
-
-		let refreshed = try JSONDecoder().decode(RefreshResponse.self, from: data)
-		TokenStorage.shared.save(accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken ?? "")
-	}
+        do {
+            let credentials = try await authService.renew(refreshToken: refreshToken)
+            TokenStorage.shared.save(
+                accessToken: credentials.accessToken,
+                refreshToken: credentials.refreshToken ?? refreshToken,
+                idToken: credentials.idToken
+            )
+        } catch {
+            throw NetworkError.unauthorized
+        }
+    }
 
     public func currentUser() -> User? {
         guard let accessToken = TokenStorage.shared.accessToken,
-              let claims = decodeJWTPayload(accessToken) else {
+              let accessClaims = decodeJWTPayload(accessToken) else {
             return nil
         }
+        // El ID token trae los claims estándar de perfil (email/given_name/family_name).
+        let idClaims = TokenStorage.shared.idToken.flatMap { decodeJWTPayload($0) } ?? [:]
 
-        guard let sub   = claims["sub"] as? String,
-              let email = claims["email"] as? String else {
-            return nil
-        }
+        guard let sub = accessClaims["sub"] as? String else { return nil }
 
-        let givenName  = claims["given_name"]  as? String ?? ""
-        let familyName = claims["family_name"] as? String ?? ""
+        // Email: claim namespaced del access token (lo emite el Action) → fallback al ID token.
+        let email = (accessClaims[Self.emailClaim] as? String)
+            ?? (idClaims["email"] as? String)
+            ?? (accessClaims["email"] as? String)
+
+        guard let email else { return nil }
+
+        let givenName  = (idClaims["given_name"]  as? String) ?? ""
+        let familyName = (idClaims["family_name"] as? String) ?? ""
+        let nameClaim  = (idClaims["name"] as? String) ?? ""
         let fullName   = [givenName, familyName].filter { !$0.isEmpty }.joined(separator: " ")
+        let displayName = !fullName.isEmpty ? fullName : (!nameClaim.isEmpty ? nameClaim : email)
 
-        // Keycloak pone los roles en realm_access.roles (array).
-        // "guard" en Keycloak → .securityGuard en la app (el rawValue del enum es "securityGuard")
-        let role: UserRole
+        // Roles: Auth0 Action los emite namespaced en {ns}/realm_access.roles.
+        // Se mantienen fallbacks a realm_access plano y a `role` por compatibilidad.
         func parseRole(_ raw: String) -> UserRole? {
             switch raw.lowercased() {
             case "guard", "securityguard", "security_guard": return .securityGuard
@@ -129,12 +109,15 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
             default:            return nil
             }
         }
-        if let realmAccess = claims["realm_access"] as? [String: Any],
-           let roles = realmAccess["roles"] as? [String] {
+
+        let role: UserRole
+        let realmAccess = (accessClaims[Self.realmAccessClaim] as? [String: Any])
+            ?? (accessClaims["realm_access"] as? [String: Any])
+        if let roles = realmAccess?["roles"] as? [String] {
             role = roles.compactMap { parseRole($0) }.first ?? .driver
-        } else if let flatRole = claims["role"] as? String {
+        } else if let flatRole = accessClaims["role"] as? String {
             role = parseRole(flatRole) ?? .driver
-        } else if let flatRoles = claims["role"] as? [String] {
+        } else if let flatRoles = accessClaims["role"] as? [String] {
             role = flatRoles.compactMap { parseRole($0) }.first ?? .driver
         } else {
             role = .driver
@@ -143,101 +126,39 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
         return User(
             id: UUID(uuidString: sub) ?? UUID(),
             email: email,
-            fullName: fullName.isEmpty ? email : fullName,
+            fullName: displayName,
             role: role,
             universityId: sub,
             active: true
         )
     }
 
-	// MARK: - JWT Helpers
+    // MARK: - JWT Helpers
 
-	private func decodeJWTPayload(_ token: String) -> [String: Any]? {
-		let segments = token.split(separator: ".")
-		guard segments.count >= 2 else { return nil }
+    private func decodeJWTPayload(_ token: String) -> [String: Any]? {
+        let segments = token.split(separator: ".")
+        guard segments.count >= 2 else { return nil }
 
-		var payload = String(segments[1])
-		let remainder = payload.count % 4
-		if remainder != 0 {
-			payload += String(repeating: "=", count: 4 - remainder)
-		}
+        var payload = String(segments[1])
+        let remainder = payload.count % 4
+        if remainder != 0 {
+            payload += String(repeating: "=", count: 4 - remainder)
+        }
 
-		payload = payload
-			.replacingOccurrences(of: "-", with: "+")
-			.replacingOccurrences(of: "_", with: "/")
+        payload = payload
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
 
-		guard let data = Data(base64Encoded: payload),
-			  let object = try? JSONSerialization.jsonObject(with: data, options: []),
-			  let dict = object as? [String: Any] else {
-			return nil
-		}
+        guard let data = Data(base64Encoded: payload),
+              let object = try? JSONSerialization.jsonObject(with: data, options: []),
+              let dict = object as? [String: Any] else {
+            return nil
+        }
 
-		return dict
-	}
-
-	// MARK: - Session
-
-	private func startWebAuthSession(authURL: URL) async throws -> URL {
-		try await withCheckedThrowingContinuation { continuation in
-			let session = ASWebAuthenticationSession(url: authURL, callbackURLScheme: URL(string: Self.redirectURI)?.scheme) { [weak self] callbackURL, error in
-				DispatchQueue.main.async {
-					defer { self?.authSession = nil }
-
-					if let error = error {
-						continuation.resume(throwing: error)
-						return
-					}
-
-					guard let callbackURL else {
-						continuation.resume(throwing: NetworkError.unauthorized)
-						return
-					}
-
-					continuation.resume(returning: callbackURL)
-				}
-			}
-
-			session.presentationContextProvider = self
-			session.prefersEphemeralWebBrowserSession = true
-			self.authSession = session
-
-			if !session.start() {
-				self.authSession = nil
-				continuation.resume(throwing: NetworkError.noConnection)
-			}
-		}
-	}
-
-	// MARK: - Presentation
-
-	@available(iOS, deprecated: 26.0)
-	public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-		UIApplication.shared.connectedScenes
-			.compactMap { $0 as? UIWindowScene }
-			.flatMap { $0.windows }
-			.first(where: { $0.isKeyWindow }) ?? ASPresentationAnchor()
-	}
-}
-
-private struct RefreshResponse: Decodable {
-	let accessToken: String
-	let refreshToken: String?
-
-	private enum CodingKeys: String, CodingKey {
-		case accessToken = "access_token"
-		case refreshToken = "refresh_token"
-	}
-}
-
-private extension String {
-	func urlEncoded() -> String {
-		addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)?
-			.replacingOccurrences(of: "+", with: "%2B")
-			.replacingOccurrences(of: "&", with: "%26")
-			.replacingOccurrences(of: "=", with: "%3D") ?? self
-	}
+        return dict
+    }
 }
 
 public extension Notification.Name {
-	static let oidcAuthStateDidChange = Notification.Name("oidcAuthStateDidChange")
+    static let oidcAuthStateDidChange = Notification.Name("oidcAuthStateDidChange")
 }

@@ -1,133 +1,52 @@
 import Foundation
-import CryptoKit
-import Security
+import Auth0
 
+/// Configuración y wrapper de autenticación con **Auth0**.
+///
+/// Reemplaza la implementación manual de PKCE / ASWebAuthenticationSession contra
+/// Keycloak. Auth0.swift maneja PKCE, el navegador seguro y el callback internamente.
+///
+/// ── Valores a completar por el responsable de Auth0 ──────────────────────────
+/// `domain`   → el dominio del tenant, p.ej. "unipark.us.auth0.com" (SIN https://).
+/// `clientID` → Client ID de la app **Native** "UniPark iOS" en el dashboard Auth0.
+/// `audience` → el Identifier de la API en Auth0 ("https://api.unipark.edu.sv").
+///              OBLIGATORIO: sin audience el access token es opaco y el backend lo rechaza.
+///
+/// El callback que debes registrar en Auth0 (Allowed Callback URLs / Logout URLs) es:
+///   {bundleId}://{domain}/ios/{bundleId}/callback
+///   p.ej. com.unipark.app://unipark.us.auth0.com/ios/com.unipark.app/callback
+/// Auth0.swift lo genera automáticamente; basta con whitelistarlo en el dashboard.
 public struct AppAuthService {
-    // Simulador local:  http://localhost:8082/realms/unipark
-    // ngrok (todos):    https://yyyy.ngrok-free.app/realms/unipark  ← reemplaza con tu URL
-    // Producción:       https://auth.universidad.edu.sv/realms/unipark
-    //
-    // Con ngrok el mismo string funciona en simulador y iPhone físico.
-    // Keycloak: usar IP local (mismo WiFi) — ngrok gratuito solo da 1 URL
-    // Si usas Tailscale: reemplaza con la IP de Tailscale (100.x.x.x)
-    public static let issuerURL = "http://192.168.0.22:8082/realms/unipark"
-    // Simulador: "http://localhost:8082/realms/unipark"
-    // iPhone físico (LAN): reemplaza 192.168.0.22 con tu IP (ifconfig en0 en la Mac)
 
-    public static let clientID = "unipark-ios"
-    public static let redirectURI = "com.unipark.app://callback"
+    // TODO(Auth0): reemplazar por los valores reales del tenant antes de probar.
+    public static let domain   = "TU_DOMINIO.us.auth0.com"
+    public static let clientID = "TU_CLIENT_ID_IOS"
+    public static let audience = "https://api.unipark.edu.sv"
+    public static let scope    = "openid profile email offline_access"
 
-	// PKCE material generated when building the auth URL.
-	static var pendingCodeVerifier: String?
-	static var pendingState: String?
-	static var pendingNonce: String?
+    public init() {}
 
-	public init() {}
+    /// Lanza el flujo de login universal de Auth0 y devuelve las credenciales.
+    public func login() async throws -> Credentials {
+        try await Auth0
+            .webAuth(clientId: Self.clientID, domain: Self.domain)
+            .audience(Self.audience)
+            .scope(Self.scope)
+            .start()
+    }
 
-	public func buildAuthURL() -> URL {
-		let verifier = generateCodeVerifier()
-		let challenge = generateCodeChallenge(from: verifier)
-		let state = randomURLSafeString(byteCount: 16)
-		let nonce = randomURLSafeString(byteCount: 16)
+    /// Cierra la sesión del navegador en Auth0 (borra la cookie SSO del tenant).
+    public func logout() async throws {
+        try await Auth0
+            .webAuth(clientId: Self.clientID, domain: Self.domain)
+            .clearSession()
+    }
 
-		Self.pendingCodeVerifier = verifier
-		Self.pendingState = state
-		Self.pendingNonce = nonce
-
-		let authEndpoint = "\(Self.issuerURL)/protocol/openid-connect/auth"
-		var components = URLComponents(string: authEndpoint)!
-		components.queryItems = [
-			URLQueryItem(name: "response_type", value: "code"),
-			URLQueryItem(name: "client_id", value: Self.clientID),
-			URLQueryItem(name: "redirect_uri", value: Self.redirectURI),
-			URLQueryItem(name: "scope", value: "openid profile email"),
-			URLQueryItem(name: "state", value: state),
-			URLQueryItem(name: "nonce", value: nonce),
-			URLQueryItem(name: "code_challenge", value: challenge),
-			URLQueryItem(name: "code_challenge_method", value: "S256")
-		]
-
-		return components.url!
-	}
-
-	public func exchangeCode(_ code: String, codeVerifier: String) async throws -> (accessToken: String, refreshToken: String) {
-		let tokenEndpoint = URL(string: "\(Self.issuerURL)/protocol/openid-connect/token")!
-		var request = URLRequest(url: tokenEndpoint)
-		request.httpMethod = "POST"
-		request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-		request.setValue("application/json", forHTTPHeaderField: "Accept")
-
-		let bodyItems: [URLQueryItem] = [
-			URLQueryItem(name: "grant_type", value: "authorization_code"),
-			URLQueryItem(name: "client_id", value: Self.clientID),
-			URLQueryItem(name: "code", value: code),
-			URLQueryItem(name: "redirect_uri", value: Self.redirectURI),
-			URLQueryItem(name: "code_verifier", value: codeVerifier)
-		]
-		request.httpBody = bodyItems
-			.map { "\($0.name)=\(($0.value ?? "").urlEncoded())" }
-			.joined(separator: "&")
-			.data(using: .utf8)
-
-		let (data, response) = try await URLSession.shared.data(for: request)
-		let http = response as? HTTPURLResponse
-		let statusCode = http?.statusCode ?? 0
-		let body = String(data: data, encoding: .utf8) ?? ""
-		print("[AppAuthService] exchangeCode status=\(statusCode) body=\(body)")
-
-		guard let http, (200...299).contains(http.statusCode) else {
-			throw NSError(domain: "OIDCAuth", code: statusCode,
-				userInfo: [NSLocalizedDescriptionKey: "Token exchange \(statusCode): \(body)"])
-		}
-
-		let payload = try JSONDecoder().decode(TokenExchangeResponse.self, from: data)
-		return (accessToken: payload.accessToken, refreshToken: payload.refreshToken ?? "")
-	}
-
-	public func generateCodeVerifier() -> String {
-		// 32 bytes => 43 chars base64url, within PKCE requirements.
-		randomURLSafeString(byteCount: 32)
-	}
-
-	public func generateCodeChallenge(from verifier: String) -> String {
-		let digest = SHA256.hash(data: Data(verifier.utf8))
-		return Data(digest).base64URLEncodedString()
-	}
-
-	// MARK: - Private helpers
-
-	private func randomURLSafeString(byteCount: Int) -> String {
-		var bytes = [UInt8](repeating: 0, count: byteCount)
-		let result = SecRandomCopyBytes(kSecRandomDefault, byteCount, &bytes)
-		precondition(result == errSecSuccess, "Unable to generate secure random bytes")
-		return Data(bytes).base64URLEncodedString()
-	}
-}
-
-private struct TokenExchangeResponse: Decodable {
-	let accessToken: String
-	let refreshToken: String?
-
-	private enum CodingKeys: String, CodingKey {
-		case accessToken = "access_token"
-		case refreshToken = "refresh_token"
-	}
-}
-
-private extension String {
-	func urlEncoded() -> String {
-		addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)?
-			.replacingOccurrences(of: "+", with: "%2B")
-			.replacingOccurrences(of: "&", with: "%26")
-			.replacingOccurrences(of: "=", with: "%3D") ?? self
-	}
-}
-
-private extension Data {
-	func base64URLEncodedString() -> String {
-		base64EncodedString()
-			.replacingOccurrences(of: "+", with: "-")
-			.replacingOccurrences(of: "/", with: "_")
-			.replacingOccurrences(of: "=", with: "")
-	}
+    /// Renueva el access token usando el refresh token (requiere scope offline_access).
+    public func renew(refreshToken: String) async throws -> Credentials {
+        try await Auth0
+            .authentication(clientId: Self.clientID, domain: Self.domain)
+            .renew(withRefreshToken: refreshToken)
+            .start()
+    }
 }
