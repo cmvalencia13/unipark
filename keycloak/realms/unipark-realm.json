@@ -1,0 +1,79 @@
+{
+  "realm": "unipark",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "clients": [
+    {
+      "clientId": "unipark-ios",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "com.unipark.app://*",
+        "http://localhost:*"
+      ],
+      "webOrigins": ["*"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "optionalClientScopes": ["offline_access", "address", "phone", "microprofile-jwt"]
+    },
+    {
+      "clientId": "unipark-android",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "com.unipark.app://*",
+        "com.unipark.android:/*"
+      ],
+      "webOrigins": ["*"]
+    },
+    {
+      "clientId": "unipark-backend",
+      "enabled": true,
+      "publicClient": false,
+      "bearerOnly": true
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "driver",     "description": "Conductor universitario" },
+      { "name": "guard",      "description": "Guardia de parqueo" },
+      { "name": "admin",      "description": "Administrador de parqueo" },
+      { "name": "superadmin", "description": "Superadministrador del sistema" }
+    ]
+  },
+  "users": [
+    {
+      "username": "maria.garcia",
+      "email": "maria.garcia@universidad.edu.sv",
+      "firstName": "María",
+      "lastName": "García",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "driver123", "temporary": false }],
+      "realmRoles": ["driver"]
+    },
+    {
+      "username": "carlos.guardian",
+      "email": "guardia.demo@universidad.edu.sv",
+      "firstName": "Carlos",
+      "lastName": "Guardián",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "guard123", "temporary": false }],
+      "realmRoles": ["guard"]
+    },
+    {
+      "username": "admin",
+      "email": "admin@universidad.edu.sv",
+      "firstName": "Admin",
+      "lastName": "Demo",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }],
+      "realmRoles": ["admin"]
+    }
+  ]
+}

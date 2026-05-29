@@ -57,7 +57,7 @@ class AuthViewModel @Inject constructor(
     fun getAuthIntent(context: Context): Intent {
         val authRequest = AuthorizationRequest.Builder(
             authServiceConfiguration,
-            "unipark-mobile",
+            "unipark-android",
             ResponseTypeValues.CODE,
             Uri.parse("com.unipark.android:/oauth2redirect")
         ).setScope("openid profile email offline_access")
