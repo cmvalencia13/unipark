@@ -4,18 +4,12 @@
 <dict>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<!-- Permite HTTP en redes locales (localhost y *.local) -->
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>10.74.10.127</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-			</dict>
-		</dict>
+		<!-- Permite HTTP arbitrario — solo para desarrollo/testing en LAN -->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
 	</dict>
 	<key>CFBundleURLTypes</key>
 	<array>
@@ -25,12 +19,10 @@
 			<key>CFBundleURLIconFile</key>
 			<string></string>
 			<key>CFBundleURLName</key>
-			<string>com.unipark.app
-</string>
+			<string>com.unipark.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.unipark.app
-</string>
+				<string>com.unipark.app</string>
 			</array>
 		</dict>
 	</array>
