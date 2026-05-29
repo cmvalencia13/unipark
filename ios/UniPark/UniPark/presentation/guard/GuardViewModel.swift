@@ -43,8 +43,14 @@ public final class GuardViewModel {
 
     // MARK: - Lots
 
-    private func refreshLots() async {
-        if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
+    /// Refresca los lotes desde el backend. Público para reintentar desde onAppear.
+    public func refreshLots() async {
+        do {
+            let remote = try await LotAPIClient.shared.fetchAllLots()
+            guard !remote.isEmpty else {
+                print("[GuardVM] refreshLots: backend devolvió 0 lotes")
+                return
+            }
             // Preservar selectedLotId si el lote sigue existiendo
             let currentId = selectedLotId
             lots = remote
@@ -54,6 +60,9 @@ public final class GuardViewModel {
                 selectedLotId = remote.first?.id ?? UUID()
             }
             lotsLoaded = true
+            print("[GuardVM] refreshLots OK: \(remote.count) lotes, selected=\(selectedLotId)")
+        } catch {
+            print("[GuardVM] refreshLots ERROR: \(error)")
         }
     }
 

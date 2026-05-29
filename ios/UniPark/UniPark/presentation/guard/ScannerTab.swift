@@ -244,6 +244,12 @@ public struct ScannerTab: View {
                 cameraActive = true
             }
         }
+        .task {
+            // Reintenta cargar lotes cada vez que aparece el scanner si aún no se cargaron.
+            if !viewModel.lotsLoaded {
+                await viewModel.refreshLots()
+            }
+        }
     }
 
     // MARK: - Result Card

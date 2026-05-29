@@ -22,9 +22,13 @@ public final class NetworkClient {
 	}
 
 	public func request<T: Decodable>(_ endpoint: Endpoint) async throws -> T {
-		// build URL
+		// build URL — concatenación explícita para preservar el path base (/v1).
+		// URL(string:relativeTo:) descarta el último segmento del base cuando este
+		// no termina en "/", lo que rompía "/v1/lots" → "/lots" (404).
 		let rawPath = endpoint.path.hasPrefix("/") ? String(endpoint.path.dropFirst()) : endpoint.path
-		guard let url = URL(string: rawPath, relativeTo: baseURL) else {
+		let baseString = baseURL.absoluteString
+		let normalizedBase = baseString.hasSuffix("/") ? baseString : baseString + "/"
+		guard let url = URL(string: normalizedBase + rawPath) else {
 			throw NetworkError.clientError(400)
 		}
 

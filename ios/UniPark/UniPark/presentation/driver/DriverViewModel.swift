@@ -33,9 +33,10 @@ public final class DriverViewModel {
     public var currentTime: String = ""
     public var currentDate: String = ""
 
-    // Timers are nonisolated(unsafe) so deinit can safely invalidate them
-    private nonisolated(unsafe) var clockTimer: Timer?
-    private nonisolated(unsafe) var countdownTimer: Timer?
+    // Tarea única de tick (reloj + countdown). Más fiable que Timer + RunLoop
+    // con @Observable: cada segundo muta en MainActor y SwiftUI re-renderiza.
+    // nonisolated(unsafe) para poder cancelarla desde deinit.
+    private nonisolated(unsafe) var tickTask: Task<Void, Never>?
 
     // MARK: - Init
     public init() {
@@ -46,25 +47,16 @@ public final class DriverViewModel {
 
     // MARK: - Timers
     public func startTimers() {
-        // Clock: updates currentTime / currentDate every second
-        clockTimer?.invalidate()
-        updateClock()
-        let cTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor [weak self] in
-                self?.updateClock()
-            }
-        }
-        RunLoop.main.add(cTimer, forMode: .common)
-        clockTimer = cTimer
-
-        // Countdown: ticks every second, regenerates QR payload at 0
-        countdownTimer?.invalidate()
+        stopTimers()
         passCountdown = FeatureFlags.qrRotationSeconds
-        let qTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor [weak self] in
-                guard let self else { return }
+        updateClock()
+
+        tickTask = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1))
+                guard let self, !Task.isCancelled else { return }
+
+                self.updateClock()
                 self.passCountdown -= 1
                 if self.passCountdown <= 0 {
                     self.passCountdown = FeatureFlags.qrRotationSeconds
@@ -72,25 +64,15 @@ public final class DriverViewModel {
                 }
             }
         }
-        RunLoop.main.add(qTimer, forMode: .common)
-        countdownTimer = qTimer
     }
 
     public func stopTimers() {
-        clockTimer?.invalidate()
-        clockTimer = nil
-        countdownTimer?.invalidate()
-        countdownTimer = nil
-    }
-
-    // nonisolated so deinit can call it without hopping to MainActor
-    nonisolated public func invalidateTimers() {
-        clockTimer?.invalidate()
-        countdownTimer?.invalidate()
+        tickTask?.cancel()
+        tickTask = nil
     }
 
     deinit {
-        invalidateTimers()
+        tickTask?.cancel()
     }
 
     private func updateClock() {
