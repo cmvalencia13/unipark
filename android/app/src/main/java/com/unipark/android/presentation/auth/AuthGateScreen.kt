@@ -7,6 +7,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -52,7 +55,7 @@ import com.unipark.android.core.ui.theme.SurfaceContainer
 
 @Composable
 fun AuthGateScreen(
-    onAuthenticated: () -> Unit,
+    onAuthenticated: (AppRole) -> Unit,
     viewModel: AuthViewModel = hiltViewModel(),
 ) {
     val authState by viewModel.authState.collectAsState()
@@ -69,8 +72,9 @@ fun AuthGateScreen(
 
     // Navigate when authenticated
     LaunchedEffect(authState) {
-        if (authState is AuthState.Authenticated) {
-            onAuthenticated()
+        val authenticated = authState as? AuthState.Authenticated
+        if (authenticated != null) {
+            onAuthenticated(authenticated.role)
         }
     }
 
@@ -123,6 +127,26 @@ fun AuthGateScreen(
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    FilterChip(
+                        selected = selectedRole == AppRole.DRIVER,
+                        onClick = { selectedRole = AppRole.DRIVER },
+                        label = { Text("Driver") },
+                        modifier = Modifier.weight(1f),
+                    )
+                    FilterChip(
+                        selected = selectedRole == AppRole.SECURITY_GUARD,
+                        onClick = { selectedRole = AppRole.SECURITY_GUARD },
+                        label = { Text("Guard") },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 // Email field
                 OutlinedTextField(

@@ -27,58 +27,70 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.unipark.android.presentation.access.AccessGateScreen
+import com.unipark.android.presentation.auth.AppRole
 import com.unipark.android.presentation.auth.AuthGateScreen
 import com.unipark.android.presentation.auth.AuthState
 import com.unipark.android.presentation.auth.AuthViewModel
-import com.unipark.android.presentation.dashboard.DashboardScreen
-import com.unipark.android.presentation.map.MapScreen
-import com.unipark.android.presentation.permits.PermitsScreen
+import com.unipark.android.presentation.driver.DigitalPassScreen
+import com.unipark.android.presentation.driver.DriverDashboardScreen
+import com.unipark.android.presentation.driver.WalletScreen
+import com.unipark.android.presentation.guard.LotCapacityScreen
+import com.unipark.android.presentation.guard.ScannerScreen
+import com.unipark.android.presentation.guard.ViolationFormScreen
+import java.util.UUID
 
-/**
- * Route constants.
- */
 object Routes {
     const val AUTH = "auth"
     const val DASHBOARD = "dashboard"
     const val MAP = "map"
     const val PERMITS = "permits"
     const val ACCESS = "access"
+    const val DIGITAL_PASS = "digital_pass"
+    const val VIOLATION = "violation"
 }
 
-/**
- * Tab definitions.
- */
-val bottomNavTabs = listOf(
+private val driverTabs = listOf(
     BottomNavTab(
         route = Routes.DASHBOARD,
-        label = "Status",
+        label = "Driver",
         icon = Icons.Outlined.Dashboard,
         filledIcon = Icons.Filled.Dashboard,
     ),
     BottomNavTab(
         route = Routes.MAP,
-        label = "Map",
+        label = "Lots",
         icon = Icons.Outlined.Map,
         filledIcon = Icons.Filled.Map,
     ),
     BottomNavTab(
         route = Routes.PERMITS,
-        label = "Permits",
+        label = "Wallet",
         icon = Icons.Outlined.Payments,
         filledIcon = Icons.Filled.Payments,
     ),
+)
+
+private val guardTabs = listOf(
+    BottomNavTab(
+        route = Routes.MAP,
+        label = "Lots",
+        icon = Icons.Outlined.Map,
+        filledIcon = Icons.Filled.Map,
+    ),
     BottomNavTab(
         route = Routes.ACCESS,
-        label = "Access",
+        label = "Guard",
         icon = Icons.Outlined.QrCodeScanner,
         filledIcon = Icons.Filled.QrCodeScanner,
     ),
 )
 
-/**
- * Placeholder screen composable.
- */
+private fun tabsForRole(role: AppRole?): List<BottomNavTab> = when (role) {
+    AppRole.DRIVER -> driverTabs
+    AppRole.SECURITY_GUARD -> guardTabs
+    null -> emptyList()
+}
+
 @Composable
 fun PlaceholderScreen(title: String) {
     Box(
@@ -99,14 +111,17 @@ fun UniParkNavGraph(
 ) {
     val authState by viewModel.authState.collectAsState()
 
-    when (authState) {
+    when (val state = authState) {
         is AuthState.Authenticated -> {
-            MainGraph()
+            MainGraph(
+                role = state.role,
+                onLogout = { viewModel.logout() }
+            )
         }
         else -> {
             AuthGateScreen(
                 onAuthenticated = {
-                    // La navegación reactiva se encarga de transicionar de forma automática
+                    // La navegación reactiva se encarga de transicionar de forma automática al cambiar authState
                 }
             )
         }
@@ -117,49 +132,70 @@ fun UniParkNavGraph(
  * Main navigation scaffold with TopAppBar + BottomNavBar + NavHost.
  */
 @Composable
-fun MainGraph() {
+fun MainGraph(
+    role: AppRole,
+    onLogout: () -> Unit
+) {
     val navController = rememberNavController()
+    val tabs = tabsForRole(role)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.hierarchy?.firstOrNull { dest ->
-        bottomNavTabs.any { it.route == dest.route }
-    }?.route ?: Routes.DASHBOARD
+    val currentRoute = navBackStackEntry?.destination?.hierarchy?.firstOrNull { destination ->
+        tabs.any { it.route == destination.route }
+    }?.route ?: tabs.firstOrNull()?.route ?: Routes.DASHBOARD
 
     Scaffold(
-        topBar = { UniParkTopAppBar() },
-        bottomBar = {
-            UniParkBottomNavBar(
-                tabs = bottomNavTabs,
-                currentRoute = currentRoute,
-                onTabClick = { route ->
-                    navController.navigate(route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
+        topBar = {
+            UniParkTopAppBar(
+                showLogout = true,
+                onLogoutClick = onLogout,
             )
+        },
+        bottomBar = {
+            if (tabs.isNotEmpty()) {
+                UniParkBottomNavBar(
+                    tabs = tabs,
+                    currentRoute = currentRoute,
+                    onTabClick = { route ->
+                        navController.navigate(route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                )
+            }
         },
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Routes.DASHBOARD,
+            startDestination = when (role) {
+                AppRole.DRIVER -> Routes.DASHBOARD
+                AppRole.SECURITY_GUARD -> Routes.MAP
+            },
             modifier = Modifier.padding(innerPadding),
         ) {
             composable(Routes.DASHBOARD) {
-                DashboardScreen()
+                DriverDashboardScreen(
+                    onOpenPass = { navController.navigate(Routes.DIGITAL_PASS) },
+                )
             }
             composable(Routes.MAP) {
-                MapScreen()
+                LotCapacityScreen()
             }
             composable(Routes.PERMITS) {
-                PermitsScreen()
+                WalletScreen()
             }
             composable(Routes.ACCESS) {
-                AccessGateScreen()
+                ScannerScreen()
+            }
+            composable(Routes.DIGITAL_PASS) {
+                DigitalPassScreen(vehicleId = UUID(0, 2))
+            }
+            composable(Routes.VIOLATION) {
+                ViolationFormScreen()
             }
         }
     }
 }
-

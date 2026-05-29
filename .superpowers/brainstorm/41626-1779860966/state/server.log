@@ -1,0 +1,8 @@
+{"type":"server-started","port":52984,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:52984","screen_dir":"/Users/felipecanas/Projects/unipark/unipark/.superpowers/brainstorm/41626-1779860966/content","state_dir":"/Users/felipecanas/Projects/unipark/unipark/.superpowers/brainstorm/41626-1779860966/state"}
+{"type":"screen-added","file":"/Users/felipecanas/Projects/unipark/unipark/.superpowers/brainstorm/41626-1779860966/content/architecture.html"}
+{"type":"screen-added","file":"/Users/felipecanas/Projects/unipark/unipark/.superpowers/brainstorm/41626-1779860966/content/api-contract.html"}
+{"type":"screen-added","file":"/Users/felipecanas/Projects/unipark/unipark/.superpowers/brainstorm/41626-1779860966/content/layout.html"}
+{"type":"screen-added","file":"/Users/felipecanas/Projects/unipark/unipark/.superpowers/brainstorm/41626-1779860966/content/pages.html"}
+{"type":"screen-added","file":"/Users/felipecanas/Projects/unipark/unipark/.superpowers/brainstorm/41626-1779860966/content/data-flow.html"}
+{"type":"screen-added","file":"/Users/felipecanas/Projects/unipark/unipark/.superpowers/brainstorm/41626-1779860966/content/waiting.html"}
+{"type":"server-stopped","reason":"idle timeout"}
