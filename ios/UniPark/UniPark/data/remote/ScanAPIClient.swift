@@ -1,24 +1,12 @@
 import Foundation
 
-/// Cliente HTTP para registrar escaneos de entrada/salida.
-/// Endpoint: POST /v1/scans
-/// Auth requerida: Bearer token con rol GUARD
-///
-/// Request body:
-/// {
-///   "qrPayload": "nonce:HMAC-SHA256-signature",
-///   "lotId": "uuid",
-///   "direction": "ENTRY" | "EXIT"
-/// }
-///
-/// Headers requeridos:
-///   Authorization: Bearer <jwt>
-///   Idempotency-Key: <uuid>   ← evita duplicados si hay retry
-///
-/// Respuesta: objeto Scan con id, pass, guard, lot, direction, scannedAt
 public final class ScanAPIClient {
     public static let shared = ScanAPIClient()
-    private let network = NetworkClient.shared
+    private let base = URL(string: FeatureFlags.backendBaseURL)!
+
+    /// Último mensaje de error del backend (400), para mostrarlo en la UI.
+    public static var lastErrorMessage: String? = nil
+
     private init() {}
 
     public func recordScan(
@@ -26,19 +14,36 @@ public final class ScanAPIClient {
         lotId: UUID,
         direction: ScanDirection
     ) async throws -> RemoteScanResponse {
-        let idempotencyKey = UUID().uuidString
+        var request = URLRequest(url: base.appendingPathComponent("scans"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(UUID().uuidString, forHTTPHeaderField: "Idempotency-Key")
+        if let token = TokenStorage.shared.accessToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
         let body = RemoteScanRequest(
             qrPayload: qrPayload,
-            lotId: lotId,
+            lotId: lotId.uuidString,
             direction: direction == .entry ? "ENTRY" : "EXIT"
         )
-        let endpoint = Endpoint(
-            path: "scans",
-            method: .POST,
-            body: body,
-            headers: ["Idempotency-Key": idempotencyKey]
-        )
-        return try await network.request(endpoint)
+        request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw NetworkError.noConnection }
+
+        if (200...299).contains(http.statusCode) {
+            ScanAPIClient.lastErrorMessage = nil
+            return try JSONDecoder().decode(RemoteScanResponse.self, from: data)
+        }
+
+        // Intentar extraer el mensaje del backend
+        if let errorBody = try? JSONDecoder().decode(BackendErrorBody.self, from: data) {
+            ScanAPIClient.lastErrorMessage = errorBody.message
+        } else {
+            ScanAPIClient.lastErrorMessage = String(data: data, encoding: .utf8)
+        }
+        throw NetworkError.clientError(http.statusCode)
     }
 }
 
@@ -46,7 +51,7 @@ public final class ScanAPIClient {
 
 public struct RemoteScanRequest: Codable {
     public let qrPayload: String
-    public let lotId: UUID
+    public let lotId: String
     public let direction: String
 }
 
@@ -54,5 +59,9 @@ public struct RemoteScanResponse: Codable {
     public let id: UUID
     public let direction: String
     public let scannedAt: String
-    // pass y guard se omiten — iOS no los necesita en la UI
+}
+
+private struct BackendErrorBody: Decodable {
+    let message: String
+    let status: Int?
 }

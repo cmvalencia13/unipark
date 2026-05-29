@@ -10,9 +10,8 @@ class ScanQRUseCase @Inject constructor(
     private val scanRepository: ScanRepository,
 ) {
     suspend fun execute(
-        passPayload: String,
-        passSignature: String,
+        qrPayload: String,
         direction: ScanDirection,
         lotId: UUID,
-    ): Scan = scanRepository.submitScan(passPayload, passSignature, direction, lotId)
+    ): Scan = scanRepository.submitScan(qrPayload, direction, lotId)
 }

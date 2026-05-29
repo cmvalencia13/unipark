@@ -3,10 +3,18 @@ import CryptoKit
 import Security
 
 public struct AppAuthService {
-	// Placeholder URLs until backend provides the real environment values.
-	public static let issuerURL = "https://auth.universidad.edu/realms/unipark"
-	public static let clientID = "unipark-ios"
-	public static let redirectURI = "com.unipark.app://callback"
+    // Simulador local:  http://localhost:8082/realms/unipark
+    // ngrok (todos):    https://yyyy.ngrok-free.app/realms/unipark  ← reemplaza con tu URL
+    // Producción:       https://auth.universidad.edu.sv/realms/unipark
+    //
+    // Con ngrok el mismo string funciona en simulador y iPhone físico.
+    // Keycloak: usar IP local (mismo WiFi) — ngrok gratuito solo da 1 URL
+    // Si usas Tailscale: reemplaza con la IP de Tailscale (100.x.x.x)
+    public static let issuerURL = "http://10.74.10.127:8082/realms/unipark"
+    // Simulador: "http://localhost:8082/realms/unipark"
+
+    public static let clientID = "unipark-ios"
+    public static let redirectURI = "com.unipark.app://callback"
 
 	// PKCE material generated when building the auth URL.
 	static var pendingCodeVerifier: String?
@@ -31,7 +39,7 @@ public struct AppAuthService {
 			URLQueryItem(name: "response_type", value: "code"),
 			URLQueryItem(name: "client_id", value: Self.clientID),
 			URLQueryItem(name: "redirect_uri", value: Self.redirectURI),
-			URLQueryItem(name: "scope", value: "openid profile email offline_access"),
+			URLQueryItem(name: "scope", value: "openid profile email"),
 			URLQueryItem(name: "state", value: state),
 			URLQueryItem(name: "nonce", value: nonce),
 			URLQueryItem(name: "code_challenge", value: challenge),
@@ -61,12 +69,18 @@ public struct AppAuthService {
 			.data(using: .utf8)
 
 		let (data, response) = try await URLSession.shared.data(for: request)
-		guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
-			throw NetworkError.unauthorized
+		let http = response as? HTTPURLResponse
+		let statusCode = http?.statusCode ?? 0
+		let body = String(data: data, encoding: .utf8) ?? ""
+		print("[AppAuthService] exchangeCode status=\(statusCode) body=\(body)")
+
+		guard let http, (200...299).contains(http.statusCode) else {
+			throw NSError(domain: "OIDCAuth", code: statusCode,
+				userInfo: [NSLocalizedDescriptionKey: "Token exchange \(statusCode): \(body)"])
 		}
 
 		let payload = try JSONDecoder().decode(TokenExchangeResponse.self, from: data)
-		return (accessToken: payload.accessToken, refreshToken: payload.refreshToken)
+		return (accessToken: payload.accessToken, refreshToken: payload.refreshToken ?? "")
 	}
 
 	public func generateCodeVerifier() -> String {
@@ -91,7 +105,7 @@ public struct AppAuthService {
 
 private struct TokenExchangeResponse: Decodable {
 	let accessToken: String
-	let refreshToken: String
+	let refreshToken: String?
 
 	private enum CodingKeys: String, CodingKey {
 		case accessToken = "access_token"

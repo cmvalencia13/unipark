@@ -55,11 +55,8 @@ fun DigitalPassScreen(
     ) {
         Text("Pase digital", style = MaterialTheme.typography.headlineSmall)
         state.pass?.let { pass ->
-            val qrContent = remember(pass.payload, pass.signature, state.nonce) {
-                "${pass.payload}.${pass.signature}?nonce=${state.nonce}&exp=${pass.expiresAt}"
-            }
-            val qr = remember(qrContent) {
-                generateQRBitmap(qrContent, 220).asImageBitmap()
+            val qr = remember(pass.qrPayload) {
+                generateQRBitmap(pass.qrPayload, 220).asImageBitmap()
             }
             Card(
                 shape = RoundedCornerShape(UniParkCardRadius),

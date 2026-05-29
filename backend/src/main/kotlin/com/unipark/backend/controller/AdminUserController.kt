@@ -19,7 +19,7 @@ class AdminUserController(
 ) {
 
     @GetMapping
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     fun listUsers(
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int,
@@ -31,7 +31,7 @@ class AdminUserController(
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     fun getUser(@PathVariable id: UUID): ResponseEntity<UserSummary> {
         val user = userRepository.findByIdOrNull(id)
             ?: return ResponseEntity.notFound().build()
@@ -39,7 +39,7 @@ class AdminUserController(
     }
 
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERADMIN')")
     fun updateUser(@PathVariable id: UUID, @RequestBody request: UpdateUserRequest): ResponseEntity<UserSummary> {
         val existing = userRepository.findByIdOrNull(id)
             ?: return ResponseEntity.notFound().build()

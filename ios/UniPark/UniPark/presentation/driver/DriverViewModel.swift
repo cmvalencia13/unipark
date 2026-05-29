@@ -16,26 +16,19 @@ public final class DriverViewModel {
     )
     public var userName: String? = "María García"
 
-    // MARK: - Scans
-    // Demo scenario: conductor entró hace 12 minutos a Parqueo Key
-    public var lastEntryScan: ScanResult? = ScanResult(
-        lotName: "Parqueo Key",
-        detail: "Acceso autorizado • Spot A-14",
-        timeString: "Hace 12 min",
-        direction: .entry
-    )
-    public var lastScanResult: ScanResult? = ScanResult(
-        lotName: "Parqueo Key",
-        detail: "Acceso autorizado • Spot A-14",
-        timeString: "Hace 12 min",
-        direction: .entry
-    )
+    // MARK: - Parking Status (actualizado desde backend)
+    public var isParked: Bool = false
+    public var parkedLotName: String? = nil
+    public var lastEntryScan: ScanResult? = nil
+    public var lastScanResult: ScanResult? = nil
 
     // MARK: - Sticker Permit
     public var stickerPermit: StickerPermit? = nil
 
     // MARK: - QR Pass & Clock
-    public var passPayload: String = "UNIPARK-\(UUID().uuidString)"
+    /// Payload firmado por el backend ("nonce:HMAC-base64").
+    /// Se renueva automáticamente cada qrRotationSeconds consultando GET /v1/passes/active.
+    public var passPayload: String = ""
     public var passCountdown: Int = 60
     public var currentTime: String = ""
     public var currentDate: String = ""
@@ -46,13 +39,9 @@ public final class DriverViewModel {
 
     // MARK: - Init
     public init() {
-        // Inyectar token mock de conductor para que el backend JWT mock acepte las requests
-        // Fase 2: reemplazar por el JWT real de Keycloak
-        if TokenStorage.shared.accessToken == nil {
-            TokenStorage.shared.accessToken = "dev-mock-token-driver"
-        }
         loadData()
         updateClock()
+        Task { await fetchActivePass() }
     }
 
     // MARK: - Timers
@@ -79,10 +68,7 @@ public final class DriverViewModel {
                 self.passCountdown -= 1
                 if self.passCountdown <= 0 {
                     self.passCountdown = FeatureFlags.qrRotationSeconds
-                    // Phase 1 — UUID temporal para que el QR rote visualmente.
-                    // Phase 2 (post-backend) — reemplazar con JWT firmado de
-                    // PassRepository.generateAccessToken() y validar server-side.
-                    self.passPayload = "UNIPARK-\(UUID().uuidString)"
+                    await self.fetchActivePass()
                 }
             }
         }
@@ -124,15 +110,59 @@ public final class DriverViewModel {
         stickerPermit = StickerPermit(qrContent: qrContent, savedAt: Date())
     }
 
+    // MARK: - QR Fetch
+    public func fetchActivePass() async {
+        do {
+            let dto = try await PassAPIClient.shared.fetchActivePass()
+            self.passPayload = dto.qrPayload
+        } catch {
+            // Si falla (sin backend, no conectado) dejamos el payload vacío o el anterior
+            if passPayload.isEmpty {
+                passPayload = "UNIPARK-NO-PASS"
+            }
+        }
+    }
+
     // MARK: - Data Loading
     public func loadData() {
-        // Carga inicial con stubs para que la UI no quede vacía
         if lots.isEmpty { lots = ParkingLot.stubs }
-        // Luego intenta el backend real (GET /v1/lots es público — no requiere auth)
         Task {
-            if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
-                self.lots = remote
+            await refreshLots()
+            await refreshParkingStatus()
+        }
+    }
+
+    /// Refresca los lotes desde el backend. Llamar en onAppear de cualquier tab que muestre ocupación.
+    public func refreshLots() async {
+        if let remote = try? await LotAPIClient.shared.fetchAllLots(), !remote.isEmpty {
+            self.lots = remote
+        }
+    }
+
+    /// Refresca el estado de parking del conductor (dentro/fuera, en qué lote).
+    public func refreshParkingStatus() async {
+        guard let status = try? await PassAPIClient.shared.fetchMyStatus() else { return }
+        self.isParked = status.isParked
+        self.parkedLotName = status.lotName
+
+        if let lotName = status.lotName, let dir = status.direction {
+            let timeFmt = DateFormatter()
+            timeFmt.locale = Locale(identifier: "es_ES")
+            timeFmt.dateFormat = "hh:mm a"
+            var timeStr = ""
+            if let scannedAtStr = status.scannedAt,
+               let date = ISO8601DateFormatter().date(from: scannedAtStr) {
+                timeStr = timeFmt.string(from: date)
             }
+            let scanDir: ScanResult.Direction = dir == "ENTRY" ? .entry : .exit
+            let result = ScanResult(
+                lotName: lotName,
+                detail: dir == "ENTRY" ? "Entrada registrada" : "Salida registrada",
+                timeString: timeStr,
+                direction: scanDir
+            )
+            self.lastScanResult = result
+            if dir == "ENTRY" { self.lastEntryScan = result }
         }
     }
 }

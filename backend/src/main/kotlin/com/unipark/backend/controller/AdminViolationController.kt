@@ -62,10 +62,11 @@ class AdminViolationController(
             return ResponseEntity.badRequest().build()
         }
 
-        val resolverId = UUID.fromString(jwt.subject)
+        val resolver = userRepository.findByEmail(jwt.getClaimAsString("email"))
+            ?: return ResponseEntity.notFound().build()
         val resolved = existing.copy(
             status = request.status,
-            resolvedBy = userRepository.getReferenceById(resolverId),
+            resolvedBy = resolver,
             resolvedAt = OffsetDateTime.now()
         )
         violationRepository.save(resolved)

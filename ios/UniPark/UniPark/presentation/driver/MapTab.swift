@@ -30,10 +30,7 @@ final class LocationPermissionManager: NSObject, CLLocationManagerDelegate {
     }
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        if manager.authorizationStatus == .authorizedWhenInUse ||
-           manager.authorizationStatus == .authorizedAlways {
-            manager.requestLocation()
-        }
+        // Do not auto-center on user location — only move camera when user taps the location button.
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
@@ -210,6 +207,13 @@ public struct MapTab: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 100)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .onAppear {
+            if !viewModel.lots.isEmpty { mapVM.lots = viewModel.lots }
+            Task {
+                await viewModel.refreshLots()
+                mapVM.lots = viewModel.lots
             }
         }
         .onChange(of: viewModel.lots) { _, newLots in

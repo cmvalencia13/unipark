@@ -46,10 +46,9 @@ class ScannerViewModel @Inject constructor(
 
     fun onQRDetected(qrContent: String) {
         if (_state.value.processing || !_state.value.actionsEnabled) return
-        val parts = qrContent.split(".", limit = 2)
-        val payload = parts.getOrNull(0).orEmpty()
-        val signature = parts.getOrNull(1).orEmpty()
-        if (payload.isBlank() || signature.isBlank()) {
+        // El QR canónico es una sola cadena "nonce:base64(HMAC)"; se envía tal cual.
+        val qrPayload = qrContent.trim()
+        if (qrPayload.isBlank()) {
             _state.value = _state.value.copy(error = "QR invalido")
             return
         }
@@ -57,7 +56,7 @@ class ScannerViewModel @Inject constructor(
         viewModelScope.launch {
             _state.value = _state.value.copy(processing = true, actionsEnabled = false, error = null)
             runCatching {
-                scanQRUseCase.execute(payload, signature, _state.value.direction, _state.value.selectedLotId)
+                scanQRUseCase.execute(qrPayload, _state.value.direction, _state.value.selectedLotId)
             }
                 .onSuccess { _state.value = _state.value.copy(lastResult = it, processing = false) }
                 .onFailure { _state.value = _state.value.copy(error = it.message, processing = false) }

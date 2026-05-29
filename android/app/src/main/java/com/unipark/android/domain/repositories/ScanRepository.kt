@@ -6,8 +6,7 @@ import java.util.UUID
 
 interface ScanRepository {
     suspend fun submitScan(
-        passPayload: String,
-        passSignature: String,
+        qrPayload: String,
         direction: ScanDirection,
         lotId: UUID,
     ): Scan

@@ -22,8 +22,7 @@ class ScanRepositoryImpl @Inject constructor(
     private val scanSyncScheduler: ScanSyncScheduler,
 ) : ScanRepository {
     override suspend fun submitScan(
-        passPayload: String,
-        passSignature: String,
+        qrPayload: String,
         direction: ScanDirection,
         lotId: UUID,
     ): Scan {
@@ -32,8 +31,7 @@ class ScanRepositoryImpl @Inject constructor(
             scanApiService.submitScan(
                 key = idempotencyKey,
                 scan = ScanRequestDto(
-                    passPayload = passPayload,
-                    passSignature = passSignature,
+                    qrPayload = qrPayload,
                     direction = direction.name,
                     lotId = lotId.toString(),
                 ),
@@ -42,8 +40,7 @@ class ScanRepositoryImpl @Inject constructor(
             scanDao.insertPendingScan(
                 PendingScanEntity(
                     idempotencyKey = idempotencyKey,
-                    passPayload = passPayload,
-                    passSignature = passSignature,
+                    qrPayload = qrPayload,
                     direction = direction.name,
                     lotId = lotId.toString(),
                     scannedAt = Instant.now().toEpochMilli(),
@@ -52,7 +49,7 @@ class ScanRepositoryImpl @Inject constructor(
             scanSyncScheduler.enqueue()
             Scan(
                 id = UUID.randomUUID(),
-                passId = UUID.nameUUIDFromBytes(passPayload.toByteArray()),
+                passId = UUID.nameUUIDFromBytes(qrPayload.toByteArray()),
                 lotId = lotId,
                 guardId = UUID(0, 0),
                 direction = direction,

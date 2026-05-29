@@ -2,22 +2,23 @@ package com.unipark.android.presentation.permits
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.unipark.android.domain.entities.Pass
 import com.unipark.android.domain.model.PermitInfo
 import com.unipark.android.domain.model.PricingOption
 import com.unipark.android.domain.model.Resource
 import com.unipark.android.domain.model.VehicleInfo
-import com.unipark.android.domain.repository.PassRepository
-import com.unipark.android.domain.repository.UserRepository
+import com.unipark.android.domain.repositories.PassRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
 class PermitsViewModel @Inject constructor(
-    private val userRepository: UserRepository,
     private val passRepository: PassRepository
 ) : ViewModel() {
 
@@ -43,40 +44,31 @@ class PermitsViewModel @Inject constructor(
     fun loadData() {
         viewModelScope.launch {
             _permitsState.value = Resource.Loading
-            passRepository.getActivePermits().collect { resource ->
-                _permitsState.value = resource
-                when (resource) {
-                    is Resource.Success -> {
-                        _permits.value = resource.data
-                    }
-                    is Resource.Error -> {
-                        // Caída de gracia a mocks para desarrollo local
-                        _permits.value = fakePermits
-                    }
-                    is Resource.Loading -> {
-                        // Cargando
-                    }
+            runCatching { passRepository.getActivePass() }
+                .onSuccess { pass ->
+                    val permits = pass?.let { listOf(it.toPermitInfo()) } ?: fakePermits
+                    _permits.value = permits
+                    _permitsState.value = Resource.Success(permits)
                 }
-            }
-        }
-        viewModelScope.launch {
-            _vehiclesState.value = Resource.Loading
-            userRepository.getUserVehicles().collect { resource ->
-                _vehiclesState.value = resource
-                when (resource) {
-                    is Resource.Success -> {
-                        _vehicles.value = resource.data
-                    }
-                    is Resource.Error -> {
-                        // Caída de gracia a mocks para desarrollo local
-                        _vehicles.value = fakeVehicles
-                    }
-                    is Resource.Loading -> {
-                        // Cargando
-                    }
+                .onFailure { e ->
+                    // Caída de gracia a mocks para desarrollo local
+                    _permits.value = fakePermits
+                    _permitsState.value = Resource.Error(e.message ?: "Error al cargar permisos")
                 }
-            }
         }
+        // El backend canónico no expone vehículos del usuario; se usan datos demo.
+        _vehicles.value = fakeVehicles
+        _vehiclesState.value = Resource.Success(fakeVehicles)
+    }
+
+    private fun Pass.toPermitInfo(): PermitInfo {
+        val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy").withZone(ZoneId.systemDefault())
+        return PermitInfo(
+            permitName = "Campus Parking",
+            status = if (isExpired) "Expired" else "Active",
+            validUntil = formatter.format(expiresAt),
+            vehiclePlate = "—",
+        )
     }
 
     companion object {

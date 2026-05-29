@@ -16,12 +16,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -30,6 +29,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.unipark.android.presentation.auth.AppRole
 import com.unipark.android.presentation.auth.AuthGateScreen
+import com.unipark.android.presentation.auth.AuthState
+import com.unipark.android.presentation.auth.AuthViewModel
 import com.unipark.android.presentation.driver.DigitalPassScreen
 import com.unipark.android.presentation.driver.DriverDashboardScreen
 import com.unipark.android.presentation.driver.WalletScreen
@@ -105,27 +106,48 @@ fun PlaceholderScreen(title: String) {
 }
 
 @Composable
-fun UniParkNavGraph() {
+fun UniParkNavGraph(
+    viewModel: AuthViewModel = hiltViewModel()
+) {
+    val authState by viewModel.authState.collectAsState()
+
+    when (val state = authState) {
+        is AuthState.Authenticated -> {
+            MainGraph(
+                role = state.role,
+                onLogout = { viewModel.logout() }
+            )
+        }
+        else -> {
+            AuthGateScreen(
+                onAuthenticated = {
+                    // La navegación reactiva se encarga de transicionar de forma automática al cambiar authState
+                }
+            )
+        }
+    }
+}
+
+/**
+ * Main navigation scaffold with TopAppBar + BottomNavBar + NavHost.
+ */
+@Composable
+fun MainGraph(
+    role: AppRole,
+    onLogout: () -> Unit
+) {
     val navController = rememberNavController()
-    var currentRole by remember { mutableStateOf<AppRole?>(null) }
-    val tabs = tabsForRole(currentRole)
+    val tabs = tabsForRole(role)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.hierarchy?.firstOrNull { destination ->
         tabs.any { it.route == destination.route }
-    }?.route ?: tabs.firstOrNull()?.route ?: Routes.AUTH
+    }?.route ?: tabs.firstOrNull()?.route ?: Routes.DASHBOARD
 
     Scaffold(
         topBar = {
             UniParkTopAppBar(
-                showLogout = currentRole != null,
-                onLogoutClick = {
-                    currentRole = null
-                    navController.navigate(Routes.AUTH) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
-                    }
-                },
+                showLogout = true,
+                onLogoutClick = onLogout,
             )
         },
         bottomBar = {
@@ -148,23 +170,12 @@ fun UniParkNavGraph() {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Routes.AUTH,
+            startDestination = when (role) {
+                AppRole.DRIVER -> Routes.DASHBOARD
+                AppRole.SECURITY_GUARD -> Routes.MAP
+            },
             modifier = Modifier.padding(innerPadding),
         ) {
-            composable(Routes.AUTH) {
-                AuthGateScreen(
-                    onAuthenticated = { role ->
-                        currentRole = role
-                        val startRoute = when (role) {
-                            AppRole.DRIVER -> Routes.DASHBOARD
-                            AppRole.SECURITY_GUARD -> Routes.MAP
-                        }
-                        navController.navigate(startRoute) {
-                            popUpTo(Routes.AUTH) { inclusive = true }
-                        }
-                    },
-                )
-            }
             composable(Routes.DASHBOARD) {
                 DriverDashboardScreen(
                     onOpenPass = { navController.navigate(Routes.DIGITAL_PASS) },

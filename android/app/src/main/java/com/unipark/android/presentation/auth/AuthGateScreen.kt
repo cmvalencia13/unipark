@@ -60,6 +60,7 @@ fun AuthGateScreen(
 ) {
     val authState by viewModel.authState.collectAsState()
     var email by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf(AppRole.DRIVER) }
     val context = LocalContext.current
 
     val authLauncher = rememberLauncherForActivityResult(
@@ -134,13 +135,19 @@ fun AuthGateScreen(
                 ) {
                     FilterChip(
                         selected = selectedRole == AppRole.DRIVER,
-                        onClick = { selectedRole = AppRole.DRIVER },
+                        onClick = {
+                            selectedRole = AppRole.DRIVER
+                            viewModel.selectRole(AppRole.DRIVER)
+                        },
                         label = { Text("Driver") },
                         modifier = Modifier.weight(1f),
                     )
                     FilterChip(
                         selected = selectedRole == AppRole.SECURITY_GUARD,
-                        onClick = { selectedRole = AppRole.SECURITY_GUARD },
+                        onClick = {
+                            selectedRole = AppRole.SECURITY_GUARD
+                            viewModel.selectRole(AppRole.SECURITY_GUARD)
+                        },
                         label = { Text("Guard") },
                         modifier = Modifier.weight(1f),
                     )
@@ -184,15 +191,11 @@ fun AuthGateScreen(
                 ShineButton(
                     label = if (authState is AuthState.Loading) "Signing In..." else "Sign In with University ID",
                     onClick = {
-                        if (email.lowercase().contains("mock")) {
-                            viewModel.loginWithMocks()
-                        } else {
-                            try {
-                                val intent = viewModel.getAuthIntent(context)
-                                authLauncher.launch(intent)
-                            } catch (e: Exception) {
-                                viewModel.loginWithMocks()
-                            }
+                        try {
+                            val intent = viewModel.getAuthIntent(context)
+                            authLauncher.launch(intent)
+                        } catch (e: Exception) {
+                            android.util.Log.e("UniParkAuth", "Error al lanzar Keycloak: ${e.message}", e)
                         }
                     },
                     icon = Icons.Default.Badge,
@@ -201,6 +204,7 @@ fun AuthGateScreen(
                     contentColor = PrimaryFixedDim,
                     borderColor = PrimaryFixedDim.copy(alpha = 0.3f),
                 )
+
 
 
                 // Error message

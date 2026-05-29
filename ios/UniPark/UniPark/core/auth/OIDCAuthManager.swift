@@ -7,9 +7,9 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 	public static let shared = OIDCAuthManager()
 	private let devMode: Bool = FeatureFlags.devMode
 
-	public static let issuerURL = "https://auth.universidad.edu/realms/unipark"
-	public static let clientID = "unipark-ios"
-	public static let redirectURI = "com.unipark.app://callback"
+    public static let issuerURL = AppAuthService.issuerURL
+    public static let clientID = AppAuthService.clientID
+    public static let redirectURI = AppAuthService.redirectURI
 
 	private let authService = AppAuthService()
 	private var authSession: ASWebAuthenticationSession?
@@ -31,8 +31,12 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 
 		let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)
 		let queryItems = components?.queryItems ?? []
-		if let state = queryItems.first(where: { $0.name == "state" })?.value, state != expectedState {
-			throw NetworkError.unauthorized
+		print("[OIDCAuth] callback: \(callbackURL.absoluteString.prefix(200))")
+		if let state = queryItems.first(where: { $0.name == "state" })?.value {
+			print("[OIDCAuth] state match=\(state == expectedState)")
+			if state != expectedState {
+				throw NSError(domain: "OIDCAuth", code: 401, userInfo: [NSLocalizedDescriptionKey: "State mismatch: got \(state)"])
+			}
 		}
 
 		if let error = queryItems.first(where: { $0.name == "error" })?.value {
@@ -40,7 +44,7 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 		}
 
 		guard let code = queryItems.first(where: { $0.name == "code" })?.value else {
-			throw NetworkError.unauthorized
+			throw NSError(domain: "OIDCAuth", code: 401, userInfo: [NSLocalizedDescriptionKey: "No code in callback"])
 		}
 
 		let tokens = try await authService.exchangeCode(code, codeVerifier: codeVerifier)
@@ -95,45 +99,56 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 		}
 
 		let refreshed = try JSONDecoder().decode(RefreshResponse.self, from: data)
-		TokenStorage.shared.save(accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken)
+		TokenStorage.shared.save(accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken ?? "")
 	}
 
-	public func currentUser() -> User? {
-		if devMode {
-			return User(
-				email: "test@universidad.edu",
-				fullName: "Carlos Test",
-				role: .driver,
-				universityId: "DEV-000",
-				active: true
-			)
-		}
+    public func currentUser() -> User? {
+        guard let accessToken = TokenStorage.shared.accessToken,
+              let claims = decodeJWTPayload(accessToken) else {
+            return nil
+        }
 
-		guard let accessToken = TokenStorage.shared.accessToken,
-			  let claims = decodeJWTPayload(accessToken) else {
-			return nil
-		}
+        guard let sub   = claims["sub"] as? String,
+              let email = claims["email"] as? String else {
+            return nil
+        }
 
-		guard let sub = claims["sub"] as? String,
-			  let email = claims["email"] as? String else {
-			return nil
-		}
+        let givenName  = claims["given_name"]  as? String ?? ""
+        let familyName = claims["family_name"] as? String ?? ""
+        let fullName   = [givenName, familyName].filter { !$0.isEmpty }.joined(separator: " ")
 
-		let givenName = claims["given_name"] as? String ?? ""
-		let familyName = claims["family_name"] as? String ?? ""
-		let fullName = [givenName, familyName].filter { !$0.isEmpty }.joined(separator: " ")
-		let roleString = (claims["role"] as? String ?? "driver").lowercased()
-		let role = UserRole(rawValue: roleString) ?? .driver
+        // Keycloak pone los roles en realm_access.roles (array).
+        // "guard" en Keycloak → .securityGuard en la app (el rawValue del enum es "securityGuard")
+        let role: UserRole
+        func parseRole(_ raw: String) -> UserRole? {
+            switch raw.lowercased() {
+            case "guard", "securityguard", "security_guard": return .securityGuard
+            case "driver":      return .driver
+            case "admin":       return .admin
+            case "superadmin":  return .superadmin
+            default:            return nil
+            }
+        }
+        if let realmAccess = claims["realm_access"] as? [String: Any],
+           let roles = realmAccess["roles"] as? [String] {
+            role = roles.compactMap { parseRole($0) }.first ?? .driver
+        } else if let flatRole = claims["role"] as? String {
+            role = parseRole(flatRole) ?? .driver
+        } else if let flatRoles = claims["role"] as? [String] {
+            role = flatRoles.compactMap { parseRole($0) }.first ?? .driver
+        } else {
+            role = .driver
+        }
 
-		return User(
-			id: UUID(uuidString: sub) ?? UUID(),
-			email: email,
-			fullName: fullName.isEmpty ? email : fullName,
-			role: role,
-			universityId: sub,
-			active: true
-		)
-	}
+        return User(
+            id: UUID(uuidString: sub) ?? UUID(),
+            email: email,
+            fullName: fullName.isEmpty ? email : fullName,
+            role: role,
+            universityId: sub,
+            active: true
+        )
+    }
 
 	// MARK: - JWT Helpers
 
@@ -195,6 +210,7 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 
 	// MARK: - Presentation
 
+	@available(iOS, deprecated: 26.0)
 	public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
 		UIApplication.shared.connectedScenes
 			.compactMap { $0 as? UIWindowScene }
@@ -205,7 +221,7 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 
 private struct RefreshResponse: Decodable {
 	let accessToken: String
-	let refreshToken: String
+	let refreshToken: String?
 
 	private enum CodingKeys: String, CodingKey {
 		case accessToken = "access_token"

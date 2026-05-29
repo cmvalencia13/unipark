@@ -12,6 +12,9 @@ public final class GuardViewModel {
         lots.first { $0.id == selectedLotId }
     }
 
+    // MARK: - Lots loading state
+    public var lotsLoaded: Bool = false
+
     // MARK: - Scanner State
     public enum ScanStatus: Equatable {
         case idle
@@ -24,6 +27,7 @@ public final class GuardViewModel {
     public var lastScanDirection: String? = nil
     public var lastScanTime: String? = nil
     public var isScanCooldown: Bool = false
+    public var backendErrorMessage: String? = nil
 
     // MARK: - Violations
     public var violations: [ViolationEntry] = ViolationEntry.stubs
@@ -32,12 +36,6 @@ public final class GuardViewModel {
 
     // MARK: - Init
     public init() {
-        // Inyectar token mock para que el backend JWT mock acepte las requests
-        // Phase 2: reemplazar por el JWT real de Keycloak
-        if TokenStorage.shared.accessToken == nil {
-            TokenStorage.shared.accessToken = "dev-mock-token-guard"
-        }
-
         lots = Array(ParkingLot.stubs.prefix(2))
         selectedLotId = lots.first?.id ?? UUID()
         Task { await refreshLots() }
@@ -53,8 +51,9 @@ public final class GuardViewModel {
             if remote.contains(where: { $0.id == currentId }) {
                 selectedLotId = currentId
             } else {
-                selectedLotId = remote.first?.id ?? currentId
+                selectedLotId = remote.first?.id ?? UUID()
             }
+            lotsLoaded = true
         }
     }
 
@@ -72,7 +71,7 @@ public final class GuardViewModel {
     ///   "REVOKED-test"   → revocado
     // Payload demo: nonce real + HMAC-SHA256 firmado con el secret del backend.
     // Phase 2: el conductor genera este payload desde POST /v1/passes → iOS lo muestra como QR.
-    public static let demoPayload = "demo-nonce-unipark-2024:c1g/f+9vlffqM6biUXEUHEqH87X7NBUz2wFoNa2L15I="
+    public nonisolated static let demoPayload = "demo-nonce-unipark-2024:c1g/f+9vlffqM6biUXEUHEqH87X7NBUz2wFoNa2L15I="
 
     public func processScan(direction: ScanDirection, payload: String = GuardViewModel.demoPayload) {
         guard !isScanCooldown, let lot = selectedLot else { return }
@@ -85,38 +84,36 @@ public final class GuardViewModel {
         scanStatus = .verifying
 
         Task {
-            // 1. Intentar POST /v1/scans en el backend real
-            let backendSuccess = await tryRecordScanInBackend(
-                payload: payload,
-                lotId: lot.id,
-                direction: direction
-            )
+            backendErrorMessage = nil
+            let result = await tryRecordScanInBackend(payload: payload, lotId: lot.id, direction: direction)
 
-            if backendSuccess {
-                // 2a. Backend registró el scan — refrescar lotes para tener
-                //     capacityUsed actualizado desde Postgres
+            if result.success {
                 await refreshLots()
                 scanStatus = .accepted(.valid(driverName: "Conductor Autorizado", lotId: lot.id))
             } else {
-                // 2b. Backend no disponible o payload inválido — usar mock local
-                let outcome = await MockPassVerificationService.shared.verify(
-                    payload: payload,
-                    selectedLotName: lot.name
-                )
-                if outcome.isValid {
-                    updateOccupancyLocally(direction: direction)
-                    scanStatus = .accepted(outcome)
+                let msg = result.errorMessage ?? "Acceso denegado."
+                backendErrorMessage = msg
+                // Mapear el mensaje del backend al caso más cercano de VerificationOutcome
+                let outcome: VerificationOutcome
+                let lower = msg.lowercased()
+                if lower.contains("entrada registrada") || lower.contains("already") {
+                    outcome = .alreadyUsed
+                } else if lower.contains("expirado") || lower.contains("expired") {
+                    outcome = .expired
+                } else if lower.contains("lote") || lower.contains("lot") {
+                    outcome = .wrongLot(expected: "")
+                } else if lower.contains("revocado") || lower.contains("revoked") {
+                    outcome = .revoked
                 } else {
-                    scanStatus = .rejected(outcome)
+                    outcome = .invalidSignature
                 }
+                scanStatus = .rejected(outcome)
             }
 
-            // Reset cooldown tras 2s
             try? await Task.sleep(for: .seconds(2))
             isScanCooldown = false
-
-            // Reset estado tras 4s más
             try? await Task.sleep(for: .seconds(4))
+            backendErrorMessage = nil
             if case .accepted = scanStatus { scanStatus = .idle }
             if case .rejected = scanStatus { scanStatus = .idle }
         }
@@ -128,17 +125,18 @@ public final class GuardViewModel {
         payload: String,
         lotId: UUID,
         direction: ScanDirection
-    ) async -> Bool {
+    ) async -> (success: Bool, errorMessage: String?) {
         do {
             _ = try await ScanAPIClient.shared.recordScan(
                 qrPayload: payload,
                 lotId: lotId,
                 direction: direction
             )
-            return true
+            return (true, nil)
+        } catch let NetworkError.clientError(code) where code == 400 {
+            return (false, ScanAPIClient.lastErrorMessage ?? "QR inválido o acceso denegado.")
         } catch {
-            // Backend no disponible, QR inválido o error de red → fallback a mock
-            return false
+            return (false, "Sin conexión con el servidor.")
         }
     }
 

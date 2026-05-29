@@ -17,9 +17,6 @@ interface LotApiService {
 interface PassApiService {
     @GET("passes/active")
     suspend fun getActivePass(): PassDto?
-
-    @POST("passes")
-    suspend fun generatePass(@Body request: GeneratePassRequestDto): PassDto
 }
 
 interface ScanApiService {
