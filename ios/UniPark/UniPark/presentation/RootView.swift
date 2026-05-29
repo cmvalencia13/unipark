@@ -18,8 +18,8 @@ public struct RootView: View {
                 switch role {
                 case .driver:        driverTabs
                 case .securityGuard: guardTabs
-                case .admin:         AdminPlaceholderView()
-                case .superadmin:    SuperadminPlaceholderView()
+                case .admin:         AdminDashboardView()
+                case .superadmin:    AdminDashboardView()
                 }
             } else {
                 NavigationStack { LoginView() }
