@@ -19,8 +19,8 @@ import Auth0
 public struct AppAuthService {
 
     // TODO(Auth0): reemplazar por los valores reales del tenant antes de probar.
-    public static let domain   = "TU_DOMINIO.us.auth0.com"
-    public static let clientID = "TU_CLIENT_ID_IOS"
+    public static let domain   = "dev-5ndrp8gm0rm3r0mw.us.auth0.com"
+    public static let clientID = "mEzhjEcOibjtfwUoxKRRlykEebqlgYHT"
     public static let audience = "https://api.unipark.edu.sv"
     public static let scope    = "openid profile email offline_access"
 

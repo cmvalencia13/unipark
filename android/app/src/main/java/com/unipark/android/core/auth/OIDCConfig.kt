@@ -19,8 +19,8 @@ package com.unipark.android.core.auth
  *   p.ej. com.unipark.android://TU_DOMINIO.us.auth0.com/android/com.unipark.android/callback
  */
 data class OIDCConfig(
-    val domain: String = "TU_DOMINIO.us.auth0.com",
-    val clientId: String = "TU_CLIENT_ID_ANDROID",
+    val domain: String = "dev-5ndrp8gm0rm3r0mw.us.auth0.com",
+    val clientId: String = "cs3CdYX3JKCmIUnCuLbY9S43qAvGDWQI",
     val audience: String = "https://api.unipark.edu.sv",
     val scheme: String = "com.unipark.android",
     val scope: String = "openid profile email offline_access",

@@ -22,7 +22,7 @@ android {
 
         // Auth0: el SDK registra su RedirectActivity con estos placeholders.
         // TODO(Auth0): reemplazar auth0Domain por el dominio real del tenant.
-        manifestPlaceholders["auth0Domain"] = "TU_DOMINIO.us.auth0.com"
+        manifestPlaceholders["auth0Domain"] = "dev-5ndrp8gm0rm3r0mw.us.auth0.com"
         manifestPlaceholders["auth0Scheme"] = "com.unipark.android"
     }
 

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
 // Logout federado de Auth0: limpia la sesión SSO del tenant además de la cookie local.
-const AUTH0_ISSUER = process.env.NEXT_PUBLIC_AUTH0_ISSUER || "https://TU_DOMINIO.us.auth0.com";
+const AUTH0_ISSUER = process.env.NEXT_PUBLIC_AUTH0_ISSUER || "https://dev-5ndrp8gm0rm3r0mw.us.auth0.com";
 const AUTH0_CLIENT_ID = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || "";
 
 const adminLinks = [
