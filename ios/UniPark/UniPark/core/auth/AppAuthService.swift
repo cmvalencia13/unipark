@@ -8,9 +8,10 @@ public struct AppAuthService {
     // Producción:       https://auth.universidad.edu.sv/realms/unipark
     //
     // Con ngrok el mismo string funciona en simulador y iPhone físico.
-    public static let issuerURL = "http://localhost:8080/realms/unipark"
-    // ↑ Cambia a tu URL de ngrok cuando lo actives, ej:
-    // public static let issuerURL = "https://yyyy.ngrok-free.app/realms/unipark"
+    // Keycloak: usar IP local (mismo WiFi) — ngrok gratuito solo da 1 URL
+    // Si usas Tailscale: reemplaza con la IP de Tailscale (100.x.x.x)
+    public static let issuerURL = "http://10.74.10.127:8080/realms/unipark"
+    // Simulador: "http://localhost:8080/realms/unipark"
 
     public static let clientID = "unipark-ios"
     public static let redirectURI = "com.unipark.app://callback"
