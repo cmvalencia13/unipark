@@ -47,7 +47,7 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 		}
 
 		let tokens = try await authService.exchangeCode(code, codeVerifier: codeVerifier)
-		TokenStorage.shared.save(accessToken: tokens.accessToken, refreshToken: tokens.refreshToken)
+		TokenStorage.shared.save(accessToken: tokens.accessToken, refreshToken: tokens.refreshToken, idToken: tokens.idToken)
 
 		guard let user = currentUser() else {
 			throw NetworkError.decodingError
@@ -81,22 +81,37 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
 
     public func currentUser() -> User? {
         guard let accessToken = TokenStorage.shared.accessToken,
-              let claims = decodeJWTPayload(accessToken) else {
+              let accessClaims = decodeJWTPayload(accessToken) else {
             return nil
         }
 
-        guard let sub   = claims["sub"] as? String,
-              let email = claims["email"] as? String else {
-            return nil
+        // Profile claims (email, name) live in the id_token with Auth0.
+        // Fall back to access token claims for backward compatibility.
+        let profileClaims: [String: Any]
+        if let idToken = TokenStorage.shared.idToken,
+           let idClaims = decodeJWTPayload(idToken) {
+            profileClaims = idClaims
+        } else {
+            profileClaims = accessClaims
         }
 
-        let givenName  = claims["given_name"]  as? String ?? ""
-        let familyName = claims["family_name"] as? String ?? ""
+        guard let sub   = (profileClaims["sub"] ?? accessClaims["sub"]) as? String,
+              let email = profileClaims["email"] as? String else {
+            // If still no email, use sub as fallback so login doesn't fail
+            let sub2 = accessClaims["sub"] as? String ?? UUID().uuidString
+            return buildUser(sub: sub2, email: sub2, givenName: "", familyName: "", accessClaims: accessClaims)
+        }
+
+        let givenName  = profileClaims["given_name"]  as? String ?? ""
+        let familyName = profileClaims["family_name"] as? String ?? ""
         let fullName   = [givenName, familyName].filter { !$0.isEmpty }.joined(separator: " ")
 
-        // Keycloak pone los roles en realm_access.roles (array).
-        // "guard" en Keycloak → .securityGuard en la app (el rawValue del enum es "securityGuard")
-        let role: UserRole
+        return buildUser(sub: sub, email: email, givenName: givenName, familyName: familyName, accessClaims: accessClaims)
+    }
+
+    private func buildUser(sub: String, email: String, givenName: String, familyName: String, accessClaims: [String: Any]) -> User {
+        let fullName = [givenName, familyName].filter { !$0.isEmpty }.joined(separator: " ")
+
         func parseRole(_ raw: String) -> UserRole? {
             switch raw.lowercased() {
             case "guard", "securityguard", "security_guard": return .securityGuard
@@ -106,17 +121,21 @@ public final class OIDCAuthManager: NSObject, ASWebAuthenticationPresentationCon
             default:            return nil
             }
         }
-        if let realmAccess = claims["realm_access"] as? [String: Any],
+
+        // Roles from access token (Auth0 Action sets realm_access.roles)
+        let role: UserRole
+        if let realmAccess = accessClaims["realm_access"] as? [String: Any],
            let roles = realmAccess["roles"] as? [String] {
             role = roles.compactMap { parseRole($0) }.first ?? .driver
-        } else if let flatRole = claims["role"] as? String {
+        } else if let flatRole = accessClaims["role"] as? String {
             role = parseRole(flatRole) ?? .driver
-        } else if let flatRoles = claims["role"] as? [String] {
+        } else if let flatRoles = accessClaims["role"] as? [String] {
             role = flatRoles.compactMap { parseRole($0) }.first ?? .driver
         } else {
             role = .driver
         }
 
+        print("[OIDCAuth] currentUser sub=\(sub) email=\(email) role=\(role)")
         return User(
             id: UUID(uuidString: sub) ?? UUID(),
             email: email,

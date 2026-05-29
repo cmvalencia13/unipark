@@ -61,7 +61,7 @@ public struct AppAuthService {
 
     // MARK: - Exchange code for tokens
 
-    public func exchangeCode(_ code: String, codeVerifier: String) async throws -> (accessToken: String, refreshToken: String) {
+    public func exchangeCode(_ code: String, codeVerifier: String) async throws -> (accessToken: String, refreshToken: String, idToken: String?) {
         let request = try buildTokenRequest(
             body: [
                 "grant_type":    "authorization_code",
@@ -83,7 +83,7 @@ public struct AppAuthService {
         }
 
         let payload = try JSONDecoder().decode(TokenResponse.self, from: data)
-        return (payload.accessToken, payload.refreshToken ?? "")
+        return (payload.accessToken, payload.refreshToken ?? "", payload.idToken)
     }
 
     // MARK: - Refresh token
@@ -146,9 +146,11 @@ public struct AppAuthService {
 private struct TokenResponse: Decodable {
     let accessToken:  String
     let refreshToken: String?
+    let idToken:      String?
     private enum CodingKeys: String, CodingKey {
         case accessToken  = "access_token"
         case refreshToken = "refresh_token"
+        case idToken      = "id_token"
     }
 }
 
