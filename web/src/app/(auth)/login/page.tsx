@@ -10,7 +10,7 @@ export default function LoginPage() {
         <form
           action={async () => {
             "use server";
-            await signIn("keycloak", { redirectTo: "/admin/dashboard" });
+            await signIn("auth0", { redirectTo: "/admin/dashboard" });
           }}
         >
           <button
