@@ -18,9 +18,10 @@ public enum FeatureFlags {
     ///   Producción:        "https://api.unipark.edu.sv/v1"
     ///
     /// Con ngrok el mismo string funciona en simulador, iPhone físico y cualquier red.
-    // ✅ ngrok — funciona desde iPhone en cualquier red
-    public static let backendBaseURL: String = "https://crested-monogram-ethanol.ngrok-free.dev/v1"
+    // ✅ IP local — iPhone y Mac en el mismo WiFi
+    public static let backendBaseURL: String = "http://10.74.10.251:8081/v1"
     // Simulador local (sin ngrok): "http://localhost:8081/v1"
+    // ngrok (fuera de red): "https://xxxx.ngrok-free.app/v1"
 
     // MARK: - QR
     public static let qrRotationSeconds: Int = 60
